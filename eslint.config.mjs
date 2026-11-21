@@ -12,6 +12,9 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Timestamped editing snapshots are preserved in this repository, but are not app source.
+    "**/*backup*/**",
+    "**/*.bak",
   ]),
 ]);
 

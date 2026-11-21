@@ -1,0 +1,1484 @@
+.sk-cinematic-hero {
+  --hero-gold: #eec601;
+  position: relative;
+  width: 100%;
+  height: calc(100svh - 216px);
+  min-height: 540px;
+  overflow: hidden;
+  isolation: isolate;
+  background: #0b1d3b;
+  color: #fff;
+}
+
+.sk-cinematic-slide {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 1100ms ease, visibility 1100ms ease;
+}
+
+.sk-cinematic-slide.is-active {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  z-index: 1;
+}
+
+.sk-cinematic-background,
+.sk-cinematic-picture {
+  position: absolute;
+  inset: 0;
+}
+
+.sk-cinematic-background {
+  overflow: hidden;
+  background:
+    radial-gradient(ellipse at 75% 35%, #244b76 0%, transparent 55%),
+    linear-gradient(125deg, #07152b, #12345b 55%, #09172b);
+}
+
+.sk-hero-video,
+.sk-hero-embed {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
+
+.sk-hero-video {
+  object-fit: cover;
+  background: #09172b;
+}
+
+.sk-hero-embed {
+  z-index: 1;
+  background: #09172b;
+}
+
+.sk-hero-embed-instagram,
+.sk-hero-embed-pinterest {
+  width: min(100%, 1100px);
+  height: min(100%, 650px);
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.sk-hero-media-status {
+  position: absolute;
+  z-index: 3;
+  left: 50%;
+  top: 18px;
+  transform: translateX(-50%);
+  padding: 8px 14px;
+  border: 1px solid #ffffff55;
+  border-radius: 30px;
+  background: #08172bbf;
+  color: #fffaf1;
+  font-size: 12px;
+  backdrop-filter: blur(10px);
+}
+
+.sk-hero-media-status button {
+  padding: 6px 12px;
+  border: 1px solid #eec601;
+  border-radius: 20px;
+  background: #eec601;
+  color: #091b34;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.sk-hero-sound {
+  position: absolute;
+  z-index: 7;
+  right: max(28px, calc((100vw - 1440px) / 2 + 28px));
+  bottom: 92px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 42px;
+  padding: 0 14px;
+  border: 1px solid #ffffff70;
+  border-radius: 24px;
+  background: #091b34a8;
+  color: #fff;
+  cursor: pointer;
+  backdrop-filter: blur(10px);
+}
+
+.sk-hero-sound:hover,
+.sk-hero-sound:focus-visible {
+  border-color: #eec601;
+  outline: 2px solid #eec601;
+  outline-offset: 2px;
+}
+
+.sk-cinematic-empty {
+  display: grid;
+  place-items: center;
+  min-height: 420px;
+  background:
+    radial-gradient(ellipse at 72% 38%, #35577d 0%, transparent 48%),
+    linear-gradient(120deg, #09172b, #183759 55%, #0b1d3b);
+}
+
+.sk-cinematic-dots button { position: relative; overflow: hidden; }
+.sk-cinematic-dot-progress {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 100%;
+  transform-origin: left center;
+  background: #cba35c;
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sk-cinematic-slide,
+  .sk-cinematic-picture,
+  .sk-cinematic-progress span,
+  .sk-cinematic-dot-progress { animation: none !important; transition-duration: .01ms !important; }
+}
+
+.sk-hero-empty-art {
+  position: absolute;
+  inset: 0;
+  opacity: .24;
+  background-image: url("/ornaments/kalamkari-vine.svg");
+  background-position: 78% center;
+  background-repeat: no-repeat;
+  background-size: min(54vw, 670px);
+  mask-image: linear-gradient(90deg, transparent 20%, #000 100%);
+}
+
+.sk-hero-empty-content {
+  position: relative;
+  width: min(100% - 48px, 1260px);
+  padding: 72px 0;
+  color: #fffaf1;
+}
+
+.sk-hero-empty-content h1 {
+  max-width: 800px;
+  margin: 20px 0 0;
+  font: 400 clamp(38px, 5vw, 72px)/1.12 Georgia, "Times New Roman", serif;
+  letter-spacing: -.035em;
+}
+
+.sk-cinematic-picture {
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+.mobile-picture {
+  display: none;
+}
+
+.sk-cinematic-slide.animation-zoom.is-active .sk-cinematic-picture {
+  animation: skHeroZoom 9s ease-out both;
+}
+
+.sk-cinematic-slide.animation-slide.is-active .sk-cinematic-picture {
+  animation: skHeroPan 7s ease-out both;
+}
+
+@keyframes skHeroZoom {
+  from { transform: scale(1); }
+  to { transform: scale(1.09); }
+}
+
+@keyframes skHeroPan {
+  from { transform: scale(1.08) translateX(1.5%); }
+  to { transform: scale(1.08) translateX(-1.5%); }
+}
+
+.sk-cinematic-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    rgba(5, 15, 32, var(--hero-overlay, .48)) 0%,
+    rgba(5, 15, 32, .34) 48%,
+    rgba(5, 15, 32, .08) 100%
+  );
+}
+
+.sk-cinematic-content {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+  height: 100%;
+  width: min(100% - 80px, 1440px);
+  margin: 0 auto;
+  padding: 35px 0 75px;
+}
+
+.sk-cinematic-slide.position-center .sk-cinematic-content {
+  align-items: center;
+  text-align: center;
+}
+
+.sk-cinematic-slide.position-right .sk-cinematic-content {
+  align-items: flex-end;
+  text-align: right;
+}
+
+.sk-cinematic-eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  color: var(--hero-gold);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .24em;
+  margin-bottom: 25px;
+}
+
+.sk-cinematic-rule {
+  display: block;
+  width: 36px;
+  height: 1px;
+  background: var(--hero-gold);
+}
+
+.sk-cinematic-title {
+  max-width: 850px;
+  margin: 0;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(48px, 5.4vw, 92px);
+  font-weight: 400;
+  line-height: 1.08;
+  letter-spacing: -.045em;
+  color: #fffaf1;
+  text-shadow: 0 3px 30px #0004;
+}
+
+.sk-cinematic-title span {
+  display: block;
+  color: var(--hero-gold);
+  font-style: italic;
+}
+
+.sk-cinematic-description {
+  max-width: 520px;
+  margin: 26px 0 32px;
+  font-size: clamp(13px, 1vw, 16px);
+  line-height: 1.85;
+  color: #f0ede7;
+  text-shadow: 0 1px 8px #0007;
+}
+
+.sk-cinematic-buttons {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 24px;
+}
+
+.sk-cinematic-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 22px;
+  padding: 16px 25px;
+  background: linear-gradient(110deg, #eec601, #ffe66b);
+  color: #0b1d3b;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: .07em;
+  text-decoration: none;
+  transition: transform .3s, box-shadow .3s;
+}
+
+.sk-cinematic-primary:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 35px #eec60140;
+}
+
+.sk-cinematic-secondary {
+  padding-bottom: 5px;
+  border-bottom: 1px solid var(--hero-gold);
+  color: white;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .07em;
+  text-decoration: none;
+}
+
+.sk-cinematic-controls {
+  position: absolute;
+  z-index: 5;
+  bottom: 34px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(100% - 80px, 1440px);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.sk-cinematic-count {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  font-size: 11px;
+  color: #ddd;
+}
+
+.sk-cinematic-count strong {
+  font-size: 19px;
+  color: var(--hero-gold);
+}
+
+.sk-cinematic-dots {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.sk-cinematic-dots button {
+  width: 24px;
+  height: 3px;
+  padding: 0;
+  border: none;
+  background: #ffffff80;
+  cursor: pointer;
+  transition: width .3s, background .3s;
+}
+
+.sk-cinematic-dots button.active {
+  width: 45px;
+  background: var(--hero-gold);
+}
+
+.sk-cinematic-arrows {
+  display: flex;
+  gap: 10px;
+}
+
+.sk-cinematic-arrows button {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border: 1px solid #ffffff80;
+  background: #0b1d3b55;
+  color: white;
+  cursor: pointer;
+  transition: background .25s, color .25s;
+}
+
+.sk-cinematic-arrows button:hover {
+  background: var(--hero-gold);
+  color: #0b1d3b;
+}
+
+.sk-cinematic-progress {
+  position: absolute;
+  z-index: 6;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 3px;
+  background: #ffffff30;
+}
+
+.sk-cinematic-progress span {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background: var(--hero-gold);
+  transform-origin: left;
+  animation: skHeroProgress linear forwards;
+}
+
+@keyframes skHeroProgress {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+
+@media (max-width: 768px) {
+  .sk-cinematic-hero {
+    height: calc(100svh - 115px);
+    min-height: 480px;
+  }
+
+  .desktop-picture {
+    display: none;
+  }
+
+  .mobile-picture {
+    display: block;
+    background-position: center center;
+  }
+
+  .sk-hero-embed-instagram,
+  .sk-hero-embed-pinterest {
+    width: min(100%, 520px);
+    height: min(100%, 780px);
+  }
+
+  .sk-hero-sound {
+    right: 20px;
+    bottom: 82px;
+  }
+
+  .sk-cinematic-empty {
+    min-height: 480px;
+    height: calc(100svh - 115px);
+  }
+
+  .sk-hero-empty-art {
+    background-position: 75% center;
+    background-size: min(90vw, 520px);
+  }
+
+  .sk-hero-empty-content {
+    width: calc(100% - 42px);
+  }
+
+  .sk-cinematic-overlay {
+    background: linear-gradient(
+      180deg,
+      rgba(5, 15, 32, .08) 0%,
+      rgba(5, 15, 32, .16) 30%,
+      rgba(5, 15, 32, .65) 70%,
+      rgba(5, 15, 32, .85) 100%
+    );
+  }
+
+  .sk-cinematic-content,
+  .sk-cinematic-slide.position-center .sk-cinematic-content,
+  .sk-cinematic-slide.position-right .sk-cinematic-content {
+    width: calc(100% - 42px);
+    justify-content: flex-end;
+    align-items: flex-start;
+    text-align: left;
+    padding: 35px 0 100px;
+  }
+
+  .sk-cinematic-eyebrow {
+    font-size: 9px;
+    letter-spacing: .16em;
+    margin-bottom: 15px;
+  }
+
+  .sk-cinematic-title {
+    font-size: clamp(39px, 10vw, 62px);
+    line-height: 1.1;
+    max-width: 100%;
+  }
+
+  .sk-cinematic-description {
+    margin: 17px 0 22px;
+    font-size: 12px;
+    line-height: 1.7;
+    max-width: 350px;
+  }
+
+  .sk-cinematic-buttons {
+    gap: 15px;
+  }
+
+  .sk-cinematic-primary {
+    padding: 13px 16px;
+    font-size: 10px;
+    gap: 12px;
+  }
+
+  .sk-cinematic-secondary {
+    font-size: 10px;
+  }
+
+  .sk-cinematic-controls {
+    width: calc(100% - 42px);
+    bottom: 27px;
+  }
+
+  .sk-cinematic-arrows button {
+    width: 34px;
+    height: 34px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sk-cinematic-slide,
+  .sk-cinematic-picture,
+  .sk-cinematic-primary {
+    transition: none;
+    animation: none !important;
+  }
+
+  .sk-cinematic-progress span {
+    animation: none;
+    transform: scaleX(1);
+  }
+}
+
+/* V3 — PREMIUM EDITORIAL HERO CONTROLS */
+
+/* Primary luxury CTA */
+.sk-cinematic-primary {
+  position: relative;
+  overflow: hidden;
+  min-height: 52px;
+  padding: 15px 27px;
+  border: 1px solid #f4d54c;
+  border-radius: 3px;
+  background: linear-gradient(
+    115deg,
+    #eec601 0%,
+    #ffe47a 48%,
+    #eec601 100%
+  );
+  color: #091b34;
+  font-size: 11px;
+  font-weight: 750;
+  letter-spacing: .09em;
+  box-shadow: 0 7px 25px #0002;
+  transition: transform .35s ease, box-shadow .35s ease;
+}
+
+.sk-cinematic-primary::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    110deg,
+    transparent 20%,
+    #ffffff65 48%,
+    transparent 75%
+  );
+  transform: translateX(-120%);
+  transition: transform .65s ease;
+}
+
+.sk-cinematic-primary:hover::before {
+  transform: translateX(120%);
+}
+
+.sk-cinematic-primary:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 35px #eec60135;
+}
+
+.sk-cinematic-primary svg {
+  position: relative;
+  transition: transform .3s ease;
+}
+
+.sk-cinematic-primary:hover svg {
+  transform: translateX(4px);
+}
+
+/* Secondary editorial link */
+.sk-cinematic-secondary {
+  position: relative;
+  padding: 13px 2px;
+  border-bottom: 0;
+  color: #fffaf1;
+  font-size: 11px;
+  font-weight: 650;
+  letter-spacing: .08em;
+}
+
+.sk-cinematic-secondary::after {
+  content: "";
+  position: absolute;
+  bottom: 8px;
+  left: 0;
+  width: 100%;
+  height: 1px;
+  background: #eec601;
+  transform-origin: left;
+  transition: transform .3s ease;
+}
+
+.sk-cinematic-secondary:hover::after {
+  transform: scaleX(.6);
+}
+
+/* Bottom indicators */
+.sk-cinematic-controls {
+  bottom: 29px;
+  pointer-events: none;
+}
+
+.sk-cinematic-count,
+.sk-cinematic-dots,
+.sk-cinematic-arrows {
+  pointer-events: auto;
+}
+
+.sk-cinematic-count strong {
+  font-family: Georgia, serif;
+  font-size: 23px;
+  font-weight: 400;
+}
+
+.sk-cinematic-dots {
+  gap: 10px;
+}
+
+.sk-cinematic-dots button {
+  width: 23px;
+  height: 2px;
+  border-radius: 2px;
+  background: #ffffff80;
+}
+
+.sk-cinematic-dots button.active {
+  width: 43px;
+  background: #eec601;
+}
+
+/* Edge-positioned floating navigation */
+.sk-cinematic-arrows {
+  position: absolute;
+  inset: auto;
+  display: contents;
+}
+
+.sk-cinematic-arrows button {
+  position: absolute;
+  top: calc(-1 * (100svh - 216px) / 2 + 29px);
+  width: 46px;
+  height: 46px;
+  border: 1px solid #ffffff65;
+  border-radius: 50%;
+  background: #091b3470;
+  color: #fff;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  transition: background .3s, border-color .3s, transform .3s;
+}
+
+.sk-cinematic-arrows button:first-child {
+  left: max(-64px, calc((100vw - 1440px) / -2 + 26px));
+}
+
+.sk-cinematic-arrows button:last-child {
+  right: max(-64px, calc((100vw - 1440px) / -2 + 26px));
+}
+
+.sk-cinematic-arrows button:hover {
+  background: #eec601;
+  border-color: #eec601;
+  color: #0b1d3b;
+  transform: scale(1.08);
+}
+
+/* Mobile */
+@media (max-width: 768px) {
+  .sk-cinematic-primary {
+    min-height: 45px;
+    padding: 12px 17px;
+    font-size: 10px;
+  }
+
+  .sk-cinematic-secondary {
+    font-size: 10px;
+  }
+
+  .sk-cinematic-arrows button {
+    top: calc(-1 * (100svh - 115px) / 2 + 27px);
+    width: 34px;
+    height: 34px;
+    background: #091b3455;
+  }
+
+  .sk-cinematic-arrows button:first-child {
+    left: -12px;
+  }
+
+  .sk-cinematic-arrows button:last-child {
+    right: -12px;
+  }
+
+  .sk-cinematic-count strong {
+    font-size: 19px;
+  }
+}
+
+/* =========================================
+   SRIKALAHASTI — HERO V4 LUXURY EDITION
+   ========================================= */
+
+.sk-cinematic-hero {
+  --hero-gold: #eec601;
+  height: calc(100svh - 216px);
+  min-height: 560px;
+  background: #08172d;
+}
+
+.sk-cinematic-title {
+  max-width: 1050px;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(64px, 6.7vw, 116px);
+  font-weight: 400;
+  line-height: 1.02;
+  letter-spacing: -0.055em;
+  color: #fffaf2;
+}
+
+.sk-cinematic-title span {
+  font-style: italic;
+  font-weight: 400;
+  color: #eec601;
+}
+
+.sk-cinematic-eyebrow {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: .28em;
+  margin-bottom: 30px;
+}
+
+.sk-cinematic-description {
+  max-width: 560px;
+  font-size: clamp(14px, 1.1vw, 17px);
+  line-height: 1.85;
+  font-weight: 400;
+  margin: 30px 0 35px;
+}
+
+/* Refined premium CTA */
+
+.sk-cinematic-primary {
+  min-height: 54px;
+  padding: 15px 28px;
+  border: 1px solid rgba(238,198,1,.8);
+  border-radius: 2px;
+  background: rgba(8,23,45,.5);
+  color: #fffaf2;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  box-shadow: none;
+  backdrop-filter: blur(10px);
+  transition:
+    background .35s ease,
+    color .35s ease,
+    border-color .35s ease,
+    transform .35s ease;
+}
+
+.sk-cinematic-primary::before {
+  display: none;
+}
+
+.sk-cinematic-primary:hover {
+  background: #eec601;
+  border-color: #eec601;
+  color: #08172d;
+  box-shadow: 0 12px 35px rgba(0,0,0,.18);
+  transform: translateY(-2px);
+}
+
+.sk-cinematic-secondary {
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+}
+
+.sk-cinematic-secondary::after {
+  background: #eec601;
+}
+
+/* Luxury slide indicators */
+
+.sk-cinematic-dots button {
+  width: 26px;
+  height: 2px;
+  border-radius: 0;
+  background: rgba(255,255,255,.45);
+}
+
+.sk-cinematic-dots button.active {
+  width: 52px;
+  background: #eec601;
+}
+
+.sk-cinematic-arrows button {
+  border-radius: 50%;
+  background: rgba(8,23,45,.35);
+  border: 1px solid rgba(255,255,255,.45);
+  backdrop-filter: blur(12px);
+}
+
+.sk-cinematic-arrows button:hover {
+  background: #eec601;
+  border-color: #eec601;
+  color: #08172d;
+}
+
+/* Responsive luxury hero */
+
+@media (max-width: 768px) {
+  .sk-cinematic-hero {
+    height: calc(100svh - 115px);
+    min-height: 520px;
+  }
+
+  .sk-cinematic-title {
+    font-size: clamp(46px, 11vw, 72px);
+    line-height: 1.04;
+    letter-spacing: -.05em;
+  }
+
+  .sk-cinematic-eyebrow {
+    font-size: 9px;
+    letter-spacing: .18em;
+    margin-bottom: 20px;
+  }
+
+  .sk-cinematic-description {
+    font-size: 13px;
+    line-height: 1.7;
+    margin: 22px 0 26px;
+  }
+
+  .sk-cinematic-primary {
+    min-height: 46px;
+    padding: 12px 17px;
+    font-size: 10px;
+  }
+
+  .sk-cinematic-secondary {
+    font-size: 10px;
+  }
+
+  .sk-cinematic-content {
+    padding-bottom: 100px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sk-cinematic-primary {
+    transition: none;
+  }
+}
+
+/* HERO V5 — ROYAL EDITORIAL TYPOGRAPHY */
+
+.sk-cinematic-title {
+  max-width: 1050px;
+  font-family: "Bodoni Moda", "Didot", "Bodoni MT",
+    "Times New Roman", serif;
+  font-size: clamp(68px, 6.9vw, 124px);
+  font-weight: 400;
+  line-height: 1.06;
+  letter-spacing: -0.045em;
+  color: #fffaf2;
+  text-wrap: balance;
+}
+
+.sk-cinematic-title span {
+  display: block;
+  font-family: "Bodoni Moda", "Didot",
+    "Times New Roman", serif;
+  font-style: italic;
+  font-weight: 400;
+  letter-spacing: -0.055em;
+  color: #eec601;
+}
+
+.sk-cinematic-eyebrow {
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: .32em;
+  text-transform: uppercase;
+  color: #eec601;
+  margin-bottom: 30px;
+}
+
+.sk-cinematic-description {
+  max-width: 475px;
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 1.95;
+  letter-spacing: .012em;
+  color: rgba(255,250,242,.82);
+  margin-top: 30px;
+  margin-bottom: 36px;
+}
+
+@media (max-width: 768px) {
+  .sk-cinematic-title {
+    font-size: clamp(43px, 10.5vw, 70px);
+    line-height: 1.08;
+    letter-spacing: -.045em;
+  }
+
+  .sk-cinematic-eyebrow {
+    font-size: 9px;
+    letter-spacing: .19em;
+    margin-bottom: 22px;
+  }
+
+  .sk-cinematic-description {
+    max-width: 330px;
+    font-size: 13px;
+    line-height: 1.8;
+    margin: 24px 0 30px;
+  }
+}
+
+/* HERO V6 MEDIA — preserve image fallback behind all video embeds */
+.sk-cinematic-background { position: absolute; inset: 0; overflow: hidden; }
+.sk-hero-video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; pointer-events: none; }
+.sk-hero-video-mobile { display: none; }
+.sk-hero-embed { position: absolute; top: 50%; left: 50%; width: max(100%, 177.78vh); height: max(100%, 56.25vw); transform: translate(-50%, -50%); border: 0; pointer-events: none; }
+/* Instagram embeds are portrait widgets, not reliable full-bleed backgrounds. Keep poster visible. */
+.sk-hero-embed-instagram { display: none; }
+@media (max-width: 768px) {
+  .sk-hero-video-desktop:has(+ .sk-hero-video-mobile) { display: none; }
+  .sk-hero-video-mobile { display: block; }
+  .sk-hero-embed-youtube { width: max(100%, 177.78vh); height: max(100%, 56.25vw); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sk-hero-video, .sk-hero-embed { display: none; }
+}
+
+/* HERO REFERENCE V7 — scoped to hero; header remains unchanged */
+.sk-cinematic-hero { --hero-gold:#eec601; }
+.sk-cinematic-content {
+  justify-content:flex-end;
+  align-items:flex-start;
+  padding-top:80px;
+  padding-bottom:clamp(145px, 17vh, 205px);
+  width:min(calc(100% - 112px), 1480px);
+}
+.sk-cinematic-slide.position-center .sk-cinematic-content { align-items:center; }
+.sk-cinematic-slide.position-right .sk-cinematic-content { align-items:flex-end; }
+.sk-cinematic-overlay {
+  background:linear-gradient(90deg,rgba(4,12,24,.72) 0%,rgba(5,14,29,.39) 43%,rgba(4,12,24,.06) 85%),
+    linear-gradient(0deg,rgba(5,10,22,.65) 0%,transparent 48%);
+}
+.sk-cinematic-eyebrow {
+  display:inline-flex; align-items:center; gap:10px;
+  border:1px solid rgba(238,198,1,.38); border-radius:999px;
+  padding:9px 16px; margin-bottom:17px;
+  background:rgba(12,24,39,.57); backdrop-filter:blur(8px);
+  color:#f4df9b; font-size:10px; font-weight:650; letter-spacing:.12em;
+}
+.sk-cinematic-rule { width:7px; height:7px; border-radius:50%; }
+.sk-cinematic-title, .sk-cinematic-title span {
+  font-family:Arial,Helvetica,sans-serif;
+  font-size:clamp(48px,5.3vw,92px);
+  line-height:1.03; letter-spacing:-.052em;
+  font-weight:750; font-style:normal; color:#fffaf3;
+  text-shadow:0 3px 24px rgba(0,0,0,.32);
+}
+.sk-cinematic-title { max-width:950px; }
+.sk-cinematic-title span { display:block; }
+.sk-cinematic-description {
+  max-width:590px; margin:20px 0 26px;
+  font-size:clamp(14px,1.05vw,17px); font-weight:450;
+  line-height:1.6; color:#fff5e8;
+}
+.sk-cinematic-buttons { gap:12px; }
+.sk-cinematic-primary,.sk-cinematic-secondary {
+  display:inline-flex; align-items:center; justify-content:center; gap:17px;
+  min-height:53px; padding:8px 10px 8px 24px;
+  border-radius:999px; font-size:13px; font-weight:700;
+  letter-spacing:0; text-decoration:none;
+  transition:transform .25s,box-shadow .25s,background .25s;
+}
+.sk-cinematic-primary {
+  border:1px solid #dcbf73;
+  background:linear-gradient(115deg,#731b31,#a32645);
+  color:#fff; box-shadow:0 8px 26px rgba(12,10,22,.25);
+}
+.sk-cinematic-secondary {
+  border:1px solid rgba(255,255,255,.85);
+  background:#fffaf3; color:#261b1b;
+  padding-right:25px;
+}
+.sk-cinematic-primary svg {
+  width:35px;height:35px; padding:9px; border-radius:50%;
+  background:#fffaf3; color:#87213a;
+}
+.sk-cinematic-primary:hover,.sk-cinematic-secondary:hover {
+  transform:translateY(-2px); box-shadow:0 12px 30px rgba(0,0,0,.2);
+}
+.sk-cinematic-controls {
+  bottom:57px; width:min(calc(100% - 112px),1480px);
+}
+.sk-cinematic-count strong { color:#f4d27d; }
+.sk-cinematic-arrows button {
+  border:1px solid rgba(255,255,255,.5);
+  border-radius:50%; width:39px;height:39px;
+  background:rgba(8,18,32,.38);
+}
+.sk-cinematic-arrows button:hover { background:#fffaf3;color:#18263a; }
+.sk-cinematic-progress { bottom:37px; height:2px; background:transparent; }
+.sk-cinematic-progress span { background:#eec601; opacity:.7; }
+.sk-reference-ticker {
+  position:absolute; z-index:8; bottom:0; left:0; right:0;
+  height:38px; display:flex; align-items:center; overflow:hidden;
+  border-top:1px solid rgba(238,198,1,.35);
+  background:#371727; color:#e8c87e;
+}
+.sk-reference-ticker-track { display:flex; width:max-content; animation:skRefTicker 32s linear infinite; }
+.sk-reference-ticker-set { display:flex;align-items:center;flex-shrink:0;gap:17px;padding-right:17px;white-space:nowrap; }
+.sk-reference-ticker-set span { font-size:11px;letter-spacing:.075em;font-weight:650; }
+.sk-reference-ticker-set b { color:#eec601;font-size:11px; }
+@keyframes skRefTicker { to { transform:translateX(-50%); } }
+@media(max-width:768px) {
+  .sk-cinematic-hero { min-height:580px; }
+  .sk-cinematic-content {
+    width:calc(100% - 40px); padding-top:55px;
+    padding-bottom:142px; justify-content:flex-end;
+  }
+  .sk-cinematic-title,.sk-cinematic-title span {
+    font-size:clamp(40px,10vw,64px);letter-spacing:-.045em;line-height:1.07;
+  }
+  .sk-cinematic-eyebrow { font-size:9px; padding:8px 12px; }
+  .sk-cinematic-description { font-size:13px; margin:15px 0 21px;line-height:1.55; }
+  .sk-cinematic-buttons { gap:9px; }
+  .sk-cinematic-primary,.sk-cinematic-secondary { min-height:45px;font-size:11px;padding:6px 12px; }
+  .sk-cinematic-primary svg { width:29px;height:29px;padding:7px; }
+  .sk-cinematic-controls { width:calc(100% - 40px);bottom:54px; }
+  .sk-cinematic-arrows button { width:34px;height:34px; }
+  .sk-cinematic-progress { bottom:36px; }
+  .sk-reference-ticker { height:36px; }
+}
+@media(prefers-reduced-motion:reduce) { .sk-reference-ticker-track { animation:none; } }
+
+/* V8 — SRIKALAHASTI ROYAL NAVY REFINEMENT */
+
+.sk-cinematic-title {
+  font-family: Georgia, "Times New Roman", serif !important;
+  font-size: clamp(48px, 5.2vw, 82px) !important;
+  font-weight: 500 !important;
+  line-height: 1.1 !important;
+  letter-spacing: -.035em !important;
+  max-width: 950px;
+}
+
+.sk-cinematic-title span {
+  font-family: inherit !important;
+  font-style: normal !important;
+  font-weight: 500 !important;
+  color: #fffaf2 !important;
+  letter-spacing: inherit !important;
+}
+
+.sk-cinematic-primary {
+  background: linear-gradient(135deg,#10284a,#07162b) !important;
+  color: #fffaf2 !important;
+  border: 1px solid #eec601 !important;
+  border-radius: 999px !important;
+  box-shadow: 0 6px 20px rgba(0,0,0,.16);
+}
+
+.sk-cinematic-primary:hover {
+  background: linear-gradient(135deg,#1a3a65,#10284a) !important;
+  transform: translateY(-2px);
+}
+
+.sk-cinematic-secondary {
+  background: #fffaf2 !important;
+  color: #10213d !important;
+  border-radius: 999px !important;
+  text-decoration: none !important;
+}
+
+@media (max-width:768px) {
+  .sk-cinematic-title {
+    font-size: clamp(40px, 9vw, 58px) !important;
+  }
+}
+
+/* ==========================================
+   V9 — ROYAL NAVY MINIMAL HERITAGE TICKER
+   ========================================== */
+
+.sk-reference-ticker {
+  height: 30px !important;
+  min-height: 30px !important;
+  background: #09182d !important;
+  border-top: 1px solid rgba(238,198,1,.35) !important;
+  border-bottom: 0 !important;
+  box-shadow: none !important;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+}
+
+.sk-reference-ticker-track {
+  display: flex;
+  align-items: center;
+  width: max-content;
+  animation: skRefTicker 48s linear infinite;
+}
+
+.sk-reference-ticker-set {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  gap: 24px;
+  padding-right: 24px;
+  white-space: nowrap;
+}
+
+.sk-reference-ticker-set span {
+  font-size: 9px !important;
+  font-weight: 500 !important;
+  letter-spacing: .12em !important;
+  color: #d6bd79 !important;
+  line-height: 1.2;
+}
+
+.sk-reference-ticker-set b {
+  color: #eec601 !important;
+  font-size: 9px !important;
+  font-weight: 400 !important;
+}
+
+@media (max-width: 768px) {
+  .sk-reference-ticker {
+    height: 27px !important;
+    min-height: 27px !important;
+  }
+
+  .sk-reference-ticker-set {
+    gap: 18px;
+    padding-right: 18px;
+  }
+
+  .sk-reference-ticker-set span {
+    font-size: 8px !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sk-reference-ticker-track {
+    animation: none !important;
+  }
+}
+
+/* ======================================
+   V10 — PREMIUM HERO FINISH
+   ====================================== */
+
+/* Button alignment and consistent size */
+
+.sk-cinematic-primary,
+.sk-cinematic-secondary {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 16px !important;
+
+  min-height: 48px !important;
+  padding: 12px 22px !important;
+
+  border-radius: 999px !important;
+
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  letter-spacing: .035em !important;
+  line-height: 1.2 !important;
+
+  text-align: center !important;
+  text-decoration: none !important;
+  white-space: nowrap !important;
+
+  transition:
+    background .3s ease,
+    transform .3s ease,
+    box-shadow .3s ease !important;
+}
+
+/* Primary — Royal Navy */
+
+.sk-cinematic-primary {
+  background: linear-gradient(
+    135deg,
+    #152e50,
+    #08182e
+  ) !important;
+
+  color: #fffaf2 !important;
+  border: 1px solid #c9a84d !important;
+}
+
+/* Secondary — Ivory */
+
+.sk-cinematic-secondary {
+  background: #fffaf2 !important;
+  color: #10213d !important;
+  border: 1px solid rgba(255,250,242,.7) !important;
+}
+
+.sk-cinematic-primary:hover,
+.sk-cinematic-secondary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0,0,0,.2);
+}
+
+/* Bottom ticker — subtle luxury */
+
+.sk-reference-ticker {
+  height: 25px !important;
+  min-height: 25px !important;
+
+  background: #09182d !important;
+
+  border-top: 1px solid rgba(238,198,1,.22) !important;
+  border-bottom: 0 !important;
+}
+
+.sk-reference-ticker-set span {
+  font-size: 8px !important;
+  font-weight: 500 !important;
+  letter-spacing: .11em !important;
+  color: #c9b778 !important;
+}
+
+.sk-reference-ticker-set b {
+  color: #eec601 !important;
+  font-size: 8px !important;
+}
+
+.sk-reference-ticker-track {
+  animation-duration: 65s !important;
+}
+
+/* Remove excessive bright bottom line */
+
+.sk-cinematic-hero {
+  border-bottom: 0 !important;
+}
+
+/* Mobile refinement */
+
+@media (max-width: 768px) {
+  .sk-cinematic-primary,
+  .sk-cinematic-secondary {
+    min-height: 44px !important;
+    padding: 11px 16px !important;
+    font-size: 10px !important;
+    gap: 8px !important;
+  }
+
+  .sk-reference-ticker {
+    height: 23px !important;
+    min-height: 23px !important;
+  }
+}
+
+/* V11 — LUXURY HERO BUTTONS */
+
+.sk-cinematic-primary,
+.sk-cinematic-secondary {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  min-height: 52px !important;
+  padding: 8px 12px 8px 22px !important;
+  gap: 18px !important;
+  border-radius: 100px !important;
+  font-size: 12px !important;
+  font-weight: 700 !important;
+  letter-spacing: .035em !important;
+  line-height: 1.25 !important;
+  white-space: nowrap !important;
+  text-decoration: none !important;
+  box-sizing: border-box !important;
+  transition: transform .25s ease, box-shadow .25s ease !important;
+}
+
+.sk-cinematic-primary {
+  background: linear-gradient(120deg,#73172d,#a32343) !important;
+  color: #fffaf2 !important;
+  border: 1px solid #d9ad60 !important;
+}
+
+.sk-cinematic-secondary {
+  background: #fffaf2 !important;
+  color: #10213d !important;
+  border: 1px solid #fffaf2 !important;
+}
+
+.sk-cinematic-primary:hover,
+.sk-cinematic-secondary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0,0,0,.24);
+}
+
+/* Existing arrow icon styling */
+
+.sk-cinematic-primary svg,
+.sk-cinematic-secondary svg {
+  flex-shrink: 0;
+}
+
+/* BOTTOM HERITAGE TICKER */
+
+.sk-reference-ticker {
+  height: 34px !important;
+  min-height: 34px !important;
+  display: flex !important;
+  align-items: center !important;
+  background: #09182d !important;
+  border-top: 1px solid rgba(238,198,1,.35) !important;
+  border-bottom: 0 !important;
+}
+
+.sk-reference-ticker-set {
+  gap: 26px !important;
+  padding-right: 26px !important;
+}
+
+.sk-reference-ticker-set span {
+  color: #eec601 !important;
+  font-size: 10px !important;
+  font-weight: 650 !important;
+  letter-spacing: .09em !important;
+  line-height: 1.3 !important;
+}
+
+.sk-reference-ticker-set b {
+  color: #eec601 !important;
+  font-size: 11px !important;
+}
+
+.sk-reference-ticker-track {
+  animation-duration: 48s !important;
+}
+
+@media(max-width:768px) {
+  .sk-cinematic-primary,
+  .sk-cinematic-secondary {
+    min-height: 46px !important;
+    padding: 9px 14px !important;
+    font-size: 10px !important;
+    gap: 9px !important;
+  }
+
+  .sk-reference-ticker {
+    height: 30px !important;
+    min-height: 30px !important;
+  }
+
+  .sk-reference-ticker-set span {
+    font-size: 9px !important;
+  }
+}
+
+@media(prefers-reduced-motion:reduce) {
+  .sk-reference-ticker-track {
+    animation: none !important;
+  }
+}
+
+/* =========================================
+   V12 — NAVY LUXURY HERO TYPOGRAPHY & CTA
+   ========================================= */
+
+/* Premium editorial heading */
+.sk-cinematic-title {
+  font-family: "Bodoni Moda", "Didot",
+    "Bodoni MT", Georgia, serif !important;
+  font-size: clamp(46px, 4.7vw, 76px) !important;
+  font-weight: 400 !important;
+  line-height: 1.12 !important;
+  letter-spacing: -.035em !important;
+  max-width: 900px !important;
+  text-wrap: balance;
+}
+
+.sk-cinematic-title span {
+  font-family: inherit !important;
+  font-size: inherit !important;
+  font-style: italic !important;
+  font-weight: 400 !important;
+  line-height: inherit !important;
+  letter-spacing: inherit !important;
+  color: #fff9ef !important;
+}
+
+/* Matching button dimensions */
+.sk-cinematic-primary,
+.sk-cinematic-secondary {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  position: relative !important;
+
+  min-height: 50px !important;
+  height: 50px !important;
+  box-sizing: border-box !important;
+
+  padding: 10px 20px !important;
+  gap: 12px !important;
+
+  border-radius: 999px !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  letter-spacing: .025em !important;
+  line-height: 1 !important;
+
+  white-space: nowrap !important;
+  text-decoration: none !important;
+  background-image: none !important;
+}
+
+/* Remove unwanted underline decorations */
+.sk-cinematic-primary::after,
+.sk-cinematic-secondary::after {
+  display: none !important;
+  content: none !important;
+}
+
+.sk-cinematic-primary {
+  background: #102747 !important;
+  color: #fff9ef !important;
+  border: 1px solid #d8b84d !important;
+  box-shadow: 0 5px 18px rgba(0,0,0,.16) !important;
+}
+
+.sk-cinematic-secondary {
+  background: #fff9ef !important;
+  color: #10213d !important;
+  border: 1px solid #fff9ef !important;
+  box-shadow: 0 5px 18px rgba(0,0,0,.12) !important;
+}
+
+.sk-cinematic-primary:hover {
+  background: #1a385e !important;
+  transform: translateY(-2px);
+}
+
+.sk-cinematic-secondary:hover {
+  background: #f0e5d2 !important;
+  transform: translateY(-2px);
+}
+
+/* Mobile */
+@media (max-width: 768px) {
+  .sk-cinematic-title {
+    font-size: clamp(38px, 9vw, 56px) !important;
+    line-height: 1.12 !important;
+  }
+
+  .sk-cinematic-primary,
+  .sk-cinematic-secondary {
+    min-height: 44px !important;
+    height: 44px !important;
+    padding: 9px 14px !important;
+    font-size: 10px !important;
+    gap: 8px !important;
+  }
+}

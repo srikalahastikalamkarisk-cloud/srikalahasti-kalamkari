@@ -1,0 +1,285 @@
+.sk-welcome {
+  position: fixed;
+  inset: 0;
+  z-index: 99999;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  isolation: isolate;
+  background: #071426;
+  color: #fff8ed;
+}
+
+.sk-welcome-atmosphere {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse at center,
+      rgba(178,119,54,.12) 0%,
+      rgba(7,20,38,.08) 42%,
+      transparent 75%),
+    linear-gradient(135deg, #09192c, #071426 55%, #0b1a2b);
+  transition: opacity 1.1s ease;
+}
+
+.sk-welcome-curtain {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 50.2%;
+  z-index: 3;
+  background-color: #10243a;
+  background-image:
+    linear-gradient(90deg,
+      rgba(0,0,0,.3),
+      transparent 30%,
+      rgba(215,166,81,.09) 65%,
+      rgba(0,0,0,.35)),
+    url("/welcome/kalamkari-pattern.svg");
+  background-size: 100% 100%, 180px 180px;
+  box-shadow: inset 0 0 65px rgba(0,0,0,.3);
+  animation-duration: 1.55s;
+  animation-delay: .35s;
+  animation-fill-mode: forwards;
+  animation-timing-function: cubic-bezier(.76,0,.24,1);
+  will-change: transform;
+}
+
+.sk-welcome-curtain-left {
+  left: 0;
+  border-right: 2px solid rgba(216,169,77,.65);
+  animation-name: skCurtainLeft;
+}
+
+.sk-welcome-curtain-right {
+  right: 0;
+  border-left: 2px solid rgba(216,169,77,.65);
+  animation-name: skCurtainRight;
+  background-position: center, 50px 0;
+}
+
+.sk-welcome-frame {
+  position: absolute;
+  inset: 24px;
+  z-index: 1;
+  border: 1px solid rgba(203,157,76,.24);
+  pointer-events: none;
+  opacity: 0;
+  animation: skFrameIn 1s ease 1.6s forwards;
+}
+
+.sk-welcome-corner {
+  position: absolute;
+  color: rgba(218,169,83,.6);
+  font-size: 16px;
+}
+
+.sk-welcome-corner-tl { top: -10px; left: -6px; }
+.sk-welcome-corner-tr { top: -10px; right: -6px; }
+.sk-welcome-corner-bl { bottom: -10px; left: -6px; }
+.sk-welcome-corner-br { bottom: -10px; right: -6px; }
+
+.sk-welcome-center {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 28px;
+  width: 100%;
+  transform-origin: center;
+}
+
+.sk-welcome-logo {
+  opacity: 0;
+  transform: perspective(850px) rotateY(-22deg) scale(.65);
+  animation: skLogoEntrance 1.25s cubic-bezier(.16,1,.3,1) 1.35s forwards;
+  filter: drop-shadow(0 12px 25px rgba(212,162,56,.18));
+}
+
+.sk-welcome-logo img {
+  display: block;
+  object-fit: contain;
+}
+
+.sk-welcome-rule {
+  width: 0;
+  height: 1px;
+  margin: 16px 0 21px;
+  background: linear-gradient(90deg,transparent,#d4a650,transparent);
+  animation: skRuleExpand .85s ease 2s forwards;
+}
+
+.sk-welcome-script {
+  font-family: "Brush Script MT", "Segoe Script", cursive;
+  font-size: clamp(31px,4.5vw,53px);
+  font-style: italic;
+  line-height: 1.35;
+  color: #e7bb60;
+  max-width: 90vw;
+  overflow: hidden;
+}
+
+.sk-welcome-script span {
+  display: block;
+  width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  animation: skWriting 1.1s steps(20,end) 2.15s forwards;
+}
+
+.sk-welcome-title {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 8px 0 0;
+  font-family: Georgia,"Times New Roman",serif;
+  font-weight: 400;
+  font-size: clamp(40px,6vw,76px);
+  line-height: 1.15;
+  letter-spacing: -.045em;
+  opacity: 0;
+  transform: translateY(18px);
+  animation: skTextEntrance .85s ease 2.55s forwards;
+}
+
+.sk-welcome-title span {
+  margin-top: 14px;
+  font-family: Arial,sans-serif;
+  font-size: clamp(11px,1.2vw,15px);
+  font-weight: 600;
+  letter-spacing: .46em;
+  color: #e7bb60;
+}
+
+.sk-welcome-caption {
+  margin-top: 22px;
+  font-family: Arial,sans-serif;
+  font-size: 10px;
+  letter-spacing: .27em;
+  color: rgba(255,248,237,.65);
+  opacity: 0;
+  animation: skTextEntrance .7s ease 3.05s forwards;
+}
+
+.sk-welcome-bottom {
+  position: absolute;
+  bottom: 35px;
+  left: 0;
+  right: 0;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 13px;
+  font-family: Arial,sans-serif;
+  font-size: 9px;
+  letter-spacing: .2em;
+  color: rgba(255,248,237,.55);
+  opacity: 0;
+  animation: skTextEntrance .7s ease 2.6s forwards;
+}
+
+.sk-welcome-bottom span {
+  color: #d4a650;
+}
+
+.sk-welcome-skip {
+  position: absolute;
+  top: 39px;
+  right: 39px;
+  z-index: 5;
+  padding: 10px 16px;
+  border: 1px solid rgba(212,166,80,.6);
+  border-radius: 999px;
+  background: rgba(7,20,38,.8);
+  color: #fff8ed;
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.sk-welcome-skip:hover {
+  border-color: #f1cb78;
+}
+
+.sk-welcome-exit {
+  pointer-events: none;
+  animation: skWelcomeFinish 1.1s ease-in forwards;
+}
+
+.sk-welcome-exit .sk-welcome-center {
+  animation: skZoomIntoSite 1.1s cubic-bezier(.5,0,.8,1) forwards;
+}
+
+.sk-welcome-exit .sk-welcome-atmosphere,
+.sk-welcome-exit .sk-welcome-frame,
+.sk-welcome-exit .sk-welcome-bottom {
+  opacity: 0;
+  transition: opacity .85s ease;
+}
+
+.sk-welcome-exit .sk-welcome-skip {
+  opacity: 0;
+}
+
+@keyframes skCurtainLeft {
+  to { transform: translateX(-101%); }
+}
+
+@keyframes skCurtainRight {
+  to { transform: translateX(101%); }
+}
+
+@keyframes skLogoEntrance {
+  to {
+    opacity: 1;
+    transform: perspective(850px) rotateY(0) scale(1);
+  }
+}
+
+@keyframes skRuleExpand {
+  to { width: 150px; }
+}
+
+@keyframes skWriting {
+  to { width: 100%; }
+}
+
+@keyframes skTextEntrance {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes skFrameIn {
+  to { opacity: 1; }
+}
+
+@keyframes skZoomIntoSite {
+  0% { transform: scale(1); opacity: 1; filter: blur(0); }
+  55% { transform: scale(1.65); opacity: .8; filter: blur(1px); }
+  100% { transform: scale(3.1); opacity: 0; filter: blur(9px); }
+}
+
+@keyframes skWelcomeFinish {
+  0% { opacity: 1; }
+  40% { opacity: 1; }
+  100% { opacity: 0; visibility: hidden; }
+}
+
+@media (max-width: 768px) {
+  .sk-welcome-frame { inset: 14px; }
+  .sk-welcome-curtain { background-size: 100% 100%, 125px 125px; }
+  .sk-welcome-logo img { width: 120px; height: 120px; }
+  .sk-welcome-title { font-size: clamp(38px,10vw,58px); }
+  .sk-welcome-title span { letter-spacing: .3em; }
+  .sk-welcome-caption { font-size: 8px; letter-spacing: .16em; }
+  .sk-welcome-bottom { bottom: 26px; font-size: 8px; letter-spacing: .08em; }
+  .sk-welcome-skip { top: 24px; right: 24px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sk-welcome { display: none; }
+}

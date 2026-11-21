@@ -1,0 +1,472 @@
+/* STEP 287C — CUSTOMER ROYAL AUTH DESIGN */
+
+.skauth-page {
+  min-height: 100svh;
+  display: grid;
+  place-items: center;
+  padding: 30px 16px;
+  background:
+    radial-gradient(ellipse at 50% 0%,
+      rgba(64,103,146,.34), transparent 60%),
+    repeating-radial-gradient(circle at 50% 115%,
+      transparent 0 115px,
+      rgba(226,187,115,.045) 116px 117px,
+      transparent 118px 220px),
+    linear-gradient(145deg,#061326,#10243e 55%,#07172b);
+  color: #10243e;
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+.skauth-page *,
+.skauth-page *::before,
+.skauth-page *::after {
+  box-sizing: border-box;
+}
+
+.skauth-shell {
+  width: min(510px,100%);
+  padding: clamp(28px,5vw,46px);
+  border: 1px solid rgba(215,173,112,.65);
+  border-radius: 20px;
+  background: linear-gradient(155deg,#fffefa,#f8f5ef);
+  box-shadow: 0 28px 80px rgba(0,0,0,.32);
+}
+
+.skauth-brand {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.skauth-logo-frame {
+  width: 98px;
+  height: 98px;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  margin-bottom: 10px;
+  border: 2px solid #d7ad70;
+  border-radius: 50%;
+  background: #10243e;
+  box-shadow: 0 8px 24px rgba(16,36,62,.18);
+}
+
+.skauth-logo {
+  width: 86px;
+  height: 86px;
+  object-fit: contain;
+}
+
+.skauth-brand strong {
+  font-family: Georgia,serif;
+  font-size: 22px;
+  font-weight: 600;
+  letter-spacing: .055em;
+  color: #10243e;
+}
+
+.skauth-brand span {
+  margin-top: 5px;
+  color: #a47b3e;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: .27em;
+}
+
+.skauth-ornament {
+  margin: 13px 0 10px;
+  text-align: center;
+  color: #b98b48;
+  font-size: 15px;
+}
+
+.skauth-heading {
+  text-align: center;
+}
+
+.skauth-overline {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  color: #a47b3e;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: .16em;
+}
+
+.skauth-heading h1 {
+  margin: 10px 0 7px;
+  font-family: Georgia,serif;
+  font-size: clamp(33px,5vw,43px);
+  font-weight: 400;
+  letter-spacing: -.045em;
+  color: #10243e;
+}
+
+.skauth-intro {
+  margin: 0 0 21px;
+  color: #69758a;
+  font-size: 13px;
+  line-height: 1.7;
+}
+
+.skauth-form {
+  display: grid;
+  gap: 12px;
+}
+
+.skauth-form label {
+  display: grid;
+  gap: 8px;
+  color: #26354c;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.skauth-form input {
+  width: 100%;
+  min-width: 0;
+  height: 52px;
+  padding: 0 14px;
+  border: 1px solid #dce2ea;
+  border-radius: 9px;
+  outline: none;
+  background: #fff;
+  color: #10213b;
+  font: inherit;
+  font-size: 13px;
+}
+
+.skauth-form input:focus {
+  border-color: #c49a50;
+  box-shadow: 0 0 0 3px rgba(196,154,80,.13);
+}
+
+.skauth-form input::placeholder {
+  color: #9aa5b4;
+}
+
+.skauth-name-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.skauth-input-wrap {
+  position: relative;
+}
+
+.skauth-input-wrap > svg {
+  position: absolute;
+  top: 50%;
+  left: 14px;
+  transform: translateY(-50%);
+  color: #7b8ba0;
+  pointer-events: none;
+}
+
+.skauth-input-wrap input {
+  padding-left: 45px;
+  padding-right: 45px;
+}
+
+.skauth-eye {
+  position: absolute;
+  top: 50%;
+  right: 8px;
+  transform: translateY(-50%);
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: #596d86;
+  cursor: pointer;
+}
+
+.skauth-forgot {
+  text-align: right;
+  font-size: 12px;
+}
+
+.skauth-forgot a,
+.skauth-switch a,
+.skauth-terms a {
+  color: #175b99;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.skauth-submit {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+  min-height: 53px;
+  margin-top: 8px;
+  border: 0;
+  border-radius: 9px;
+  background: linear-gradient(100deg,#10243e,#263f5c);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.skauth-submit:hover {
+  filter: brightness(1.1);
+}
+
+.skauth-terms {
+  color: #68778b;
+  font-size: 11px;
+  line-height: 1.6;
+}
+
+.skauth-switch {
+  margin-top: 19px;
+  padding-top: 17px;
+  border-top: 1px solid #e4dfd6;
+  text-align: center;
+  color: #65738a;
+  font-size: 12px;
+}
+
+.skauth-switch a {
+  font-weight: 700;
+}
+
+.skauth-back {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 19px;
+  font-size: 12px;
+}
+
+.skauth-back a {
+  color: #526784;
+  text-decoration: none;
+}
+
+.skauth-copyright {
+  margin: 22px 0 0;
+  text-align: center;
+  color: #8d99a8;
+  font-size: 11px;
+}
+
+.skauth-notice {
+  display: grid;
+  gap: 5px;
+  padding: 12px;
+  border: 1px solid #b6d3ed;
+  border-radius: 9px;
+  background: #eef5fc;
+  color: #153f68;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.skauth-notice a {
+  color: #0d5a9c;
+}
+
+.skauth-page a:focus-visible,
+.skauth-page button:focus-visible {
+  outline: 3px solid #e9bd75;
+  outline-offset: 3px;
+}
+
+@media (max-width: 520px) {
+  .skauth-page {
+    padding: 18px 12px;
+  }
+
+  .skauth-shell {
+    padding: 25px 22px;
+  }
+
+  .skauth-logo-frame {
+    width: 84px;
+    height: 84px;
+  }
+
+  .skauth-logo {
+    width: 74px;
+    height: 74px;
+  }
+
+  .skauth-brand strong {
+    font-size: 19px;
+  }
+
+  .skauth-heading h1 {
+    font-size: 35px;
+  }
+}
+
+@media (max-width: 380px) {
+  .skauth-name-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+
+/* STEP 287E — CUSTOMER LOGIN COMPACT */
+
+/* Apply only to Customer Login */
+.skauth-login-compact .skauth-shell {
+  width: min(490px, 100%);
+  padding: 32px 40px 29px;
+}
+
+.skauth-login-compact .skauth-logo-frame {
+  width: 86px;
+  height: 86px;
+  margin-bottom: 8px;
+}
+
+.skauth-login-compact .skauth-logo {
+  width: 76px;
+  height: 76px;
+}
+
+.skauth-login-compact .skauth-ornament {
+  margin: 10px 0 7px;
+}
+
+.skauth-login-compact .skauth-heading h1 {
+  margin: 8px 0 6px;
+  font-size: 39px;
+}
+
+.skauth-login-compact .skauth-intro {
+  margin-bottom: 18px;
+}
+
+.skauth-login-compact .skauth-form {
+  gap: 10px;
+}
+
+.skauth-login-compact .skauth-form input {
+  height: 50px;
+}
+
+.skauth-login-compact .skauth-submit {
+  min-height: 51px;
+  margin-top: 5px;
+}
+
+.skauth-login-compact .skauth-switch {
+  margin-top: 15px;
+  padding-top: 14px;
+}
+
+.skauth-login-compact .skauth-back {
+  margin-top: 15px;
+}
+
+.skauth-login-compact .skauth-copyright {
+  margin-top: 17px;
+}
+
+@media (max-width: 520px) {
+  .skauth-login-compact .skauth-shell {
+    width: 100%;
+    padding: 25px 22px;
+  }
+
+  .skauth-login-compact .skauth-heading h1 {
+    font-size: 35px;
+  }
+}
+
+
+/* STEP 287G — REGISTER COMPACT */
+
+.skauth-register-compact .skauth-shell {
+  width: min(490px, 100%);
+  padding: 26px 38px 25px;
+}
+
+.skauth-register-compact .skauth-logo-frame {
+  width: 78px;
+  height: 78px;
+  margin-bottom: 6px;
+}
+
+.skauth-register-compact .skauth-logo {
+  width: 69px;
+  height: 69px;
+}
+
+.skauth-register-compact .skauth-brand strong {
+  font-size: 20px;
+}
+
+.skauth-register-compact .skauth-ornament {
+  margin: 8px 0 5px;
+}
+
+.skauth-register-compact .skauth-heading h1 {
+  margin: 7px 0 5px;
+  font-size: 35px;
+}
+
+.skauth-register-compact .skauth-intro {
+  margin-bottom: 14px;
+}
+
+.skauth-register-compact .skauth-form {
+  gap: 9px;
+}
+
+.skauth-register-compact .skauth-form label {
+  gap: 5px;
+}
+
+.skauth-register-compact .skauth-form input {
+  height: 45px;
+}
+
+.skauth-register-compact .skauth-submit {
+  min-height: 48px;
+  margin-top: 5px;
+}
+
+.skauth-register-compact .skauth-terms {
+  margin: 2px 0;
+}
+
+.skauth-register-compact .skauth-switch {
+  margin-top: 13px;
+  padding-top: 12px;
+}
+
+.skauth-register-compact .skauth-back {
+  margin-top: 13px;
+}
+
+.skauth-register-compact .skauth-copyright {
+  margin-top: 14px;
+}
+
+@media (max-width: 520px) {
+  .skauth-register-compact .skauth-shell {
+    width: 100%;
+    padding: 23px 21px;
+  }
+
+  .skauth-register-compact .skauth-heading h1 {
+    font-size: 32px;
+  }
+
+  .skauth-register-compact .skauth-name-row {
+    gap: 9px;
+  }
+}

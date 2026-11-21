@@ -1,4 +1,1254 @@
-@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=DM+Sans:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=Manrope:wght@400;500;600;700&display=swap');
 @import "tailwindcss";
-:root{--navy:#061b42;--royal:#08449b;--gold:#f1c650;--cream:#faf7f1;--ink:#192744}*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--cream);color:var(--ink);font-family:'DM Sans',Arial,sans-serif}button,input,textarea{font:inherit}button{cursor:pointer}a{text-decoration:none;color:inherit}img{display:block;max-width:100%}.notice{background:#04122c;color:#eac96f;text-align:center;padding:9px 10px;font-size:10px;letter-spacing:3px}.header{height:91px;position:sticky;top:0;z-index:20;background:#061b42f5;backdrop-filter:blur(16px);color:#fff;display:flex;align-items:center;justify-content:space-between;padding:0 5%;border-bottom:1px solid #f0c65b50}.brand{display:flex;align-items:center;gap:10px;min-width:220px;font-family:'Cormorant Garamond',serif;font-size:21px;letter-spacing:1px;line-height:1}.brand img{height:66px;width:66px;object-fit:contain}.brand em{display:block;color:var(--gold);font-size:17px;font-style:normal;letter-spacing:3px;margin-top:6px}.header nav{display:flex;gap:23px;align-items:center}.header nav a{font-size:11px;letter-spacing:1.3px;text-transform:uppercase;transition:color .2s}.header nav a:hover,.header-icons a:hover{color:var(--gold)}.header-icons{display:flex;gap:22px;font-size:25px}.mobile-toggle{display:none;color:#fff;background:none;border:0;font-size:27px}.hero{min-height:670px;display:grid;grid-template-columns:53% 47%;background:radial-gradient(circle at 28% 35%,#1558a8 0%,#082d68 40%,#041532 100%);color:#fff;overflow:hidden}.hero-text{padding:125px 7% 75px 12%;position:relative}.eyebrow,.section-heading>span{color:var(--gold);font-size:11px;letter-spacing:3px;font-weight:600}.hero h1,.story h2,.custom h2{font-family:'Cormorant Garamond',serif;font-size:clamp(62px,6.3vw,110px);font-weight:400;line-height:.95;margin:25px 0}.hero h1 i,.story h2 i,.custom h2 i,.section-heading h2 i{font-weight:400;color:#f6ce72}.hero-text>p{max-width:430px;line-height:1.9;color:#e4e8f2;font-size:14px;margin-bottom:35px}.gold-btn{display:inline-block;background:linear-gradient(120deg,#f7df92,#d6a33a);color:#10234a;padding:16px 27px;border:0;border-radius:2px;font-weight:700;font-size:12px;letter-spacing:1px;transition:transform .25s,box-shadow .25s}.gold-btn:hover{transform:translateY(-3px);box-shadow:0 12px 35px #0003}.hero-foot{margin-top:100px;font-size:10px;letter-spacing:2.5px;color:#d9e4f6}.hero-foot span{color:var(--gold);padding:0 10px}.hero-art{position:relative;min-height:670px}.hero-art>img{width:100%;height:100%;object-fit:cover;filter:saturate(.8)}.hero-art:after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,#082d68 0%,transparent 28%),linear-gradient(0deg,#061b4266,transparent 55%)}.hero-ring{position:absolute;border:1px solid #efc66d8c;border-radius:50%;width:580px;height:580px;top:45px;left:-80px;z-index:1;pointer-events:none}.hero-stamp{position:absolute;z-index:2;bottom:35px;right:35px;border:1px solid #f6d67e;color:#f6d67e;border-radius:50%;width:110px;height:110px;display:grid;place-content:center;text-align:center;font-family:'Cormorant Garamond',serif;font-size:16px;letter-spacing:2px}.marquee{background:#d6ad50;color:#081b3c;white-space:nowrap;overflow:hidden;padding:13px;font-size:10px;letter-spacing:3px;font-weight:700}.marquee div{width:max-content;animation:marquee 27s linear infinite}@keyframes marquee{to{transform:translateX(-50%)}}.section{padding:95px 6%}.section-heading{text-align:center;margin:0 auto 42px}.section-heading>span{color:#b18b43}.section-heading h2{font:400 clamp(45px,5vw,72px)/1 'Cormorant Garamond',serif;margin:14px 0;color:#082f69}.section-heading h2 i{color:#c39a45}.section-heading p{color:#777e88;font-size:13px}.category-grid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:18px;max-width:1400px;margin:auto}.category-card{text-align:center}.category-photo{height:260px;overflow:hidden;position:relative;border:1px solid #dec48b;padding:5px;background:#fff}.category-photo img{width:100%;height:100%;object-fit:cover;transition:transform .6s}.category-card:hover img{transform:scale(1.09)}.category-photo span{position:absolute;left:14px;bottom:12px;background:#082c67;color:#eecb70;padding:5px 8px;font-size:10px}.category-card h3{font:500 26px 'Cormorant Garamond',serif;margin:16px 0 5px}.category-card small{font-size:9px;color:#b08b4c;letter-spacing:1.2px}.shop-section{background:#fff}.shop-toolbar{display:flex;justify-content:space-between;gap:20px;align-items:center;max-width:1400px;margin:0 auto 30px}.filters{display:flex;gap:8px;flex-wrap:wrap}.filters button{border:1px solid #d7d9e0;background:white;padding:9px 14px;border-radius:20px;color:#34415a;font-size:11px}.filters button.active{background:#082f69;color:#fff;border-color:#082f69}.shop-toolbar input{border:1px solid #ddd;padding:11px 14px;border-radius:3px;min-width:190px}.product-grid{max-width:1400px;margin:auto;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:27px 18px}.product-photo{height:300px;position:relative;overflow:hidden;background:#e9e8e4}.product-photo img{width:100%;height:100%;object-fit:cover;transition:transform .5s}.product:hover .product-photo img{transform:scale(1.06)}.product-tag{position:absolute;top:12px;left:12px;background:#f4d991;color:#082f69;padding:6px 8px;font-size:9px;letter-spacing:1px}.heart{position:absolute;right:12px;top:10px;width:32px;height:32px;border:0;border-radius:50%;background:#fff;color:#0b3168;font-size:23px}.product-meta{display:flex;justify-content:space-between;gap:6px;margin-top:14px;color:#a08a64;font-size:9px;letter-spacing:1px;text-transform:uppercase}.product h3{font:500 22px 'Cormorant Garamond',serif;margin:7px 0}.product p{color:#6c7481;font-size:11px}.product>a{display:block;background:#082e68;color:#fff;text-align:center;padding:11px 6px;font-size:10px;letter-spacing:.7px;margin-top:12px}.product>a:hover{background:#ba9344}.empty{text-align:center;padding:40px}.story{display:grid;grid-template-columns:1fr 1fr;background:#061b42;color:#fff;min-height:540px}.story-photo img{height:100%;width:100%;object-fit:cover}.story-content{padding:95px 10%;display:flex;flex-direction:column;align-items:flex-start;justify-content:center}.story h2,.custom h2{font-size:clamp(48px,5vw,80px)}.story-content p,.custom p{line-height:1.9;color:#d2dbe9;max-width:500px;font-size:14px}.outline-btn{border:1px solid #d9b65b;color:#e9c56b;padding:15px 23px;font-size:12px;margin-top:22px}.process-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:18px;max-width:1400px;margin:auto}.process-step{padding:24px 16px;border:1px solid #dfd7c6;background:#fff;transition:transform .3s}.process-step:hover{transform:translateY(-8px)}.process-step b{font:400 50px 'Cormorant Garamond',serif;color:#c5a259}.process-line{height:1px;background:#d5bd8c;margin:16px 0}.process-step h3{font:500 24px 'Cormorant Garamond',serif}.process-step p{font-size:12px;color:#7b8190;line-height:1.8}.custom{padding:90px 9%;display:grid;grid-template-columns:1fr 1fr;gap:9%;background:linear-gradient(130deg,#082e69,#031632);color:white}.custom form{background:#fff;color:#10274e;padding:32px;display:flex;flex-direction:column;gap:16px}.custom label{display:flex;flex-direction:column;gap:8px;font-size:12px}.custom input,.custom textarea{border:1px solid #d4d7de;padding:12px;width:100%;background:#fff;color:#182744}.custom form small{font-size:11px;color:#6f7785}.gallery-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;max-width:1400px;margin:auto}.gallery-grid img{width:100%;height:320px;object-fit:cover}.gallery-note{text-align:center;color:#8a8d96;font-size:11px;margin-top:20px}footer{background:#041329;color:#fff;padding:70px 7% 20px}.footer-grid{display:grid;grid-template-columns:2fr 1fr 1fr 1.3fr;gap:50px;max-width:1400px;margin:auto}.footer-logo{height:100px;width:100px;object-fit:contain}.footer-grid h3{font:500 24px 'Cormorant Garamond',serif;color:#f2d17b}.footer-grid h4{font-size:11px;letter-spacing:2px;color:#e8c16c}.footer-grid a,.footer-grid p{display:block;color:#bdc8d8;font-size:12px;line-height:2.3}.footer-grid a:hover{color:#f2d17b}.footer-bottom{border-top:1px solid #ffffff22;max-width:1400px;margin:60px auto 0;padding-top:20px;display:flex;justify-content:space-between;color:#aab7cb;font-size:10px;letter-spacing:1px}@media(max-width:1100px){.header nav{gap:12px}.category-grid{grid-template-columns:repeat(3,1fr)}.product-grid{grid-template-columns:repeat(3,1fr)}.process-grid{grid-template-columns:repeat(3,1fr)}}@media(max-width:750px){.header{height:75px;padding:0 4%}.brand{min-width:auto;font-size:15px}.brand img{height:56px;width:56px}.brand em{font-size:12px;letter-spacing:2px}.mobile-toggle{display:block;margin-left:auto}.header nav{display:none;position:absolute;top:75px;left:0;right:0;background:#061b42;padding:25px;flex-direction:column;align-items:flex-start}.header nav.open{display:flex}.header-icons{margin-left:15px;gap:12px;font-size:22px}.hero{grid-template-columns:1fr}.hero-text{padding:90px 7% 45px}.hero h1{font-size:65px}.hero-foot{margin-top:55px}.hero-art{min-height:400px;height:400px}.hero-ring{width:360px;height:360px;top:15px;left:10%}.section{padding:70px 5%}.category-grid{grid-template-columns:repeat(2,1fr);gap:14px}.category-photo{height:230px}.product-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:25px 12px}.product-photo{height:250px}.shop-toolbar{flex-direction:column;align-items:stretch}.shop-toolbar input{width:100%}.story,.custom{grid-template-columns:1fr}.story-photo{height:360px}.story-content{padding:65px 7%}.process-grid{grid-template-columns:1fr 1fr}.gallery-grid{grid-template-columns:repeat(3,1fr)}.gallery-grid img{height:210px}.footer-grid{grid-template-columns:1fr 1fr;gap:30px}.footer-bottom{gap:15px;flex-direction:column}}@media(max-width:420px){.brand span{font-size:13px}.brand em{font-size:11px}.hero h1{font-size:56px}.category-photo{height:190px}.product-photo{height:210px}.product h3{font-size:19px}.process-grid{grid-template-columns:1fr}.gallery-grid{grid-template-columns:repeat(2,1fr)}.footer-grid{grid-template-columns:1fr 1fr}}
-@media(prefers-reduced-motion:reduce){*,*:before,*:after{scroll-behavior:auto!important;animation:none!important;transition:none!important}}
+
+:root {
+  --navy: #10213b;
+  --navy-deep: #08162c;
+  --gold: #b58a43;
+  --ivory: #f8f3e9;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  background: var(--ivory);
+  color: #1c2737;
+  font-family: "Manrope", Arial, sans-serif;
+}
+
+img, svg, video, iframe { max-width: 100%; }
+input, select, textarea, button { font: inherit; }
+button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible { outline: 2px solid #b58a43; outline-offset: 3px; }
+@media (max-width: 600px) {
+  input, select, textarea { font-size: 16px; }
+  .skaccount { padding: 42px 15px; }
+  .skaccount-item { min-width: 0; align-items: flex-start; }
+  .skaccount-item > div { min-width: 0; overflow-wrap: anywhere; }
+  .skaccount-item .skaccount-remove { min-height: 44px; padding: 8px; }
+  .skaccount-quantity button { min-width: 44px; min-height: 44px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; scroll-behavior: auto !important; transition-duration: .01ms !important; }
+}
+
+.heritage-announcement {
+  height: 30px;
+  background: #07152a;
+  color: #d5ba83;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  border-bottom: 1px solid rgba(191,163,107,.22);
+}
+
+.heritage-track {
+  display: flex;
+  width: max-content;
+  white-space: nowrap;
+  animation: heritageScroll 55s linear infinite;
+}
+
+.heritage-message {
+  display: inline-flex;
+  align-items: center;
+  gap: 32px;
+  padding-right: 32px;
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 2px;
+}
+
+.heritage-message span {
+  color: #bfa36b;
+  font-size: 10px;
+}
+
+@keyframes heritageScroll {
+  to { transform: translateX(-50%); }
+}
+
+.luxury-header {
+  position: relative;
+  z-index: 50;
+  background: var(--navy);
+  border-bottom: 1px solid rgba(191,163,107,.3);
+}
+
+.luxury-header-inner {
+  max-width: 1560px;
+  min-height: 94px;
+  margin: auto;
+  padding: 0 40px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 28px;
+}
+
+.luxury-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+  text-decoration: none;
+}
+
+.luxury-logo {
+  object-fit: contain;
+  width: 66px;
+  height: 66px;
+}
+
+.luxury-brand-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.luxury-brand-text strong {
+  color: #fff9ef;
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-size: 30px;
+  font-weight: 600;
+  line-height: .95;
+  letter-spacing: -.4px;
+}
+
+.luxury-brand-text small {
+  color: var(--gold);
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 3px;
+  margin-top: 7px;
+}
+
+.luxury-nav {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(16px, 1.8vw, 31px);
+  height: 94px;
+}
+
+.luxury-nav > a,
+.luxury-shop-wrap > button {
+  color: #eee9df;
+  font-family: "Manrope", sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: .5px;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: color .2s;
+}
+
+.luxury-nav > a:hover,
+.luxury-shop-wrap > button:hover {
+  color: #d5b57c;
+}
+
+.luxury-shop-wrap {
+  position: relative;
+  height: 100%;
+  display: flex;
+  align-items: center;
+}
+
+.luxury-shop-wrap > button {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  cursor: pointer;
+  border: 0;
+  background: transparent;
+}
+
+.luxury-dropdown {
+  position: absolute;
+  top: 77px;
+  left: -90px;
+  width: 420px;
+  background: #fffdfa;
+  border: 1px solid #e6dcc9;
+  box-shadow: 0 20px 50px rgba(0,0,0,.15);
+  padding: 25px;
+  border-radius: 3px;
+  color: #17243b;
+}
+
+.dropdown-heading {
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-size: 25px;
+  margin-bottom: 20px;
+}
+
+.dropdown-grid {
+  display: grid;
+  grid-template-columns: repeat(2,1fr);
+  gap: 8px 20px;
+}
+
+.dropdown-grid a {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 11px 0;
+  border-bottom: 1px solid #eee8df;
+  font-size: 12px;
+  text-decoration: none;
+  color: #25314a;
+}
+
+.dropdown-grid a:hover {
+  color: #9d783c;
+}
+
+.dropdown-all {
+  display: inline-block;
+  margin-top: 22px;
+  color: #96713e;
+  font-size: 12px;
+  text-decoration: none;
+  font-weight: 700;
+}
+
+.luxury-actions {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+
+.luxury-search {
+  display: flex;
+  align-items: center;
+  width: 205px;
+  height: 39px;
+  background: #fffdfa;
+  border: 1px solid #e9e3d8;
+  border-radius: 4px;
+  padding: 0 10px 0 14px;
+}
+
+.luxury-search input {
+  width: 100%;
+  min-width: 0;
+  border: none;
+  outline: none;
+  background: transparent;
+  color: #26354a;
+  font-size: 11px;
+}
+
+.luxury-search button {
+  background: transparent;
+  border: 0;
+  color: #9b7b49;
+  cursor: pointer;
+}
+
+.action-icon {
+  color: #f5f1e8;
+  text-decoration: none;
+  position: relative;
+  transition: color .2s, transform .2s;
+}
+
+.action-icon:hover {
+  color: var(--gold);
+  transform: translateY(-2px);
+}
+
+.cart-icon span {
+  position: absolute;
+  top: -10px;
+  right: -10px;
+  color: var(--navy);
+  background: #d5b57c;
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-size: 9px;
+  font-weight: 700;
+}
+
+.mobile-toggle,
+.mobile-navigation {
+  display: none;
+}
+
+.empty-home {
+  min-height: calc(100vh - 125px);
+  background: #f8f6f1;
+  display: grid;
+  place-items: center;
+}
+
+.home-ornament {
+  color: #d6c5a5;
+  font-size: 25px;
+  opacity: .4;
+}
+
+@media (max-width: 1250px) {
+  .luxury-header-inner {
+    padding: 0 24px;
+    gap: 18px;
+  }
+  .luxury-brand-text strong {
+    font-size: 25px;
+  }
+  .luxury-nav {
+    gap: 14px;
+  }
+  .luxury-search {
+    width: 160px;
+  }
+}
+
+@media (max-width: 1050px) {
+  .luxury-nav {
+    display: none;
+  }
+  .mobile-toggle {
+    display: block;
+    background: none;
+    border: 0;
+    color: #fff;
+    cursor: pointer;
+  }
+  .mobile-navigation {
+    display: flex;
+    flex-direction: column;
+    background: #102441;
+    padding: 15px 25px 25px;
+    max-height: 75vh;
+    overflow-y: auto;
+  }
+  .mobile-navigation a {
+    color: #fff;
+    padding: 12px 0;
+    border-bottom: 1px solid rgba(255,255,255,.1);
+    font-size: 13px;
+    text-decoration: none;
+  }
+}
+
+@media (max-width: 640px) {
+  .luxury-header-inner {
+    min-height: 75px;
+    padding: 0 15px;
+  }
+  .luxury-logo {
+    width: 47px;
+    height: 47px;
+  }
+  .luxury-brand-text strong {
+    font-size: 22px;
+  }
+  .luxury-brand-text small {
+    font-size: 7px;
+    letter-spacing: 2px;
+  }
+  .luxury-actions {
+    gap: 12px;
+  }
+  .luxury-search {
+    display: none;
+  }
+  .action-icon:nth-of-type(2) {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .heritage-track {
+    animation: none;
+  }
+}
+
+/* SRIKALAHASTI — LUXURY HEADER V4 */
+
+.sk-announcement {
+  height: 31px;
+  overflow: hidden;
+  background: #07162e;
+  border-bottom: 1px solid rgba(208,174,105,.28);
+  display: flex;
+  align-items: center;
+}
+
+.sk-announcement-track {
+  display: flex;
+  width: max-content;
+  animation: sk-marquee 65s linear infinite;
+}
+
+.sk-announcement-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 24px;
+  white-space: nowrap;
+  padding-right: 24px;
+  color: #d9bd85;
+  font-size: 9px;
+  font-weight: 500;
+  letter-spacing: 2px;
+}
+
+.sk-announcement-item span {
+  color: #c49a51;
+  font-size: 10px;
+}
+
+@keyframes sk-marquee {
+  to { transform: translateX(-50%); }
+}
+
+.sk-header {
+  position: relative;
+  z-index: 100;
+  background: #0b2145;
+  color: #f7f2e9;
+  border-bottom: 1px solid rgba(210,178,115,.3);
+}
+
+.sk-header-main {
+  max-width: 1440px;
+  min-height: 100px;
+  margin: auto;
+  padding: 14px 48px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 28px;
+}
+
+.sk-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 14px;
+  text-decoration: none;
+  color: #fff;
+  flex-shrink: 0;
+}
+
+.sk-logo {
+  width: 64px;
+  height: 64px;
+  object-fit: contain;
+}
+
+.sk-brand-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.sk-brand-copy strong {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 28px;
+  font-weight: 400;
+  line-height: 1;
+  letter-spacing: -.7px;
+  text-transform: uppercase;
+  color: #fffaf0;
+}
+
+.sk-brand-copy small {
+  font-size: 10px;
+  letter-spacing: 5px;
+  font-weight: 500;
+  color: #d9b86f;
+}
+
+.sk-header-right {
+  display: flex;
+  align-items: center;
+  gap: 30px;
+}
+
+.sk-search {
+  display: flex;
+  align-items: center;
+  width: 310px;
+  height: 43px;
+  padding: 0 8px 0 18px;
+  border-radius: 100px;
+  background: #f9f6ef;
+  border: 1px solid #e8ddc9;
+  transition: box-shadow .25s, border-color .25s;
+}
+
+.sk-search:focus-within {
+  border-color: #caa65f;
+  box-shadow: 0 0 0 3px rgba(202,166,95,.15);
+}
+
+.sk-search input {
+  width: 100%;
+  min-width: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: #172b49;
+  font-size: 12px;
+  font-family: inherit;
+}
+
+.sk-search input::placeholder {
+  color: #777d86;
+}
+
+.sk-search button {
+  border: 0;
+  background: transparent;
+  color: #19365a;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  padding: 6px;
+}
+
+.sk-actions {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+
+.sk-actions a {
+  color: #f5ead8;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: color .2s, transform .2s;
+}
+
+.sk-actions a:hover {
+  color: #dfbd79;
+  transform: translateY(-2px);
+}
+
+.sk-nav-row {
+  border-top: 1px solid rgba(220,194,145,.16);
+}
+
+.sk-nav {
+  min-height: 55px;
+  max-width: 1440px;
+  margin: auto;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: clamp(22px,3.2vw,49px);
+}
+
+.sk-nav > a,
+.sk-shop > button {
+  position: relative;
+  text-decoration: none;
+  color: #f0e9de;
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 1.25px;
+  text-transform: uppercase;
+  transition: color .2s;
+}
+
+.sk-nav > a:hover,
+.sk-shop > button:hover {
+  color: #e2c28a;
+}
+
+.sk-nav > a::after {
+  content: "";
+  position: absolute;
+  bottom: -8px;
+  left: 0;
+  width: 0;
+  height: 1px;
+  background: #d6b36d;
+  transition: width .25s;
+}
+
+.sk-nav > a:hover::after {
+  width: 100%;
+}
+
+.sk-shop {
+  position: relative;
+}
+
+.sk-shop > button {
+  border: 0;
+  background: transparent;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  cursor: pointer;
+  padding: 15px 0;
+}
+
+.sk-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 470px;
+  padding: 26px;
+  background: #fffaf3;
+  color: #142c4b;
+  border: 1px solid #e4d5b8;
+  box-shadow: 0 20px 55px rgba(0,0,0,.2);
+  border-radius: 4px;
+  z-index: 200;
+}
+
+.sk-dropdown p {
+  color: #9a7846;
+  font-size: 10px;
+  letter-spacing: 2px;
+  margin: 0 0 20px;
+}
+
+.sk-dropdown-grid {
+  display: grid;
+  grid-template-columns: repeat(2,minmax(0,1fr));
+  gap: 8px 20px;
+}
+
+.sk-dropdown-grid a,
+.sk-dropdown-all {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 0;
+  color: #183454;
+  text-decoration: none;
+  font-size: 13px;
+  border-bottom: 1px solid #eee5d7;
+}
+
+.sk-dropdown-grid a:hover,
+.sk-dropdown-all:hover {
+  color: #b68a43;
+}
+
+.sk-dropdown-all {
+  margin-top: 15px;
+  font-weight: 600;
+}
+
+.sk-mobile-toggle,
+.sk-mobile-nav {
+  display: none;
+}
+
+@media (max-width: 1100px) {
+  .sk-header-main {
+    padding: 14px 25px;
+  }
+
+  .sk-search {
+    width: 240px;
+  }
+
+  .sk-nav {
+    gap: 22px;
+  }
+}
+
+@media (max-width: 850px) {
+  .sk-header-main {
+    min-height: 76px;
+    padding: 10px 18px;
+  }
+
+  .sk-logo {
+    width: 48px;
+    height: 48px;
+  }
+
+  .sk-brand-copy strong {
+    font-size: 20px;
+  }
+
+  .sk-brand-copy small {
+    font-size: 8px;
+    letter-spacing: 3px;
+  }
+
+  .sk-header-right {
+    gap: 16px;
+  }
+
+  .sk-search {
+    display: none;
+  }
+
+  .sk-actions {
+    gap: 15px;
+  }
+
+  .sk-nav-row {
+    display: none;
+  }
+
+  .sk-mobile-toggle {
+    display: grid;
+    place-items: center;
+    border: 0;
+    background: transparent;
+    color: #fff;
+    cursor: pointer;
+  }
+
+  .sk-mobile-nav {
+    display: flex;
+    flex-direction: column;
+    padding: 15px 22px 25px;
+    background: #0b2145;
+    border-top: 1px solid rgba(220,194,145,.2);
+    max-height: 70vh;
+    overflow-y: auto;
+  }
+
+  .sk-mobile-nav a {
+    padding: 12px 4px;
+    border-bottom: 1px solid rgba(255,255,255,.09);
+    color: #f7f1e7;
+    text-decoration: none;
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 440px) {
+  .sk-brand {
+    gap: 7px;
+  }
+
+  .sk-brand-copy strong {
+    font-size: 16px;
+  }
+
+  .sk-brand-copy small {
+    font-size: 7px;
+    letter-spacing: 2px;
+  }
+
+  .sk-actions {
+    gap: 11px;
+  }
+
+  .sk-actions svg {
+    width: 19px;
+    height: 19px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sk-announcement-track {
+    animation: none;
+  }
+}
+
+/* =========================================
+   SRIKALAHASTI KALAMKARI
+   V8 — ROYAL HERITAGE HEADER
+   ========================================= */
+
+:root {
+  --sk-royal-navy: #0b1d3b;
+  --sk-antique-gold: #c9a461;
+  --sk-heritage-ivory: #f8f4ec;
+}
+
+/* Premium navy gradient */
+.luxury-header {
+  background: linear-gradient(
+    115deg,
+    #08172e 0%,
+    #10274b 52%,
+    #091a34 100%
+  );
+}
+
+/* Refined brand typography */
+.luxury-brand-text strong {
+  font-family: Georgia, "Times New Roman", serif;
+  font-weight: 700;
+  letter-spacing: -0.035em;
+}
+
+.luxury-brand-text small {
+  color: var(--sk-antique-gold);
+  letter-spacing: 0.28em;
+}
+
+/* Refined scrolling announcement */
+.heritage-announcement {
+  background:
+    radial-gradient(
+      circle at 15% 50%,
+      rgba(201, 164, 97, 0.09),
+      transparent 32%
+    ),
+    #07162d;
+
+  border-bottom: 1px solid rgba(201, 164, 97, 0.35);
+}
+
+.heritage-message {
+  color: #d9b979;
+  letter-spacing: 0.13em;
+}
+
+/* Kalamkari-inspired floral divider */
+.luxury-header-inner {
+  position: relative;
+}
+
+.luxury-header-inner::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 9px;
+  pointer-events: none;
+  opacity: 0.72;
+
+  background-image:
+    radial-gradient(
+      ellipse at 50% 50%,
+      #c9a461 0 13%,
+      transparent 16%
+    ),
+    radial-gradient(
+      ellipse at 25% 50%,
+      #a77b42 0 10%,
+      transparent 13%
+    ),
+    radial-gradient(
+      ellipse at 75% 50%,
+      #a77b42 0 10%,
+      transparent 13%
+    );
+
+  background-size: 38px 9px;
+  background-repeat: repeat-x;
+}
+
+/* Premium search */
+.luxury-search {
+  background: var(--sk-heritage-ivory);
+  border: 1px solid rgba(201, 164, 97, 0.65);
+}
+
+/* Elegant icons */
+.action-icon {
+  transition:
+    color 0.25s ease,
+    transform 0.25s ease;
+}
+
+.action-icon:hover {
+  color: #e5bf77;
+  transform: translateY(-2px);
+}
+
+/* Navigation refinement */
+.luxury-nav a,
+.luxury-nav button {
+  transition: color 0.25s ease;
+}
+
+.luxury-nav a:hover,
+.luxury-nav button:hover {
+  color: #e5bf77;
+}
+
+/* Mobile: subtle divider */
+@media (max-width: 768px) {
+  .luxury-header-inner::after {
+    height: 5px;
+    background-size: 28px 5px;
+    opacity: 0.5;
+  }
+}
+
+
+/* =========================================
+   V8 FIX — ACTIVE SRIKALAHASTI HEADER
+   ========================================= */
+
+.sk-header {
+  background: linear-gradient(
+    115deg,
+    #07162d 0%,
+    #112b50 50%,
+    #081a34 100%
+  );
+}
+
+/* Kalamkari-inspired ornamental divider */
+.sk-header-main {
+  position: relative;
+}
+
+.sk-header-main::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 8px;
+  pointer-events: none;
+  z-index: 1;
+
+  background-image:
+    radial-gradient(
+      ellipse at center,
+      rgba(204, 161, 89, 0.85) 0 18%,
+      transparent 21%
+    ),
+    linear-gradient(
+      90deg,
+      transparent,
+      rgba(204, 161, 89, 0.45),
+      transparent
+    );
+
+  background-size: 36px 8px, 100% 1px;
+  background-repeat: repeat-x, no-repeat;
+  background-position: center, center;
+}
+
+/* Premium brand */
+.sk-brand-name {
+  font-family: Georgia, "Times New Roman", serif;
+  font-weight: 700;
+  letter-spacing: -0.035em;
+}
+
+.sk-brand-sub {
+  color: #d6b371;
+}
+
+/* Announcement bar */
+.sk-heritage-bar {
+  background: linear-gradient(
+    90deg,
+    #07152b,
+    #112849,
+    #07152b
+  );
+  border-bottom: 1px solid rgba(201, 164, 97, 0.35);
+}
+
+/* Premium navigation */
+.sk-navigation {
+  background: rgba(6, 19, 40, 0.35);
+  border-top: 0;
+}
+
+/* Small premium search box */
+.sk-search {
+  border-color: rgba(201, 164, 97, 0.65);
+}
+
+/* Mobile */
+@media (max-width: 768px) {
+  .sk-header-main::after {
+    height: 5px;
+    background-size: 28px 5px, 100% 1px;
+    opacity: 0.55;
+  }
+}
+
+
+/* ============================================
+   V9 — SRIKALAHASTI KALAMKARI
+   PREMIUM HERITAGE HEADER REFINEMENT
+   ============================================ */
+
+/* Rich but restrained royal navy */
+.sk-header {
+  background:
+    linear-gradient(
+      110deg,
+      #09172d 0%,
+      #102749 48%,
+      #0b1d38 100%
+    );
+}
+
+/* Remove V8 broken dotted divider */
+.sk-header-main::after {
+  content: "" !important;
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100%;
+  height: 14px;
+  background-image:
+    url("/ornaments/kalamkari-vine.svg") !important;
+  background-repeat: repeat-x !important;
+  background-size: 160px 14px !important;
+  background-position: center !important;
+  opacity: 0.62;
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Brand refinement */
+.sk-brand-name {
+  font-family: Georgia, "Times New Roman", serif;
+  font-weight: 700;
+  letter-spacing: -0.035em;
+  line-height: 1.05;
+}
+
+.sk-brand-sub {
+  color: #d7b575;
+  letter-spacing: 0.3em;
+  line-height: 1.2;
+}
+
+.sk-brand-caption {
+  color: #d9c6a5;
+  letter-spacing: 0.14em;
+}
+
+/* Announcement strip */
+.sk-heritage-bar {
+  background: #07162d;
+  border-bottom:
+    1px solid rgba(201, 164, 97, 0.32);
+}
+
+/* Hide tiny decorative dots if present */
+.sk-heritage-bar {
+  background-image: none !important;
+}
+
+/* Elegant search */
+.sk-search {
+  background: #faf7f1;
+  border: 1px solid #c9ad7c;
+  box-shadow: none;
+}
+
+.sk-search:focus-within {
+  border-color: #d9b56d;
+  box-shadow:
+    0 0 0 3px rgba(201, 164, 97, 0.12);
+}
+
+/* Premium navigation */
+.sk-navigation {
+  background: rgba(5, 16, 34, 0.22);
+}
+
+.sk-navigation > a,
+.sk-shop > button {
+  position: relative;
+  transition: color 0.25s ease;
+}
+
+.sk-navigation > a:hover,
+.sk-shop > button:hover {
+  color: #d8b574;
+}
+
+/* Subtle animated underline */
+.sk-navigation > a::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -7px;
+  height: 1px;
+  background: #d7b575;
+  transform: scaleX(0);
+  transform-origin: center;
+  transition: transform 0.25s ease;
+}
+
+.sk-navigation > a:hover::after {
+  transform: scaleX(1);
+}
+
+/* Mobile refinement */
+@media (max-width: 768px) {
+  .sk-header-main::after {
+    height: 8px;
+    background-size: 110px 8px !important;
+    opacity: 0.42;
+  }
+
+  .sk-brand-name {
+    letter-spacing: -0.025em;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sk-navigation > a::after {
+    transition: none;
+  }
+}
+
+
+/* V10 — CLEAN GOLD DIVIDER */
+
+.sk-header-main::after {
+  content: "" !important;
+  position: absolute !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+
+  width: 100% !important;
+  height: 1px !important;
+
+  background: #EEC601 !important;
+  background-image: none !important;
+  background-size: auto !important;
+  background-repeat: no-repeat !important;
+
+  opacity: 0.75 !important;
+  pointer-events: none !important;
+}
+
+/* Mobile — same clean divider */
+@media (max-width: 768px) {
+  .sk-header-main::after {
+    height: 1px !important;
+    background: #EEC601 !important;
+    background-image: none !important;
+    opacity: 0.65 !important;
+  }
+}
+
+
+/* V11 — FULL WIDTH GOLD & TICKER */
+
+/* Full-width divider */
+.sk-header-main::after {
+  content: "" !important;
+  position: absolute !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  width: 100% !important;
+  height: 1px !important;
+  background: #EEC601 !important;
+  background-image: none !important;
+  opacity: 1 !important;
+}
+
+/* Extend gold line across the entire viewport */
+.sk-header {
+  position: relative;
+}
+
+.sk-header-main {
+  position: static !important;
+}
+
+.sk-header-main::after {
+  display: none !important;
+}
+
+.sk-navigation {
+  border-top: 1px solid #EEC601 !important;
+}
+
+/* Scrolling announcement text */
+.sk-heritage-bar,
+.sk-heritage-bar .sk-heritage-track,
+.sk-heritage-bar .sk-heritage-set,
+.sk-heritage-bar .sk-heritage-set span {
+  color: #EEC601 !important;
+}
+
+/* Gold decorative symbols */
+.sk-heritage-bar b,
+.sk-heritage-bar strong {
+  color: #EEC601 !important;
+}
+
+/* Mobile */
+@media (max-width: 768px) {
+  .sk-navigation {
+    border-top-color: #EEC601 !important;
+  }
+}
+
+
+/* V12 — SRIKALAHASTI SIGNATURE GOLD PALETTE */
+
+:root {
+  --sk-gold: #EEC601;
+  --sk-antique-gold: #EEC601;
+  --sk-gold-light: #FFE45C;
+  --sk-gold-dark: #B99A00;
+}
+
+/* Announcement scrolling text */
+.sk-heritage-bar,
+.sk-heritage-bar .sk-heritage-set,
+.sk-heritage-bar .sk-heritage-set span,
+.sk-heritage-bar b,
+.sk-heritage-bar strong {
+  color: var(--sk-gold) !important;
+}
+
+/* Full-width gold divider */
+.sk-navigation {
+  border-top: 1px solid var(--sk-gold) !important;
+}
+
+/* Brand accents */
+.sk-brand-sub {
+  color: var(--sk-gold) !important;
+}
+
+/* Search border and focus */
+.sk-search:focus-within {
+  border-color: var(--sk-gold) !important;
+}
+
+/* Navigation hover */
+.sk-navigation > a:hover,
+.sk-shop > button:hover {
+  color: var(--sk-gold) !important;
+}
+
+.sk-navigation > a::after {
+  background: var(--sk-gold) !important;
+}
+
+/* Action icon hover */
+.sk-icon:hover {
+  color: var(--sk-gold) !important;
+}
+
+
+
+/* Pure white website background */
+html,
+body {
+  background-color: #ffffff;
+}

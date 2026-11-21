@@ -1,9 +1,13 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // HERO_ISOLATED_TEST_DISTDIR_V1
+  ...(process.env.HERO_ISOLATED_TEST === "1"
+    ? { distDir: ".next-hero-test" }
+    : {}),
   /* config options here */
-  cacheComponents: true,
-  partialPrefetching: true,
+  cacheComponents: false,
+  partialPrefetching: false,
   turbopack: {
     rules: {
       "*.css": {

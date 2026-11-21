@@ -4,7 +4,7 @@ import {products} from "@/data/products";
 const cats=["Sarees","Dupattas","Lehengas","Fabrics","Kurtas","Home Decor"];
 const photos=[
 "https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=1200&q=85",
-"https://images.unsplash.com/photo-1583391733956-6c78276477e2?auto=format&fit=crop&w=1200&q=85",
+"/images/products/ivory-peacock.webp",
 "https://images.unsplash.com/photo-1597983073493-88cd35cf93b0?auto=format&fit=crop&w=1200&q=85",
 "https://images.unsplash.com/photo-1617627143750-d86bc21e42bb?auto=format&fit=crop&w=1200&q=85",
 "https://images.unsplash.com/photo-1605000797499-95a51c5269ae?auto=format&fit=crop&w=1200&q=85",

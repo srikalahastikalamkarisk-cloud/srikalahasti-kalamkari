@@ -1,0 +1,64 @@
+SRIKALAHASTI KALAMKARI
+ADVANCED PRODUCT SCHEMA — PROPOSED FIELDS
+
+EXISTING FIELDS — PRESERVE
+id
+name
+slug
+description
+price
+stock
+images
+isActive
+categoryId
+createdAt
+updatedAt
+
+PRICING
+originalPrice       Decimal? (10,2)
+pricingMode         String default "FIXED"
+pricePerMeter       Decimal? (10,2)
+discountPercentage  Calculated, not stored
+
+PRODUCT INFORMATION
+sku                 String?
+shortDescription    String? @db.Text
+brand               String?
+fabricMaterial      String?
+length              String?
+width               String?
+washCare            String? @db.Text
+specifications      Json?
+
+DYNAMIC OPTIONS
+colors              Json?
+sizes               Json?
+meterOptions        Json?
+variants            Separate relational model (planned)
+
+FEATURE VISIBILITY
+showColors          Boolean default false
+showSizes           Boolean default false
+showMeters          Boolean default false
+showSpecifications  Boolean default false
+showWashCare        Boolean default false
+allowCOD            Boolean default false
+freeShipping        Boolean default false
+allowEnquiry        Boolean default true
+
+PRODUCT DISPLAY
+isFeatured          Boolean default false
+isNewArrival        Boolean default false
+seoTitle            String?
+seoDescription      String? @db.Text
+
+SAFETY RULES
+- Preserve existing product IDs and category relationships
+- Do not remove existing columns
+- Use nullable fields or safe defaults
+- Keep existing price and stock fields compatible
+- Validate prices, variants and stock in API
+- Avoid database migration until schema is reviewed
+- Use transactional stock updates during checkout
+- Product options appear only when enabled
+- Never expose unpublished products on storefront

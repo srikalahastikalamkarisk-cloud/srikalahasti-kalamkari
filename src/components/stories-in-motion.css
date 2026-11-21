@@ -1,0 +1,156 @@
+/* Stories in Motion V4 — independent, continuous premium reel rail */
+.sim4-section{background:#fff;color:#10213b;padding:clamp(64px,7vw,105px) 0 66px;overflow:hidden}
+.sim4-heading{text-align:center;margin:0 auto 40px;padding:0 20px}
+.sim4-eyebrow{font-size:10px;font-weight:700;letter-spacing:.25em;color:#b58a43}
+.sim4-heading h2{font:400 clamp(42px,5.1vw,74px)/1.09 Georgia,serif;letter-spacing:-.04em;margin:14px 0}
+.sim4-heading h2 em{color:#b58a43;font-weight:400}.sim4-heading p{font-size:13px;color:#798292}
+.sim4-stage{position:relative;perspective:1100px}
+.sim4-stage:before,.sim4-stage:after{content:"";position:absolute;z-index:4;top:0;bottom:0;width:min(7vw,100px);pointer-events:none}
+.sim4-stage:before{left:0;background:linear-gradient(90deg,#fff,transparent)}.sim4-stage:after{right:0;background:linear-gradient(270deg,#fff,transparent)}
+.sim4-rail{display:flex;gap:clamp(13px,1.55vw,25px);overflow-x:auto;scrollbar-width:none;overscroll-behavior-x:contain;align-items:center;padding:35px max(25px,calc((100vw - 1200px)/2)) 50px;touch-action:pan-x pan-y}
+.sim4-rail::-webkit-scrollbar{display:none}
+.sim4-card{flex:0 0 clamp(165px,16vw,250px);min-width:0;position:relative;opacity:.78;transform:perspective(1000px) rotateY(7deg) scale(.92);transition:transform .75s cubic-bezier(.2,.75,.2,1),opacity .75s,filter .75s;filter:saturate(.85)}
+.sim4-card.is-active{opacity:1;transform:perspective(1000px) rotateY(0) scale(1.055) translateY(-5px);filter:none;z-index:2}
+.sim4-card.is-active~.sim4-card{transform:perspective(1000px) rotateY(-7deg) scale(.92)}
+.sim4-frame{aspect-ratio:9/16;position:relative;border-radius:20px;overflow:hidden;background:linear-gradient(145deg,#f4e8d4,#d8c3a5);border:1px solid #e1d3bd;box-shadow:0 18px 42px #10213b17;transition:box-shadow .6s,border-color .6s}
+.sim4-card.is-active .sim4-frame{border:2px solid #b58a43;box-shadow:0 28px 75px #10213b33,0 0 0 5px #b58a431a}
+.sim4-frame video,.sim4-frame iframe{display:block;width:100%;height:100%;border:0;object-fit:cover}
+.sim4-cover{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:14px;background-size:cover;background-position:center;color:#94703d;font:500 clamp(14px,1.35vw,20px)/1.5 Georgia,serif;letter-spacing:.11em}
+.sim4-pending{pointer-events:none}.sim4-flower{font-size:34px}
+.sim4-number{position:absolute;top:12px;left:12px;background:#10213bdc;color:#fff;padding:7px 10px;border-radius:30px;font:11px Arial,sans-serif;z-index:2}
+.sim4-sound{position:absolute;top:11px;right:11px;width:36px;height:36px;border-radius:50%;border:0;background:#fffef0;color:#10213b;font-size:20px;cursor:pointer;z-index:3}
+.sim4-external{position:absolute;bottom:72px;left:50%;transform:translateX(-50%);z-index:3;white-space:nowrap;background:#fff;color:#10213b;border-radius:30px;padding:9px 15px;font-size:11px}
+.sim4-overlay{position:absolute;bottom:0;left:0;right:0;padding:45px 15px 17px;background:linear-gradient(0deg,#07182dcc,transparent);color:#fff;display:flex;flex-direction:column;gap:5px;pointer-events:none}
+.sim4-overlay span{font-size:8px;letter-spacing:.18em;color:#e9c98b}.sim4-overlay strong{font:400 clamp(14px,1.2vw,18px) Georgia,serif}
+.sim4-footer{width:min(1350px,90%);margin:8px auto 0;display:grid;grid-template-columns:1fr 1fr 1fr;align-items:center;gap:16px}
+.sim4-current{display:flex;flex-direction:column;gap:7px}.sim4-current span{font:10px Arial,sans-serif;letter-spacing:.13em;color:#b58a43}.sim4-current strong{font:400 19px Georgia,serif}
+.sim4-progress{display:flex;justify-content:center;gap:6px}.sim4-progress button{width:27px;height:3px;background:#ddd5c9;border:0;border-radius:5px;cursor:pointer;transition:width .3s,background .3s}.sim4-progress button.is-active{width:46px;background:#b58a43}
+.sim4-controls{display:flex;justify-content:flex-end;gap:9px}.sim4-controls button{width:40px;height:40px;border-radius:50%;border:1px solid #d6bc92;background:#fff;color:#10213b;cursor:pointer;transition:background .2s,color .2s}.sim4-controls button:hover{background:#10213b;color:#fff}
+@media(max-width:700px){.sim4-section{padding:60px 0 40px}.sim4-rail{padding:25px 18vw 40px;gap:12px}.sim4-card{flex-basis:52vw}.sim4-footer{grid-template-columns:1fr auto}.sim4-progress{grid-column:1/-1;grid-row:2}.sim4-current strong{font-size:15px}.sim4-controls button{width:35px;height:35px}}
+@media(prefers-reduced-motion:reduce){.sim4-card,.sim4-frame,.sim4-progress button{transition:none!important}}
+
+/* V5: premium Watch & Shop-inspired continuous reel gallery */
+.sim4-section{background:#fff!important;color:#10213b;padding:clamp(52px,5.5vw,86px) 0 58px}
+.sim4-heading{margin-bottom:25px}
+.sim4-heading h2{font-size:clamp(38px,4vw,60px)}
+.sim4-stage{perspective:none}
+.sim4-stage:before,.sim4-stage:after{width:clamp(12px,3vw,45px)}
+.sim4-rail{align-items:stretch;gap:12px;padding:14px 32px 32px;scroll-snap-type:none}
+.sim4-card,.sim4-card.is-active,.sim4-card.is-active~.sim4-card{flex:0 0 clamp(175px,13.8vw,235px);opacity:1;transform:none;filter:none;z-index:auto;transition:transform .3s ease}
+.sim4-card:hover{transform:translateY(-7px);z-index:3}
+.sim4-frame{border-radius:12px;border:1px solid #e2d3bc;box-shadow:0 6px 20px #10213b12;aspect-ratio:9/16}
+.sim4-card.is-active .sim4-frame{border:1px solid #b58a43;box-shadow:0 6px 24px #10213b1e}
+.sim4-card:hover .sim4-frame{border-color:#b58a43;box-shadow:0 16px 35px #10213b25}
+.sim4-number{font-size:10px;padding:6px 9px}
+.sim4-overlay{padding:48px 12px 14px}
+.sim4-footer{margin-top:0}
+@media(max-width:700px){.sim4-section{padding:48px 0 36px}.sim4-rail{padding:12px 16px 25px;gap:10px}.sim4-card,.sim4-card.is-active,.sim4-card.is-active~.sim4-card{flex-basis:44vw}.sim4-heading{margin-bottom:20px}}
+@media(prefers-reduced-motion:reduce){.sim4-card:hover{transform:none}}
+
+/* V6: reference-inspired framed video rail; overrides only this section */
+.sim4-section{background:#fff!important;padding:55px 0 52px!important}
+.sim4-heading{margin-bottom:25px!important}
+.sim4-stage:before,.sim4-stage:after{width:18px}
+.sim4-rail{gap:11px!important;padding:12px 24px 28px!important;scroll-behavior:auto!important;scroll-snap-type:none!important}
+.sim4-card,.sim4-card.is-active,.sim4-card.is-active~.sim4-card{flex:0 0 clamp(170px,13.3vw,230px)!important;transform:none!important;opacity:1!important;filter:none!important}
+.sim4-frame,.sim4-card.is-active .sim4-frame{border:2.5px solid #805332!important;border-radius:11px!important;box-shadow:0 7px 18px #10213b16!important;aspect-ratio:9/16}
+.sim4-card:hover .sim4-frame{border-color:#b58a43!important;box-shadow:0 15px 30px #10213b29!important}
+.sim4-card:hover{transform:translateY(-5px)!important}
+.sim4-overlay{padding:45px 12px 13px!important}
+.sim4-footer{margin-top:0!important}
+@media(max-width:700px){.sim4-rail{padding:12px 14px 24px!important}.sim4-card,.sim4-card.is-active,.sim4-card.is-active~.sim4-card{flex-basis:45vw!important}}
+@media(prefers-reduced-motion:reduce){.sim4-card:hover{transform:none!important}}
+
+
+/* STORIES FINAL V11 START */
+/* Exactly two traditional Kalamkari dividers: section top and bottom. */
+.sim4-section { background: #fff !important; padding-top: 0 !important; padding-bottom: 0 !important; border: 0 !important; }
+.sim4-section::before, .sim4-section::after {
+  content: "" !important; display: block !important; position: relative !important;
+  width: 100% !important; height: 30px !important; box-sizing: border-box;
+  background-color: #faf4ed !important;
+  background-image: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2222%22%20height%3D%2230%22%20viewBox%3D%220%200%2022%2030%22%3E%3Cg%20fill%3D%22none%22%20stroke%3D%22%23c9ad91%22%20stroke-width%3D%221.15%22%20opacity%3D%22.82%22%3E%3Cpath%20d%3D%22M11%201C4%207%204%2010%2011%2015C18%2010%2018%207%2011%201Z%20M11%2015C4%2021%204%2024%2011%2029C18%2024%2018%2021%2011%2015Z%22%2F%3E%3Cpath%20d%3D%22M0%201C-7%207%20-7%2010%200%2015C7%2010%207%207%200%201Z%20M22%201C15%207%2015%2010%2022%2015C29%2010%2029%207%2022%201Z%20M0%2015C-7%2021%20-7%2024%200%2029C7%2024%207%2021%200%2015Z%20M22%2015C15%2021%2015%2024%2022%2029C29%2024%2029%2021%2022%2015Z%22%2F%3E%3Ccircle%20cx%3D%2211%22%20cy%3D%228%22%20r%3D%221.5%22%2F%3E%3Ccircle%20cx%3D%2211%22%20cy%3D%2222%22%20r%3D%221.5%22%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E") !important;
+  background-repeat: repeat-x !important; background-position: center !important;
+  background-size: 22px 30px !important;
+  border-top: 1px solid #f0e3d5 !important;
+  border-bottom: 1px solid #f0e3d5 !important;
+  pointer-events: none;
+}
+.sim4-section::before { margin: 0 0 clamp(36px,4.2vw,60px) !important; }
+.sim4-section::after { margin: clamp(34px,4vw,54px) 0 0 !important; }
+/* Refined reels: soft border, no heavy dark frame. */
+.sim4-section .sim4-frame, .sim4-section .sim4-card.is-active .sim4-frame {
+  border: 1px solid #dfd0bb !important; border-radius: 12px !important;
+  outline: none !important; box-shadow: 0 6px 20px rgba(16,33,59,.09) !important;
+}
+.sim4-section .sim4-card:hover .sim4-frame { border-color: #b58a43 !important; box-shadow: 0 12px 26px rgba(16,33,59,.14) !important; }
+@media(max-width:700px) { .sim4-section::before { margin-bottom: 30px !important; } .sim4-section::after { margin-top: 30px !important; } }
+/* STORIES FINAL V11 END */
+
+
+/* STORIES VIDEO PLAYBACK V12 */
+.sim4-section .sim4-frame > video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+  object-position: center;
+  background: #14213a;
+}
+
+.sim4-section .sim4-frame > iframe {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
+
+.sim4-section .sim4-sound {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  background: rgba(12, 25, 44, .78);
+  color: #fff;
+  border: 1px solid rgba(255,255,255,.45);
+  backdrop-filter: blur(8px);
+}
+
+.sim4-section .sim4-sound:hover {
+  background: #b58a43;
+  color: #fff;
+}
+
+.sim4-section .sim4-cover.sim4-pending {
+  z-index: 1;
+}
+
+
+/* STORIES VIDEO ACTIVATION V13 */
+.sim4-section .sim4-frame > video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  display: block;
+  z-index: 0;
+}
+
+.sim4-section .sim4-frame > .sim4-pending {
+  z-index: 1;
+  pointer-events: none;
+}
+
+.sim4-section .sim4-frame > .sim4-overlay {
+  z-index: 2;
+}
+
+.sim4-section .sim4-frame > .sim4-sound {
+  z-index: 4;
+}

@@ -1,0 +1,3 @@
+ALTER TABLE `Order`
+  ADD COLUMN `inventoryStatus` VARCHAR(191) NOT NULL DEFAULT 'PENDING',
+  ADD COLUMN `inventoryDeductedAt` DATETIME(3) NULL;

@@ -1,0 +1,7 @@
+ALTER TABLE `HeroSlide`
+  ADD COLUMN `desktopSourceUrl` TEXT NULL,
+  ADD COLUMN `mobileSourceUrl` TEXT NULL,
+  ADD COLUMN `videoFallbackMs` INTEGER NOT NULL DEFAULT 30000,
+  ADD COLUMN `soundControlsEnabled` BOOLEAN NOT NULL DEFAULT true,
+  ADD COLUMN `initialMuted` BOOLEAN NOT NULL DEFAULT true,
+  ALTER COLUMN `duration` SET DEFAULT 5000;

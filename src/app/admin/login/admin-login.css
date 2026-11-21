@@ -1,0 +1,373 @@
+/* STEP 285I — ROYAL CENTERED ADMIN LOGIN */
+
+.sk-admin-login {
+  min-height: 100svh;
+  display: grid;
+  place-items: center;
+  padding: 30px 16px;
+  background:
+    radial-gradient(ellipse at 50% 0%, rgba(64,103,146,.34), transparent 60%),
+    repeating-radial-gradient(circle at 50% 115%,
+      transparent 0 115px,
+      rgba(226,187,115,.045) 116px 117px,
+      transparent 118px 220px),
+    linear-gradient(145deg, #061326, #10243e 55%, #07172b);
+  color: #10243e;
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+.sk-admin-login *,
+.sk-admin-login *::before,
+.sk-admin-login *::after {
+  box-sizing: border-box;
+}
+
+.sk-login-shell {
+  width: min(510px, 100%);
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  overflow: hidden;
+  padding: clamp(28px, 5vw, 48px);
+  border: 1px solid rgba(215,173,112,.65);
+  border-radius: 20px;
+  background: linear-gradient(155deg, #fffefa, #f8f5ef);
+  box-shadow: 0 28px 80px rgba(0,0,0,.32);
+  animation: skAdminEnter .6s ease-out both;
+}
+
+.sk-login-brand {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0;
+  background: transparent;
+  color: #10243e;
+  text-align: center;
+}
+
+.sk-login-brand::before,
+.sk-login-brand::after {
+  display: none;
+}
+
+.sk-login-logo-frame {
+  width: 98px;
+  height: 98px;
+  display: grid;
+  place-items: center;
+  margin: 0 auto 14px;
+  overflow: hidden;
+  border: 2px solid #d7ad70;
+  border-radius: 50%;
+  background: #10243e;
+  box-shadow: 0 8px 24px rgba(16,36,62,.18);
+}
+
+.sk-login-original-logo {
+  width: 86px;
+  height: 86px;
+  object-fit: contain;
+}
+
+.sk-login-brand-name {
+  display: grid;
+  gap: 5px;
+  text-align: center;
+}
+
+.sk-login-brand-name strong {
+  color: #10243e;
+  font-family: Georgia, serif;
+  font-size: 22px;
+  font-weight: 600;
+  letter-spacing: .055em;
+}
+
+.sk-login-brand-name span {
+  color: #a47b3e;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: .27em;
+}
+
+.sk-login-gold-divider {
+  width: 100%;
+  margin: 20px 0 14px;
+  color: #b98b48;
+  font-size: 15px;
+  text-align: center;
+}
+
+.sk-login-form-section {
+  display: block;
+  padding: 0;
+  background: transparent;
+}
+
+.sk-login-form-wrap {
+  width: 100%;
+  max-width: none;
+  margin: 0;
+}
+
+.sk-login-label {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  color: #a47b3e;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: .16em;
+}
+
+.sk-login-form-wrap h2 {
+  margin: 15px 0 9px;
+  color: #10243e;
+  font-family: Georgia, serif;
+  font-size: clamp(35px, 5vw, 43px);
+  font-weight: 400;
+  letter-spacing: -.045em;
+  text-align: center;
+}
+
+.sk-login-subtitle {
+  margin: 0 0 28px;
+  color: #69758a;
+  font-size: 13px;
+  line-height: 1.7;
+  text-align: center;
+}
+
+.sk-login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.sk-login-form label {
+  color: #26354c;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.sk-login-forgot { display: flex; justify-content: flex-end; margin-top: -4px; }
+.sk-login-forgot a { color: #8d6b37; font-size: 12px; font-weight: 700; text-decoration: none; }
+.sk-login-forgot a:hover { color: #10243e; text-decoration: underline; }
+.sk-login-forgot a:focus-visible { outline: 2px solid #c49a50; outline-offset: 3px; border-radius: 2px; }
+
+.sk-email-field,
+.sk-password-field {
+  position: relative;
+}
+
+.sk-email-field > svg,
+.sk-password-field > svg {
+  position: absolute;
+  top: 50%;
+  left: 14px;
+  transform: translateY(-50%);
+  color: #7b8ba0;
+  pointer-events: none;
+}
+
+.sk-email-field input,
+.sk-password-field input {
+  width: 100%;
+  height: 52px;
+  padding: 0 45px;
+  border: 1px solid #dce2ea;
+  border-radius: 9px;
+  outline: none;
+  background: #fff;
+  color: #10213b;
+  font-size: 13px;
+  transition: border-color .2s, box-shadow .2s;
+}
+
+.sk-email-field input:focus,
+.sk-password-field input:focus {
+  border-color: #c49a50;
+  box-shadow: 0 0 0 3px rgba(196,154,80,.13);
+}
+
+.sk-password-field input {
+  padding-right: 58px;
+}
+
+.sk-password-toggle {
+  position: absolute;
+  top: 50%;
+  right: 8px;
+  transform: translateY(-50%);
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: #596d86;
+  cursor: pointer;
+}
+
+.sk-login-submit {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 53px;
+  margin-top: 12px;
+  border: 0;
+  border-radius: 9px;
+  background: linear-gradient(100deg, #10243e, #263f5c);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform .2s, box-shadow .2s;
+}
+
+.sk-login-submit:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 25px rgba(16,36,62,.24);
+}
+
+.sk-login-submit:disabled {
+  opacity: .65;
+  cursor: wait;
+}
+
+.sk-login-error {
+  margin: 0;
+  color: #b42318;
+  font-size: 12px;
+}
+
+.sk-login-back {
+  display: block;
+  margin-top: 25px;
+  color: #526784;
+  font-size: 12px;
+  text-align: center;
+  text-decoration: none;
+}
+
+.sk-login-back:hover {
+  color: #10243e;
+  text-decoration: underline;
+}
+
+.sk-login-copyright {
+  margin-top: 22px;
+  color: #8d99a8;
+  font-size: 11px;
+  text-align: center;
+}
+
+.sk-admin-login a:focus-visible,
+.sk-admin-login button:focus-visible {
+  outline: 3px solid #e9bd75;
+  outline-offset: 3px;
+}
+
+@keyframes skAdminEnter {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@media (max-width: 520px) {
+  .sk-admin-login { padding: 18px 12px; }
+  .sk-login-shell { padding: 30px 23px; }
+  .sk-login-logo-frame { width: 84px; height: 84px; }
+  .sk-login-original-logo { width: 74px; height: 74px; }
+  .sk-login-brand-name strong { font-size: 19px; }
+  .sk-login-form-wrap h2 { font-size: 35px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sk-login-shell { animation: none; }
+  .sk-login-submit,
+  .sk-email-field input,
+  .sk-password-field input { transition: none; }
+}
+
+
+/* STEP 285J — FINAL COMPACT POLISH */
+
+/* Reduce card height without shrinking the logo */
+@media (min-width: 521px) {
+  .sk-login-shell {
+    padding-top: 34px;
+    padding-bottom: 32px;
+  }
+}
+
+/* Refine logo and brand rhythm */
+.sk-login-logo-frame {
+  margin-bottom: 10px;
+}
+
+.sk-login-brand-name {
+  gap: 3px;
+}
+
+.sk-login-gold-divider {
+  margin-top: 13px;
+  margin-bottom: 10px;
+}
+
+/* Tighter typography */
+.sk-login-form-wrap h2 {
+  margin-top: 10px;
+  margin-bottom: 7px;
+}
+
+.sk-login-subtitle {
+  margin-bottom: 21px;
+}
+
+/* Balanced form spacing */
+.sk-login-form {
+  gap: 10px;
+}
+
+.sk-login-submit {
+  margin-top: 8px;
+}
+
+/* Compact footer */
+.sk-login-back {
+  margin-top: 19px;
+}
+
+.sk-login-copyright {
+  margin-top: 15px;
+}
+
+/* Comfortable mobile layout */
+@media (max-width: 520px) {
+  .sk-login-shell {
+    padding: 25px 22px;
+  }
+
+  .sk-login-logo-frame {
+    margin-bottom: 9px;
+  }
+
+  .sk-login-gold-divider {
+    margin-top: 12px;
+    margin-bottom: 9px;
+  }
+
+  .sk-login-subtitle {
+    margin-bottom: 19px;
+  }
+
+  .sk-login-form {
+    gap: 10px;
+  }
+}

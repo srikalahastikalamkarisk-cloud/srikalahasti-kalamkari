@@ -1,0 +1,1089 @@
+
+.skp-section {
+  background: #fff;
+  color: #10213b;
+  padding: 32px 20px 44px;
+}
+
+.skp-container {
+  width: 100%;
+  max-width: 1440px;
+  margin: 0 auto;
+}
+
+.skp-heading {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 23px;
+}
+
+.skp-eyebrow {
+  margin: 0 0 7px;
+  color: #b58b4c;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .19em;
+}
+
+.skp-heading h2 {
+  margin: 0;
+  color: #10213b;
+  font-family: Didot, "Bodoni MT", Georgia, serif;
+  font-weight: 400;
+  font-size: clamp(32px, 3.5vw, 51px);
+  letter-spacing: -.045em;
+  line-height: 1.12;
+}
+
+.skp-navigation {
+  display: flex;
+  gap: 9px;
+  flex-shrink: 0;
+}
+
+.skp-navigation button {
+  width: 39px;
+  height: 39px;
+  display: grid;
+  place-items: center;
+  border: 1px solid #d9dfe7;
+  border-radius: 50%;
+  color: #10213b;
+  background: #fff;
+  cursor: pointer;
+  transition: .2s ease;
+}
+
+.skp-navigation button:hover {
+  background: #10213b;
+  color: #fff;
+  border-color: #10213b;
+}
+
+.skp-track {
+  display: flex;
+  gap: 15px;
+  overflow-x: auto;
+  overscroll-behavior-inline: contain;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+  padding: 3px 1px 12px;
+}
+
+.skp-track::-webkit-scrollbar {
+  display: none;
+}
+
+.skp-card {
+  flex: 0 0 calc((100% - 60px) / 5);
+  min-width: 0;
+  scroll-snap-align: start;
+}
+
+.skp-media {
+  position: relative;
+  aspect-ratio: .79;
+  border: 1px solid #e8e8e8;
+  border-radius: 14px;
+  background: #fafafa;
+  overflow: hidden;
+  transition: box-shadow .25s ease, border-color .25s ease;
+}
+
+.skp-card:hover .skp-media {
+  border-color: #cbb58f;
+  box-shadow: 0 8px 24px rgba(16, 33, 59, .08);
+}
+
+.skp-discount {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  z-index: 2;
+  border-radius: 20px;
+  padding: 7px 10px;
+  background: #10213b;
+  color: #f4d79b;
+  font-size: 10px;
+  font-weight: 750;
+}
+
+.skp-side-actions {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.skp-side-actions button {
+  width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  border: 1px solid #e7e7e7;
+  border-radius: 50%;
+  background: #fff;
+  color: #10213b;
+  cursor: pointer;
+}
+
+.skp-side-actions button.selected {
+  color: #b84452;
+}
+
+.skp-placeholder {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  color: #b68b4d;
+  pointer-events: none;
+}
+
+.skp-placeholder span {
+  font: 13px Georgia, serif;
+  letter-spacing: .12em;
+}
+
+.skp-placeholder small {
+  font-size: 9px;
+  letter-spacing: .27em;
+}
+
+.skp-buttons {
+  position: absolute;
+  bottom: 10px;
+  left: 9px;
+  right: 9px;
+  z-index: 2;
+  display: flex;
+  gap: 7px;
+}
+
+.skp-buttons button {
+  flex: 1;
+  min-width: 0;
+  min-height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  padding: 7px 3px;
+  border-radius: 30px;
+  font-size: 10px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.skp-cart {
+  background: #fff;
+  color: #10213b;
+  border: 1px solid #10213b;
+  cursor: pointer;
+}
+
+.skp-buy {
+  background: #10213b;
+  color: #fff;
+  border: 1px solid #10213b;
+}
+
+.skp-buy:disabled {
+  opacity: 1;
+  cursor: not-allowed;
+}
+
+.skp-info {
+  padding: 10px 2px 0;
+}
+
+.skp-info h3 {
+  margin: 0 0 8px;
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.skp-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+
+.skp-prices {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.skp-prices strong {
+  font-size: 16px;
+  font-weight: 800;
+  color: #10213b;
+}
+
+.skp-prices del {
+  font-size: 10px;
+  color: #999;
+}
+
+.skp-rating {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  color: #b8873d;
+  font-size: 11px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.skp-disclaimer {
+  margin: 16px 0 0;
+  text-align: center;
+  font-size: 10px;
+  color: #858585;
+}
+
+.skp-message {
+  text-align: center;
+  margin: 12px 0 0;
+  font-size: 12px;
+}
+
+.skp-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100000;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgba(0,0,0,.75);
+}
+
+.skp-dialog {
+  position: relative;
+  width: min(90vw, 460px);
+  padding: 20px;
+  border-radius: 15px;
+  background: #fff;
+  text-align: center;
+}
+
+.skp-close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  border: 0;
+  background: #fff;
+  cursor: pointer;
+}
+
+.skp-dialog-image {
+  min-height: 280px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  color: #b68b4d;
+  background: #fafafa;
+}
+
+.skp-dialog h3 {
+  margin: 16px 0 8px;
+  font: 21px Georgia, serif;
+}
+
+@media (min-width: 641px) and (max-width: 1000px) {
+  .skp-card {
+    flex-basis: calc((100% - 30px) / 3);
+  }
+}
+
+@media (max-width: 640px) {
+  .skp-section {
+    padding: 29px 10px 38px;
+  }
+
+  .skp-heading {
+    margin-bottom: 18px;
+  }
+
+  .skp-heading h2 {
+    font-size: 32px;
+  }
+
+  .skp-eyebrow {
+    font-size: 8px;
+  }
+
+  .skp-navigation button {
+    width: 34px;
+    height: 34px;
+  }
+
+  .skp-track {
+    gap: 10px;
+  }
+
+  .skp-card {
+    flex-basis: calc((100% - 10px) / 2);
+  }
+
+  .skp-media {
+    border-radius: 11px;
+  }
+
+  .skp-discount {
+    top: 7px;
+    left: 6px;
+    padding: 6px 7px;
+    font-size: 9px;
+  }
+
+  .skp-side-actions {
+    top: 7px;
+    right: 6px;
+  }
+
+  .skp-side-actions button {
+    width: 28px;
+    height: 28px;
+  }
+
+  .skp-buttons {
+    left: 4px;
+    right: 4px;
+    bottom: 6px;
+    gap: 4px;
+  }
+
+  .skp-buttons button {
+    min-height: 30px;
+    font-size: 8px;
+    gap: 2px;
+  }
+
+  .skp-buttons svg {
+    width: 11px;
+    height: 11px;
+  }
+
+  .skp-placeholder span {
+    font-size: 10px;
+  }
+
+  .skp-info h3 {
+    font-size: 11px;
+  }
+
+  .skp-prices strong {
+    font-size: 13px;
+  }
+
+  .skp-prices del {
+    font-size: 9px;
+  }
+
+  .skp-rating {
+    font-size: 10px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skp-track {
+    scroll-behavior: auto;
+  }
+}
+
+
+/* ===== AUTOMATIC SHOP OUR PRODUCTS CAROUSEL ===== */
+
+.skp-auto-section {
+  overflow: hidden;
+  background: #ffffff;
+}
+
+.skp-auto-track {
+  width: 100%;
+  overflow: hidden;
+  scroll-snap-type: none;
+  scrollbar-width: none;
+}
+
+.skp-auto-track .skp-card {
+  flex-shrink: 0;
+  scroll-snap-align: none;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .skp-auto-track {
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .skp-auto-track::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skp-auto-track {
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+  }
+
+  .skp-auto-track .skp-card {
+    scroll-snap-align: start;
+  }
+}
+
+/* ===== SHOP PRODUCTS FAST SCROLL V2 ===== */
+
+/* Keep all products in one horizontal scrolling line */
+.skp-auto-section .skp-track {
+  display: flex !important;
+  flex-wrap: nowrap !important;
+  overflow-x: auto !important;
+  overflow-y: hidden !important;
+  scroll-snap-type: none !important;
+  scrollbar-width: none;
+  gap: 15px;
+}
+
+/* Five products visible on desktop */
+.skp-auto-section .skp-card {
+  flex: 0 0 calc((100% - 60px) / 5) !important;
+  min-width: 0;
+  scroll-snap-align: none !important;
+}
+
+.skp-auto-section .skp-track::-webkit-scrollbar {
+  display: none;
+}
+
+/* Tablet */
+@media (min-width: 641px) and (max-width: 1000px) {
+  .skp-auto-section .skp-card {
+    flex-basis: calc((100% - 30px) / 3) !important;
+  }
+}
+
+/* Mobile: two products visible */
+@media (max-width: 640px) {
+  .skp-auto-section .skp-track {
+    gap: 10px;
+  }
+
+  .skp-auto-section .skp-card {
+    flex-basis: calc((100% - 10px) / 2) !important;
+  }
+}
+
+/* Respect accessibility preference */
+@media (prefers-reduced-motion: reduce) {
+  .skp-auto-section .skp-track {
+    scroll-snap-type: x mandatory !important;
+  }
+
+  .skp-auto-section .skp-card {
+    scroll-snap-align: start !important;
+  }
+}
+
+/* ===== TEN SMALL PRODUCT CARDS ===== */
+
+@media (min-width: 1200px) {
+  .skp-auto-section .skp-track {
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    gap: 10px !important;
+    overflow-x: auto !important;
+  }
+
+  .skp-auto-section .skp-card {
+    flex: 0 0 calc((100% - 90px) / 10) !important;
+    min-width: 0 !important;
+  }
+
+  .skp-auto-section .skp-discount {
+    font-size: 8px;
+    padding: 5px 6px;
+  }
+
+  .skp-auto-section .skp-side-actions button {
+    width: 23px;
+    height: 23px;
+  }
+
+  .skp-auto-section .skp-placeholder span {
+    font-size: 9px;
+  }
+
+  .skp-auto-section .skp-placeholder small {
+    font-size: 7px;
+  }
+
+  .skp-auto-section .skp-buttons {
+    left: 3px;
+    right: 3px;
+    bottom: 5px;
+    gap: 3px;
+  }
+
+  .skp-auto-section .skp-buttons button {
+    min-height: 25px;
+    padding: 3px 1px;
+    font-size: 7px;
+    gap: 2px;
+  }
+
+  .skp-auto-section .skp-buttons svg {
+    width: 9px;
+    height: 9px;
+  }
+
+  .skp-auto-section .skp-info h3 {
+    font-size: 10px;
+  }
+
+  .skp-auto-section .skp-prices strong {
+    font-size: 12px;
+  }
+
+  .skp-auto-section .skp-prices del {
+    font-size: 8px;
+  }
+
+  .skp-auto-section .skp-rating {
+    font-size: 9px;
+  }
+}
+
+@media (min-width: 641px) and (max-width: 1199px) {
+  .skp-auto-section .skp-card {
+    flex: 0 0 calc((100% - 60px) / 5) !important;
+  }
+}
+
+@media (max-width: 640px) {
+  .skp-auto-section .skp-card {
+    flex: 0 0 calc((100% - 10px) / 2) !important;
+  }
+}
+
+
+/* ===== PREMIUM 8-CARD CAROUSEL ===== */
+
+@media (min-width: 1200px) {
+  .skp-auto-section .skp-track {
+    gap: 12px !important;
+  }
+
+  .skp-auto-section .skp-card {
+    flex: 0 0 calc((100% - 84px) / 8) !important;
+  }
+}
+
+@media (min-width: 641px) and (max-width: 1199px) {
+  .skp-auto-section .skp-track {
+    gap: 12px !important;
+  }
+
+  .skp-auto-section .skp-card {
+    flex: 0 0 calc((100% - 36px) / 4) !important;
+  }
+}
+
+@media (max-width: 640px) {
+  .skp-auto-section .skp-track {
+    gap: 10px !important;
+  }
+
+  .skp-auto-section .skp-card {
+    flex: 0 0 calc((100% - 10px) / 2) !important;
+  }
+}
+
+/* ===== PREMIUM 6-CARD FINAL ===== */
+
+@media (min-width: 1200px) {
+  .skp-auto-section .skp-track {
+    gap: 14px !important;
+  }
+
+  .skp-auto-section .skp-card {
+    flex: 0 0 calc((100% - 70px) / 6) !important;
+  }
+}
+
+@media (min-width: 641px) and (max-width: 1199px) {
+  .skp-auto-section .skp-track {
+    gap: 12px !important;
+  }
+
+  .skp-auto-section .skp-card {
+    flex: 0 0 calc((100% - 24px) / 3) !important;
+  }
+}
+
+@media (max-width: 640px) {
+  .skp-auto-section .skp-track {
+    gap: 10px !important;
+  }
+
+  .skp-auto-section .skp-card {
+    flex: 0 0 calc((100% - 10px) / 2) !important;
+  }
+}
+
+/* ===== KALAMKARI HERITAGE CARD UI ===== */
+
+/* Only Shop Our Products, not Best Collection */
+
+.skp-auto-section .skp-heritage-card {
+  color: #10213b;
+}
+
+.skp-auto-section .skp-heritage-card .skp-media {
+  position: relative;
+  aspect-ratio: 0.79;
+  background: #f7f2e9;
+  border: 1px solid #ece4d7;
+  border-radius: 12px;
+  box-shadow: none;
+  overflow: hidden;
+}
+
+.skp-auto-section .skp-heritage-card:hover .skp-media {
+  border-color: #d8c6a7;
+  box-shadow: 0 8px 22px rgba(16, 33, 59, .07);
+}
+
+/* Subtle Kalamkari-inspired decorative artwork */
+
+.skp-auto-section .skp-heritage-card .skp-media::before {
+  content: "";
+  position: absolute;
+  inset: 15%;
+  border: 1px solid rgba(181, 138, 67, .12);
+  border-radius: 50% 50% 8% 8%;
+  pointer-events: none;
+}
+
+.skp-auto-section .skp-heritage-card .skp-placeholder {
+  background:
+    radial-gradient(
+      circle at 50% 45%,
+      rgba(218, 190, 139, .12),
+      transparent 65%
+    );
+  color: #b58a43;
+}
+
+.skp-auto-section .skp-heritage-card .skp-placeholder svg {
+  width: 34px;
+  height: 34px;
+  opacity: .55;
+}
+
+.skp-auto-section .skp-heritage-card .skp-placeholder span {
+  color: #98713b;
+  font-family: Georgia, serif;
+  font-size: 11px;
+  letter-spacing: .1em;
+}
+
+.skp-auto-section .skp-heritage-card .skp-placeholder small {
+  color: #b58a43;
+  letter-spacing: .25em;
+}
+
+/* Navy and antique gold offer badge */
+
+.skp-auto-section .skp-heritage-card .skp-discount {
+  background: #10213b;
+  color: #e6c78f;
+  border-radius: 5px;
+  padding: 6px 8px;
+  font-size: 9px;
+  letter-spacing: .02em;
+}
+
+/* Floating wishlist and quick view */
+
+.skp-auto-section .skp-heritage-card .skp-side-actions button {
+  background: rgba(255,255,255,.96);
+  border: 1px solid #e9dfd0;
+  color: #10213b;
+  box-shadow: 0 2px 7px rgba(16,33,59,.04);
+}
+
+.skp-auto-section .skp-heritage-card .skp-side-actions button.selected {
+  color: #b5454b;
+}
+
+/* Move purchase controls BELOW the product image */
+
+.skp-auto-section .skp-heritage-card .skp-buttons {
+  position: static;
+  display: flex;
+  gap: 0;
+  padding: 0;
+  margin: 0;
+  background: transparent;
+}
+
+/* Hide Buy Now only in the discovery carousel.
+   Checkout is not connected yet. */
+
+.skp-auto-section .skp-heritage-card .skp-buy {
+  display: none;
+}
+
+.skp-auto-section .skp-heritage-card .skp-cart {
+  width: 100%;
+  flex: 1;
+  min-height: 35px;
+  border: 0;
+  border-radius: 0;
+  background: #10213b;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.skp-auto-section .skp-heritage-card .skp-cart:hover {
+  background: #203c61;
+}
+
+/* Product information */
+
+.skp-auto-section .skp-heritage-card .skp-info {
+  padding: 12px 2px 0;
+}
+
+.skp-auto-section .skp-heritage-card .skp-info h3 {
+  color: #10213b;
+  font-family: Georgia, serif;
+  font-size: 13px;
+  font-weight: 500;
+  margin-bottom: 9px;
+}
+
+.skp-auto-section .skp-heritage-card .skp-prices strong {
+  color: #10213b;
+  font-size: 16px;
+  font-weight: 800;
+}
+
+.skp-auto-section .skp-heritage-card .skp-prices del {
+  color: #958c80;
+  font-size: 10px;
+}
+
+.skp-auto-section .skp-heritage-card .skp-rating {
+  color: #ad7b2e;
+}
+
+/* Tablet */
+
+@media (min-width: 641px) and (max-width: 1199px) {
+  .skp-auto-section .skp-heritage-card .skp-info h3 {
+    font-size: 12px;
+  }
+}
+
+/* Mobile */
+
+@media (max-width: 640px) {
+  .skp-auto-section .skp-heritage-card .skp-media {
+    border-radius: 10px;
+  }
+
+  .skp-auto-section .skp-heritage-card .skp-cart {
+    min-height: 32px;
+    font-size: 10px;
+  }
+
+  .skp-auto-section .skp-heritage-card .skp-info h3 {
+    font-size: 11px;
+  }
+
+  .skp-auto-section .skp-heritage-card .skp-prices strong {
+    font-size: 13px;
+  }
+}
+
+/* ===== HERITAGE CARD STRUCTURE FIX ===== */
+
+/* Only Shop Our Products */
+
+.skp-auto-section .skp-heritage-card {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.skp-auto-section .skp-heritage-card .skp-media {
+  background: #f7f2e9;
+  border: 1px solid #ece4d7;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.skp-auto-section .skp-heritage-card .skp-info {
+  padding: 12px 2px 0;
+}
+
+.skp-auto-section .skp-heritage-card .skp-info h3 {
+  font-family: Georgia, serif;
+  color: #10213b;
+  font-size: 13px;
+  line-height: 1.4;
+  margin: 0 0 9px;
+}
+
+.skp-auto-section .skp-heritage-card .skp-prices strong {
+  color: #10213b;
+  font-size: 16px;
+  font-weight: 800;
+}
+
+.skp-auto-section .skp-heritage-card .skp-rating {
+  color: #b58a43;
+}
+
+.skp-auto-section .skp-heritage-cart-wrap {
+  margin-top: auto;
+  padding-top: 13px;
+}
+
+.skp-auto-section .skp-heritage-cart-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  min-height: 39px;
+  padding: 10px;
+  border: 1px solid #10213b;
+  border-radius: 7px;
+  background: #10213b;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background .2s ease;
+}
+
+.skp-auto-section .skp-heritage-cart-button:hover {
+  background: #233d60;
+}
+
+@media (max-width: 640px) {
+  .skp-auto-section .skp-heritage-card .skp-info h3 {
+    font-size: 11px;
+  }
+
+  .skp-auto-section .skp-heritage-cart-button {
+    min-height: 35px;
+    font-size: 10px;
+  }
+}
+
+
+/* ===== BEST COLLECTION: COMPACT SIX-CARD HERITAGE EDITORIAL ===== */
+/* All selectors are scoped to Best Collection; Shop Our Products stays unchanged. */
+.skp-section.skp-royal-best {
+  position:relative; overflow:hidden; background:#10213b; color:#f8f3e9;
+  padding:48px 22px 48px;
+}
+.skp-royal-best::before,.skp-royal-best::after {
+  content:"";position:absolute;left:22px;right:22px;height:13px;pointer-events:none;opacity:.7;
+  background:
+    radial-gradient(ellipse 6px 3px at 8px 6px, transparent 45%, #b58a43 52%, transparent 65%) 0 0 / 32px 12px repeat-x,
+    radial-gradient(circle at 16px 6px,#b58a43 1.5px,transparent 2px) 0 0 / 32px 12px repeat-x,
+    linear-gradient(#b58a43,#b58a43) center / 100% 1px no-repeat;
+}
+.skp-royal-best::before{top:15px}.skp-royal-best::after{bottom:15px}
+.skp-royal-best .skp-container{
+  width:100%;max-width:1760px;margin:0 auto;display:grid;
+  grid-template-columns:minmax(205px,20%) minmax(0,1fr);
+  column-gap:clamp(18px,2.2vw,38px);align-items:center;
+}
+.skp-royal-best .skp-heading{
+  min-width:0;min-height:0;margin:0;padding:0;display:flex;flex-direction:column;
+  align-items:flex-start;justify-content:center;gap:17px;text-align:left;
+}
+.skp-royal-best .skp-heading>div:first-child{text-align:left}
+.skp-royal-best .skp-eyebrow{margin:0 0 10px;color:#b58a43;font-size:9px;letter-spacing:.16em;font-weight:700}
+.skp-royal-best .skp-heading h2{
+  margin:0;color:#f8f3e9;font:400 clamp(30px,2.65vw,48px)/1.08 Georgia,serif;
+  letter-spacing:-.035em;max-width:260px;
+}
+.skp-royal-best .skp-editorial-copy{margin-top:14px}
+.skp-royal-best .skp-editorial-rule{display:block;width:49px;height:1px;background:#b58a43;margin-bottom:12px}
+.skp-royal-best .skp-editorial-copy p{max-width:245px;margin:0 0 12px;color:#e1d9cd;font:12px/1.65 Georgia,serif}
+.skp-royal-best .skp-editorial-signature{color:#b58a43;font-size:8px;letter-spacing:.13em;font-weight:700}
+.skp-royal-best .skp-navigation{position:static;transform:none;display:flex;gap:8px}
+.skp-royal-best .skp-navigation button{width:33px;height:33px;border:1px solid #b58a43;border-radius:50%;background:transparent;color:#f8f3e9;cursor:pointer}
+.skp-royal-best .skp-navigation button:hover{background:#b58a43;color:#10213b}
+.skp-royal-best .skp-best-auto-track{
+  box-sizing:border-box;min-width:0;width:100%;display:flex;flex-wrap:nowrap;
+  gap:10px;overflow-x:auto;overflow-y:hidden;padding:3px 0 8px;
+  scroll-snap-type:none;scrollbar-width:none;scroll-behavior:auto;overscroll-behavior-x:contain;
+}
+.skp-royal-best .skp-best-auto-track::-webkit-scrollbar{display:none}
+.skp-royal-best .skp-best-auto-track .skp-card{
+  box-sizing:border-box;flex:0 0 calc((100% - 50px)/6);min-width:0;
+  display:flex;flex-direction:column;overflow:hidden;
+  background:#f8f3e9;border:1px solid rgba(181,138,67,.55);border-radius:3px;
+  padding:4px;box-shadow:none;scroll-snap-align:none;transform:none;
+}
+.skp-royal-best .skp-card:hover{transform:none;box-shadow:none}
+.skp-royal-best .skp-card .skp-media{
+  position:relative;aspect-ratio:4/4.5;overflow:hidden;border:0;border-radius:1px;
+  background:#e9ddc8;box-shadow:none;
+}
+.skp-royal-best .skp-placeholder{background:radial-gradient(ellipse at center,#f8f0e2,#e8dac3);color:#b58a43;gap:4px}
+.skp-royal-best .skp-placeholder svg{width:19px;height:19px}
+.skp-royal-best .skp-placeholder span{font:9px Georgia,serif;letter-spacing:.06em}
+.skp-royal-best .skp-placeholder small{font-size:6px;letter-spacing:.12em}
+.skp-royal-best .skp-discount{top:5px;left:5px;padding:4px 5px;background:#10213b;color:#f8f3e9;border-radius:2px;font-size:8px}
+.skp-royal-best .skp-side-actions{top:5px;right:5px;gap:4px}
+.skp-royal-best .skp-side-actions button{width:24px;height:24px;background:#fffdf8;border:1px solid #e7d9c3}
+.skp-royal-best .skp-side-actions svg{width:13px;height:13px}
+.skp-royal-best .skp-info{order:1;padding:8px 3px 7px;color:#10213b}
+.skp-royal-best .skp-info h3{
+  color:#10213b;font:400 11px/1.35 Georgia,serif;white-space:normal;
+  display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;
+  overflow:hidden;min-height:2.7em;margin:0 0 6px;
+}
+.skp-royal-best .skp-meta{display:flex;align-items:center;gap:3px;flex-wrap:wrap}
+.skp-royal-best .skp-prices{gap:4px}
+.skp-royal-best .skp-prices strong{font-size:12px;color:#10213b}
+.skp-royal-best .skp-prices del{font-size:8px;color:#8f8a83}
+.skp-royal-best .skp-rating{font-size:9px;color:#b58a43}
+.skp-royal-best .skp-rating svg{width:10px;height:10px}
+.skp-royal-best .skp-buttons{position:static;order:2;margin:auto 2px 2px;display:flex;gap:0}
+.skp-royal-best .skp-buttons .skp-cart{
+  width:100%;min-height:29px;padding:5px 2px;border:0;border-radius:2px;
+  background:#10213b;color:#f8f3e9;font-size:9px;cursor:pointer;
+}
+.skp-royal-best .skp-buttons .skp-cart svg{width:12px;height:12px}
+.skp-royal-best .skp-disclaimer{grid-column:2;text-align:right;color:#c9c2b6;font-size:9px;margin:5px 0 0}
+.skp-royal-best .skp-message{grid-column:1/-1;color:#f8f3e9}
+@media(max-width:1199px){
+ .skp-royal-best .skp-container{grid-template-columns:minmax(180px,24%) minmax(0,1fr)}
+ .skp-royal-best .skp-best-auto-track .skp-card{flex-basis:calc((100% - 30px)/4)}
+}
+@media(max-width:760px){
+ .skp-section.skp-royal-best{padding:39px 13px 40px}
+ .skp-royal-best::before,.skp-royal-best::after{left:13px;right:13px}
+ .skp-royal-best .skp-container{display:block}
+ .skp-royal-best .skp-heading{gap:10px;margin-bottom:17px}
+ .skp-royal-best .skp-heading h2{max-width:none;font-size:34px}
+ .skp-royal-best .skp-editorial-copy{margin-top:8px}
+ .skp-royal-best .skp-editorial-copy p{max-width:100%;font-size:11px;margin-bottom:7px}
+ .skp-royal-best .skp-best-auto-track{gap:9px}
+ .skp-royal-best .skp-best-auto-track .skp-card{flex-basis:calc((100% - 9px)/2)}
+ .skp-royal-best .skp-info h3{font-size:11px}
+ .skp-royal-best .skp-disclaimer{text-align:left}
+}
+@media(prefers-reduced-motion:reduce){.skp-royal-best .skp-best-auto-track{scroll-snap-type:x proximity}}
+
+@media(max-width:760px){
+  .skp-side-actions button,.skp-royal-best .skp-side-actions button{width:44px!important;height:44px!important}
+  .skp-royal-best .skp-side-actions svg{width:18px;height:18px}
+  .skp-buttons button,.skp-royal-best .skp-buttons .skp-cart{min-height:44px!important;font-size:10px!important}
+  .skp-navigation button{width:44px;height:44px}
+}
+
+
+
+
+/* REFERENCE FLORAL BORDER V2 */
+/* Border only. No product/card/carousel layout changes. */
+.skp-section.skp-royal-best { position: relative; }
+.skp-section.skp-royal-best::before,
+.skp-section.skp-royal-best::after {
+  content: "" !important;
+  position: absolute !important;
+  left: 18px !important;
+  right: 18px !important;
+  width: auto !important;
+  height: 24px !important;
+  z-index: 2 !important;
+  display: block !important;
+  pointer-events: none !important;
+  background: url("/borders/kalamkari-floral-gold.svg") left center / 120px 24px repeat-x !important;
+  opacity: .85 !important;
+  transform: none !important;
+  border: 0 !important;
+}
+.skp-section.skp-royal-best::before { top: 10px !important; bottom: auto !important; }
+.skp-section.skp-royal-best::after { bottom: 10px !important; top: auto !important; }
+@media (max-width: 640px) {
+  .skp-section.skp-royal-best::before,
+  .skp-section.skp-royal-best::after { left: 8px !important; right: 8px !important; }
+}
+
+
+/* BEST COLLECTION BLUE GRADIENT START */
+section.skp-section.skp-royal-best {
+  background:
+    radial-gradient(
+      ellipse at 82% 28%,
+      rgba(64, 116, 185, 0.30) 0%,
+      transparent 56%
+    ),
+    radial-gradient(
+      ellipse at 12% 85%,
+      rgba(33, 83, 143, 0.26) 0%,
+      transparent 52%
+    ),
+    linear-gradient(
+      115deg,
+      #08172b 0%,
+      #10213b 42%,
+      #214a76 100%
+    ) !important;
+}
+/* BEST COLLECTION BLUE GRADIENT END */
+
+.skp-product-image-link {
+  display: block;
+  width: 100%;
+  height: 100%;
+  color: inherit;
+  text-decoration: none;
+}
+
+.skp-product-title-link {
+  color: inherit;
+  text-decoration: none;
+}
+
+.skp-product-title-link:hover {
+  color: #b58a43;
+}
+
+.skp-product-image-link:focus-visible,
+.skp-product-title-link:focus-visible {
+  outline: 2px solid #b58a43;
+  outline-offset: 3px;
+}

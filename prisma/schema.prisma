@@ -1,0 +1,534 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "mysql"
+}
+
+model Category {
+  id        String     @id @default(cuid())
+  name      String
+  slug      String     @unique
+  image     String?
+  isActive  Boolean    @default(true)
+  products  Product[]
+  parentId  String?
+  parent    Category?  @relation("CategoryHierarchy", fields: [parentId], references: [id], onDelete: Restrict)
+  children  Category[] @relation("CategoryHierarchy")
+  sortOrder Int        @default(0)
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+}
+
+model Product {
+  id               String  @id @default(cuid())
+  name             String
+  slug             String  @unique
+  description      String? @db.Text
+  shortDescription String? @db.Text
+
+  price         Decimal  @db.Decimal(10, 2)
+  originalPrice Decimal? @db.Decimal(10, 2)
+  pricingMode   String   @default("FIXED")
+  pricePerMeter Decimal? @db.Decimal(10, 2)
+
+  stock              Int     @default(0)
+  availabilityStatus String  @default("IN_STOCK")
+  sku                String? @unique
+  images             Json?
+  isActive           Boolean @default(true)
+  isFeatured         Boolean @default(false)
+  isNewArrival       Boolean @default(false)
+
+  brand          String?
+  fabricMaterial String?
+  length         String?
+  width          String?
+  washCare       String? @db.Text
+  specifications Json?
+
+  colors       Json?
+  sizes        Json?
+  meterOptions Json?
+
+  showColors         Boolean @default(false)
+  showSizes          Boolean @default(false)
+  showMeters         Boolean @default(false)
+  showSpecifications Boolean @default(false)
+  showFabricMaterial Boolean @default(false)
+  showLength         Boolean @default(false)
+  showWidth          Boolean @default(false)
+  showWashCare       Boolean @default(false)
+
+  allowCOD     Boolean @default(false)
+  freeShipping Boolean @default(false)
+  allowEnquiry Boolean @default(true)
+
+  seoTitle       String?
+  seoDescription String? @db.Text
+
+  categoryId         String
+  category           Category            @relation(fields: [categoryId], references: [id])
+  variants           ProductVariant[]
+  inventoryMovements InventoryMovement[]
+  mediaReferences    MediaReference[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([categoryId])
+  @@index([isActive, isFeatured])
+}
+
+model MediaFolder {
+  id        String        @id @default(cuid())
+  name      String        @db.VarChar(120)
+  parentId  String?
+  parent    MediaFolder?  @relation("MediaFolderTree", fields: [parentId], references: [id], onDelete: Restrict)
+  children  MediaFolder[] @relation("MediaFolderTree")
+  assets    MediaAsset[]
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+
+  @@unique([parentId, name])
+  @@index([parentId])
+}
+
+model MediaAsset {
+  id          String           @id @default(cuid())
+  storageKey  String           @unique @db.VarChar(255)
+  filename    String           @db.VarChar(255)
+  mimeType    String           @db.VarChar(100)
+  sizeBytes   Int
+  checksum    String           @unique @db.Char(64)
+  photoNumber String?          @db.VarChar(64)
+  folderId    String?
+  folder      MediaFolder?     @relation(fields: [folderId], references: [id], onDelete: SetNull)
+  deletionPending Boolean      @default(false)
+  references  MediaReference[]
+  deletionJobs MediaDeletionJob[]
+  createdAt   DateTime         @default(now())
+
+  @@index([filename])
+  @@index([photoNumber])
+  @@index([folderId])
+}
+
+model MediaReference {
+  id          String     @id @default(cuid())
+  mediaId     String
+  media       MediaAsset @relation(fields: [mediaId], references: [id], onDelete: Cascade)
+  placement   String     @db.VarChar(64)
+  placementId String?    @db.VarChar(191)
+  productId   String?
+  product     Product?   @relation(fields: [productId], references: [id], onDelete: Cascade)
+  sortOrder   Int        @default(0)
+  createdAt   DateTime   @default(now())
+
+  @@index([mediaId])
+  @@index([placement, placementId])
+  @@index([productId, sortOrder])
+}
+
+model MediaDeletionJob {
+  id          String     @id @default(cuid())
+  mediaId     String
+  media       MediaAsset @relation(fields: [mediaId], references: [id], onDelete: Cascade)
+  storageKey  String     @db.VarChar(255)
+  status      String     @default("PENDING") @db.VarChar(32)
+  attempts    Int        @default(0)
+  lastError   String?    @db.Text
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  @@index([status, createdAt])
+}
+
+model ProductVariant {
+  id        String  @id @default(cuid())
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  sku          String?  @unique
+  colorName    String?
+  colorHex     String?
+  size         String?
+  lengthMeters Decimal? @db.Decimal(8, 2)
+  attributes   Json?
+  imageUrl     String?  @db.VarChar(500)
+
+  price         Decimal? @db.Decimal(10, 2)
+  originalPrice Decimal? @db.Decimal(10, 2)
+  stock         Int      @default(0)
+  isActive      Boolean  @default(true)
+  sortOrder     Int      @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  orderItems OrderItem[]
+
+  @@index([productId])
+  @@index([productId, isActive])
+}
+
+model InventoryMovement {
+  id             String   @id @default(cuid())
+  productId      String?
+  product        Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
+  productName    String
+  productSku     String?
+  movementType   String
+  quantityChange Int
+  quantityBefore Int
+  quantityAfter  Int
+  note           String?  @db.VarChar(500)
+  referenceId    String?
+  performedBy    String?
+  createdAt      DateTime @default(now())
+
+  @@index([productId, createdAt])
+  @@index([movementType, createdAt])
+  @@index([referenceId])
+}
+
+model AdminUser {
+  id           String   @id @default(cuid())
+  name         String
+  email        String   @unique
+  passwordHash String
+  role         String   @default("ADMIN")
+  isActive     Boolean  @default(true)
+  sessionVersion Int    @default(0)
+  passwordResetTokens AdminPasswordResetToken[]
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model AdminPasswordResetToken {
+  id        String   @id @default(cuid())
+  adminId   String
+  tokenHash String   @unique @db.Char(64)
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime @default(now())
+  admin     AdminUser @relation(fields: [adminId], references: [id], onDelete: Cascade)
+
+  @@index([adminId, expiresAt])
+  @@index([expiresAt])
+}
+
+// Customer order records
+model Order {
+  id          String @id @default(cuid())
+  orderNumber String @unique
+
+  customerName  String
+  customerEmail String
+  customerPhone String
+
+  address  String  @db.Text
+  landmark String?
+  city     String
+  state    String
+  pincode  String
+
+  subtotal       Decimal @db.Decimal(10, 2)
+  shippingAmount Decimal @default(0) @db.Decimal(10, 2)
+  discountAmount Decimal @default(0) @db.Decimal(10, 2)
+  couponCode     String? @db.VarChar(64)
+  totalAmount    Decimal @db.Decimal(10, 2)
+
+  currency        String    @default("INR")
+  orderStatus     String    @default("PENDING")
+  paymentStatus   String    @default("UNPAID")
+  paymentMethod   String?
+  paymentId       String?   @unique
+  razorpayOrderId String?   @unique
+  paidAt          DateTime?
+
+  inventoryStatus     String    @default("PENDING")
+  inventoryDeductedAt DateTime?
+
+  courierName    String?
+  trackingNumber String?
+  trackingUrl    String?   @db.VarChar(500)
+  shippedAt      DateTime?
+  deliveredAt    DateTime?
+
+  checkoutKey String? @unique
+
+  paymentAttempts PaymentAttempt[]
+
+  items OrderItem[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([customerEmail])
+  @@index([customerPhone])
+  @@index([orderStatus])
+  @@index([createdAt])
+}
+
+model OrderItem {
+  id String @id @default(cuid())
+
+  orderId String
+  order   Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  productId    String
+  productName  String
+  productImage String?
+  productSku   String?
+  variantId    String?
+  variant      ProductVariant? @relation(fields: [variantId], references: [id], onDelete: SetNull)
+  variantSnapshot Json?
+
+  quantity   Int
+  unitPrice  Decimal @db.Decimal(10, 2)
+  totalPrice Decimal @db.Decimal(10, 2)
+
+  createdAt DateTime @default(now())
+
+  @@index([orderId])
+  @@index([productId])
+  @@index([variantId])
+}
+
+model PaymentAttempt {
+  id String @id @default(cuid())
+
+  orderId String
+  order   Order  @relation(fields: [orderId], references: [id], onDelete: Restrict)
+
+  razorpayOrderId   String? @unique
+  razorpayPaymentId String? @unique
+
+  status      String @default("CREATING")
+  amountPaise Int
+  currency    String @default("INR")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([orderId])
+  @@index([status])
+}
+
+model PaymentWebhookEvent {
+  id String @id @default(cuid())
+
+  eventId   String @unique
+  eventType String
+  status    String @default("RECEIVED")
+
+  receivedAt  DateTime  @default(now())
+  processedAt DateTime?
+
+  @@index([status])
+}
+
+model PaymentRateLimit {
+  key         String   @id @db.VarChar(191)
+  count       Int      @default(0)
+  windowStart DateTime
+  expiresAt   DateTime
+  updatedAt   DateTime @updatedAt
+
+  @@index([expiresAt])
+}
+
+
+// ADMIN-110: Coupon management and verified checkout redemption.
+model Coupon {
+  id String @id @default(cuid())
+
+  code String @unique @db.VarChar(64)
+
+  description String? @db.VarChar(500)
+
+  discountType String @db.VarChar(20)
+  discountValue Decimal @db.Decimal(10, 2)
+
+  minimumOrderAmount Decimal @default(0) @db.Decimal(10, 2)
+  maximumDiscountAmount Decimal? @db.Decimal(10, 2)
+
+  usageLimit Int?
+  usedCount Int @default(0)
+
+  startsAt DateTime?
+  expiresAt DateTime?
+
+  isActive Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([isActive])
+  @@index([expiresAt])
+}
+
+
+// Coupon usage reservation for payment checkout.
+// Reservations must not be released until payment state is verified.
+model CouponReservation {
+  id String @id @default(cuid())
+
+  couponId String
+  orderId  String @unique
+
+  couponCode String @db.VarChar(64)
+
+  status String @default("RESERVED") @db.VarChar(20)
+
+  expiresAt DateTime
+  finalizedAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([couponId, status])
+  @@index([expiresAt, status])
+}
+
+
+model StoreSettings {
+  id                String   @id @default("primary")
+  storeName         String   @default("Srikalahasti Kalamkari")
+  description       String?  @db.Text
+  logoUrl           String?
+  faviconUrl        String?
+  contactEmail      String?
+  contactPhone      String?
+  whatsappNumber    String?
+  address           String?  @db.Text
+  instagramUrl      String?
+  facebookUrl       String?
+  youtubeUrl        String?
+  metaTitle         String?
+  metaDescription   String?  @db.Text
+  updatedAt         DateTime @updatedAt
+  createdAt         DateTime @default(now())
+}
+
+
+model HeroSlide {
+  id             String   @id @default(cuid()) @db.VarChar(191)
+  enabled        Boolean  @default(true)
+  sortOrder      Int      @default(0)
+
+  mediaType      String   @default("image") @db.VarChar(20)
+  desktopImage   String   @default("") @db.Text
+  mobileImage    String   @default("") @db.Text
+  desktopVideo   String?  @db.Text
+  mobileVideo    String?  @db.Text
+  videoUrl       String?  @db.Text
+  posterImage    String?  @db.Text
+
+  eyebrow        String   @default("") @db.VarChar(191)
+  title          String   @default("") @db.VarChar(191)
+  highlight      String   @default("") @db.VarChar(191)
+  description    String   @default("") @db.Text
+
+  primaryLabel   String   @default("") @db.VarChar(191)
+  primaryHref    String   @default("") @db.VarChar(500)
+  secondaryLabel String   @default("") @db.VarChar(191)
+  secondaryHref  String   @default("") @db.VarChar(500)
+
+  desktopSourceUrl String?  @db.Text
+  mobileSourceUrl  String?  @db.Text
+
+  duration       Int      @default(5000)
+  videoFallbackMs Int     @default(30000)
+  soundControlsEnabled Boolean @default(true)
+  initialMuted   Boolean  @default(true)
+  transitionMs   Int      @default(1100)
+  animation      String   @default("fade") @db.VarChar(20)
+  textPosition   String   @default("left") @db.VarChar(20)
+  overlayOpacity Float    @default(0.48)
+
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([enabled, sortOrder])
+}
+
+
+// Homepage Stories in Motion — managed from Admin > Video Stories.
+model VideoStory {
+  id          String   @id @default(cuid()) @db.VarChar(191)
+  title       String   @db.VarChar(191)
+  enabled     Boolean  @default(true)
+  sortOrder   Int      @default(0)
+
+  // "upload" or "url"; URL platform is detected by application code.
+  sourceType  String   @default("url") @db.VarChar(20)
+  videoUrl    String?  @db.Text
+  mobileUrl   String?  @db.Text
+  videoFile   String?  @db.Text
+  posterImage String?  @db.Text
+
+  fallbackMs  Int      @default(15000)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([enabled, sortOrder])
+}
+
+
+// STEP 137: Admin-managed customer gallery and reviews.
+// Only approved content may appear on the public homepage.
+
+model CustomerGallery {
+  id          String   @id @default(cuid())
+  imageUrl    String   @db.VarChar(500)
+  caption     String?  @db.VarChar(255)
+  altText     String?  @db.VarChar(255)
+  isApproved  Boolean  @default(false)
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([isApproved, sortOrder])
+}
+
+model CustomerReview {
+  id           String   @id @default(cuid())
+  customerName String   @db.VarChar(120)
+  rating       Int
+  reviewText   String   @db.Text
+  isVerified   Boolean  @default(false)
+  isApproved   Boolean  @default(false)
+  sortOrder    Int      @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([isApproved, sortOrder])
+}
+
+// Homepage About Kalamkari content — managed independently from StoreSettings.
+model AboutKalamkariContent {
+  id               String   @id @default("primary")
+  eyebrow          String   @default("OUR ART & HERITAGE") @db.VarChar(120)
+  heading          String   @default("About Kalamkari") @db.VarChar(160)
+  descriptionOne   String   @db.Text
+  descriptionTwo   String   @db.Text
+  imageUrl         String?  @db.VarChar(500)
+  imageAlt         String   @default("Srikalahasti Kalamkari heritage textile presentation") @db.VarChar(250)
+  imageCaption     String   @default("THE ART OF THE HAND ✦ SRIKALAHASTI, INDIA") @db.VarChar(250)
+  categoryIds      Json
+  buttonText       String   @default("Read Our Story") @db.VarChar(100)
+  buttonHref       String   @default("/about") @db.VarChar(500)
+  updatedAt        DateTime @updatedAt
+  createdAt        DateTime @default(now())
+}
+
+// Separate singleton for the public /about page; homepage About content remains independent.
+model AboutPageContent {
+  id        String   @id @default("primary")
+  content   Json
+  updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now())
+}

@@ -1,0 +1,23 @@
+import {MapPin, Phone, Mail, Clock3, ArrowUpRight} from "lucide-react";
+import "./store-connect-section.css";
+
+
+// Brand marks are inline SVGs, independent of lucide-react brand-icon exports.
+function WhatsAppMark(){return <svg viewBox="0 0 32 32" width="20" height="20" aria-hidden="true" fill="currentColor"><path d="M16 .8A15.1 15.1 0 0 0 3 23.6L.9 31l7.6-2A15.2 15.2 0 1 0 16 .8Zm0 27.6a12.3 12.3 0 0 1-6.3-1.7l-.5-.3-4.5 1.2 1.2-4.4-.3-.5A12.4 12.4 0 1 1 16 28.4Zm6.8-9.2c-.4-.2-2.2-1.1-2.6-1.2-.3-.1-.6-.2-.8.2-.2.4-1 1.2-1.2 1.5-.2.2-.4.3-.8.1-.4-.2-1.6-.6-3-1.9-1.1-1-1.9-2.2-2.1-2.6-.2-.4 0-.6.2-.8l.6-.7.4-.6c.1-.2.1-.5 0-.7l-1.2-2.8c-.3-.7-.6-.6-.8-.6h-.7c-.3 0-.7.1-1 .5-.4.4-1.3 1.3-1.3 3.1s1.3 3.6 1.5 3.9c.2.2 2.5 3.9 6.1 5.4.9.4 1.6.6 2.1.8.9.3 1.8.3 2.4.2.7-.1 2.2-.9 2.5-1.8.3-.9.3-1.7.2-1.8-.1-.2-.3-.3-.7-.5Z"/></svg>}
+function InstagramMark(){return <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" fill="none"><defs><linearGradient id="skInstagramGradient" x1="0" y1="1" x2="1" y2="0"><stop stopColor="#FEDA75"/><stop offset=".35" stopColor="#FA7E1E"/><stop offset=".65" stopColor="#D62976"/><stop offset="1" stopColor="#4F5BD5"/></linearGradient></defs><rect x="1" y="1" width="22" height="22" rx="6" fill="url(#skInstagramGradient)"/><rect x="5.5" y="5.5" width="13" height="13" rx="4" stroke="white" strokeWidth="1.8"/><circle cx="12" cy="12" r="3.2" stroke="white" strokeWidth="1.8"/><circle cx="17.2" cy="6.9" r="1.1" fill="white"/></svg>}
+function YouTubeMark(){return <svg viewBox="0 0 24 24" width="23" height="23" aria-hidden="true"><rect x="1" y="4" width="22" height="16" rx="5" fill="#FF0033"/><path d="m10 8 7 4-7 4z" fill="white"/></svg>}
+
+const email="srikalahastikalamkari.sk@gmail.com";
+const stores=[
+ {name:"Srikalahasti",type:"Store & Workshop",address:"# 17-68, Bharathi Nagar, Tirupati Main Road, Near Railway Station, Srikalahasti-517640",phone:"+91 72888 48881"},
+ {name:"Tirupati",type:"Store",address:"# 6-8-1126, NGOs Colony, Opp: Balaji Silk Emporium, Revenue Ward No 6, Tirupati",phone:"+91 70364 81999"},
+];
+const instagram="https://www.instagram.com/srikalahasti_kalamkari_offical/";
+const youtube=""; // Add verified official YouTube URL here when supplied.
+const mapUrl=(address:string)=>`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address+", Andhra Pradesh, India")}`;
+export default function StoreConnectSection(){return <section className="sk-connect" aria-label="Stores and contact information"><div className="sk-connect-wrap">
+ <div className="sk-connect-heading"><span>VISIT · CONNECT · DISCOVER</span><h2>Visit Our <em>Stores</em></h2><p>Explore our Srikalahasti workshop and Tirupati store, or connect with our team.</p></div>
+ <div className="sk-connect-layout"><div className="sk-connect-stores">{stores.map(s=><article className="sk-connect-store" key={s.name}><div className="sk-connect-store-title"><div><small>{s.type}</small><h3>{s.name}</h3></div><MapPin size={22}/></div><p>{s.address}</p><div className="sk-connect-map"><iframe title={`${s.name} store map`} src={`https://www.google.com/maps?q=${encodeURIComponent(s.address+", Andhra Pradesh, India")}&output=embed`} loading="lazy" referrerPolicy="no-referrer-when-downgrade" allowFullScreen/></div><div className="sk-connect-store-actions"><a href={mapUrl(s.address)} target="_blank" rel="noopener noreferrer">Get directions <ArrowUpRight size={15}/></a><a href={`tel:${s.phone.replace(/[^+\d]/g,"")}`}><Phone size={14}/> Call store</a></div></article>)}</div>
+ <aside className="sk-connect-side" aria-label="Contact and social links"><div className="sk-connect-panel"><span className="sk-connect-kicker">PERSONAL ASSISTANCE</span><h3>Reach Our Atelier</h3><p>Questions about products, custom designs or visits? We are here to help.</p><div className="sk-connect-actions"><a className="sk-connect-wa" href="https://wa.me/917288848881" target="_blank" rel="noopener noreferrer"><WhatsAppMark/> WhatsApp <ArrowUpRight size={15}/></a><a href="tel:+917288848881"><Phone size={18}/> Call us</a><a href={`mailto:${email}`}><Mail size={18}/> Email us</a></div><div className="sk-connect-hours"><Clock3 size={17}/><span>Mon–Sat · 10 AM–8 PM</span></div></div>
+ <div className="sk-connect-panel sk-connect-social"><span className="sk-connect-kicker">FOLLOW OUR ART</span><h3>Stay Connected</h3><div className="sk-connect-social-links"><a href={instagram} target="_blank" rel="noopener noreferrer" aria-label="Instagram"><InstagramMark/> Instagram</a>{youtube&&<a href={youtube} target="_blank" rel="noopener noreferrer" aria-label="YouTube"><YouTubeMark/> YouTube</a>}</div></div></aside></div>
+ </div></section>}

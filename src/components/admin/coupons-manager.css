@@ -1,0 +1,63 @@
+.skcoupons-content{max-width:1500px}
+.skcoupons-heading{display:flex;justify-content:space-between;align-items:center;gap:20px;flex-wrap:wrap}
+.skcoupons-heading h1{font:400 clamp(30px,3vw,42px) Georgia,serif;color:#142a46;margin:12px 0 8px}
+.skcoupons-heading p{font-size:13px;color:#77859a}
+.skcoupons-primary{display:inline-flex;align-items:center;justify-content:center;gap:8px;background:#142a46;color:#fff;border:0;border-radius:9px;padding:13px 19px;font-weight:700;cursor:pointer}
+.skcoupons-primary:disabled{opacity:.55;cursor:wait}
+.skcoupons-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px;margin:28px 0}
+.skcoupons-stats article{background:#fff;border:1px solid #e5e9ef;border-radius:14px;padding:24px}
+.skcoupons-stats span{display:block;font-size:12px;color:#758296;margin-bottom:12px}
+.skcoupons-stats strong{font:32px Georgia,serif;color:#142a46}
+.skcoupons-panel{background:#fff;border:1px solid #e5e9ef;border-radius:16px;overflow:hidden}
+.skcoupons-panel-head{display:flex;align-items:center;justify-content:space-between;gap:15px;padding:24px;border-bottom:1px solid #e5e9ef}
+.skcoupons-panel-head h2{font:24px Georgia,serif;margin:9px 0 0;color:#142a46}
+.skcoupons-refresh{display:flex;align-items:center;gap:7px;background:#fff;border:1px solid #e5e9ef;border-radius:8px;padding:10px;cursor:pointer}
+.skcoupons-search{display:flex;gap:12px;padding:20px 24px;border-bottom:1px solid #e5e9ef}
+.skcoupons-search label{display:flex;align-items:center;gap:9px;border:1px solid #e5e9ef;border-radius:9px;padding:10px 12px;flex:1;min-width:0}
+.skcoupons-search input{width:100%;border:0;outline:0;font:inherit;font-size:13px}
+.skcoupons-search>button{border:0;border-radius:9px;background:#142a46;color:#fff;padding:10px 20px;cursor:pointer}
+.skcoupons-table-wrap{overflow-x:auto}
+.skcoupons-table{width:100%;min-width:900px;border-collapse:collapse;text-align:left}
+.skcoupons-table th{background:#f8fafc;color:#758296;font-size:10px;letter-spacing:1px;padding:16px}
+.skcoupons-table td{padding:18px 16px;border-top:1px solid #edf0f4;font-size:13px;vertical-align:middle}
+.skcoupons-table td strong{display:block;color:#142a46}
+.skcoupons-table td small{display:block;color:#758296;margin-top:5px}
+.skcoupons-status{display:inline-block;padding:7px 11px;border-radius:20px;background:#f1f3f6;color:#65758b;font-size:11px;font-weight:700}
+.skcoupons-status.active{background:#e6f5eb;color:#237746}
+.skcoupons-actions{display:flex;gap:7px}
+.skcoupons-actions button{display:inline-flex;align-items:center;gap:5px;background:#fff;border:1px solid #e5e9ef;border-radius:7px;padding:8px;cursor:pointer;white-space:nowrap}
+.skcoupons-actions button:disabled{opacity:.5}
+.skcoupons-empty{text-align:center;padding:65px 20px;color:#758296}
+.skcoupons-empty svg{color:#b48b52}
+.skcoupons-empty h3{font:25px Georgia,serif;color:#142a46}
+.skcoupons-pagination{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:20px 24px;border-top:1px solid #e5e9ef;font-size:12px;color:#758296}
+.skcoupons-pagination button{border:1px solid #e5e9ef;background:#fff;border-radius:7px;padding:9px 13px;margin-left:7px;cursor:pointer}
+.skcoupons-pagination button:disabled{opacity:.4;cursor:not-allowed}
+.skcoupons-notice{padding:13px 24px;background:#eff9f1;color:#237746;font-size:13px}
+.skcoupons-error{display:flex;align-items:center;gap:8px;padding:13px 20px;background:#fff0f0;color:#a22b2b;font-size:13px}
+.skcoupons-overlay{position:fixed;inset:0;z-index:1000;background:rgba(13,30,50,.55);display:flex;align-items:center;justify-content:center;padding:16px}
+.skcoupons-dialog{background:#fff;border-radius:16px;width:min(650px,100%);max-height:90dvh;overflow-y:auto;box-shadow:0 20px 70px rgba(0,0,0,.2)}
+.skcoupons-dialog-head{display:flex;align-items:center;justify-content:space-between;padding:24px;border-bottom:1px solid #e5e9ef}
+.skcoupons-dialog-head h2{font:28px Georgia,serif;color:#142a46;margin:8px 0 0}
+.skcoupons-dialog-head button{border:0;background:transparent;cursor:pointer}
+.skcoupons-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px;padding:24px}
+.skcoupons-fields label{display:flex;flex-direction:column;gap:8px;font-size:12px;font-weight:700;color:#142a46}
+.skcoupons-fields .wide{grid-column:1/-1}
+.skcoupons-fields input,.skcoupons-fields select{width:100%;min-width:0;border:1px solid #dce3ec;border-radius:9px;padding:12px;font:inherit;font-size:13px;background:#fff;color:#142a46}
+.skcoupons-fields input:focus,.skcoupons-fields select:focus{outline:2px solid #b48b52;outline-offset:1px}
+.skcoupons-dialog-footer{display:flex;justify-content:flex-end;gap:12px;padding:20px 24px;border-top:1px solid #e5e9ef}
+.skcoupons-dialog-footer>button:first-child{background:#fff;border:1px solid #dce3ec;border-radius:9px;padding:12px 18px;cursor:pointer}
+@media(max-width:700px){
+.skcoupons-heading{align-items:stretch}
+.skcoupons-heading .skcoupons-primary{width:100%}
+.skcoupons-stats{grid-template-columns:1fr;gap:10px}
+.skcoupons-stats article{padding:18px}
+.skcoupons-panel-head{padding:18px}
+.skcoupons-search{padding:16px;flex-wrap:wrap}
+.skcoupons-search>button{width:100%}
+.skcoupons-fields{grid-template-columns:1fr;padding:18px}
+.skcoupons-fields .wide{grid-column:auto}
+.skcoupons-dialog-head{padding:18px}
+.skcoupons-dialog-footer{padding:18px}
+.skcoupons-pagination{padding:16px}
+}

@@ -1,0 +1,243 @@
+"use client";
+
+import { whatsappUrl } from "@/data/store-contact";
+
+
+import { useEffect, useState } from "react";
+import Image from "next/image";
+import Link from "next/link";
+import {
+  Search, UserRound, Heart, ShoppingBag,
+  Menu, X, ChevronDown, ChevronRight
+} from "lucide-react";
+import "./premium-header.css";
+import { useShopState } from "@/lib/shop-state";
+import { megaCategories } from "@/data/mega-menu";
+
+const categories = [
+  { label: "Sarees", slug: "sarees" },
+  { label: "Dupattas", slug: "dupattas" },
+  { label: "Running Fabrics", slug: "running-fabrics" },
+  { label: "Lehengas", slug: "lehengas" },
+  { label: "Men's Wear", slug: "mens-wear" },
+  { label: "Wall Paintings", slug: "wall-paintings" },
+];
+
+const otherLinks = [
+  { label: "Collections", href: "/shop" },
+  { label: "About", href: "/about" },
+  { label: "Contact", href: "/contact" },
+];
+
+export default function PremiumHeader() {
+  const { cart, wishlist } = useShopState();
+  const cartCount = cart.reduce((sum, item) => sum + item.quantity, 0);
+  const wishlistCount = wishlist.length;
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const [shopOpen, setShopOpen] = useState(false);
+  const [activeNav, setActiveNav] = useState("shop");
+  const [selectedMega, setSelectedMega] = useState(0);
+  const [mobileShopOpen, setMobileShopOpen] = useState(false);
+  const [mobileCategory, setMobileCategory] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (!mobileOpen) return;
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setMobileOpen(false);
+        setMobileShopOpen(false);
+        setMobileCategory(null);
+      }
+    };
+    window.addEventListener("keydown", closeOnEscape);
+    return () => window.removeEventListener("keydown", closeOnEscape);
+  }, [mobileOpen]);
+
+  return (
+    <>
+      <div className="sk-heritage-bar">
+        <div className="sk-heritage-track">
+          {[0, 1].map((copy) => (
+            <div className="sk-heritage-set" key={copy} aria-hidden={copy === 1}>
+              {[
+                "THE ART OF SRIKALAHASTI",
+                "HANDCRAFTED HERITAGE",
+                "KALAMKARI, WOVEN WITH SOUL",
+                "TIMELESS INDIAN ARTISTRY",
+              ].map((message) => (
+                <span key={message}>
+                  <b>✦</b>{message}
+                </span>
+              ))}
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <header className="sk-header">
+        <div className="sk-header-main">
+          <Link href="/" className="sk-brand">
+            <span className="sk-brand-name">Srikalahasti</span>
+            <span className="sk-brand-sub">KALAMKARI</span>
+            <span className="sk-brand-caption">THE ART OF TIMELESS HERITAGE</span>
+          </Link>
+<div className="sk-left-search"><form className="sk-search" action="/shop" role="search">
+              <input
+                type="search"
+                name="q"
+                aria-label="Search products"
+                placeholder="Search Kalamkari..."
+              />
+              <button type="submit" aria-label="Search">
+                <Search size={19} strokeWidth={1.7} />
+              </button>
+            </form></div>
+
+
+          <Link href="/" className="sk-center-logo" aria-label="Srikalahasti Kalamkari home">
+            <Image
+              src="/srikalahasti-logo.png"
+              alt="Srikalahasti Kalamkari"
+              width={94}
+              height={94}
+              priority
+            />
+          </Link>
+
+          <div className="sk-actions">
+            
+            
+            
+
+            <Link href="/account" aria-label="My account" className="sk-icon">
+              <UserRound size={22} strokeWidth={1.5} />
+            </Link>
+            <Link href="/wishlist" aria-label={`Wishlist, ${wishlistCount} saved products`} className="sk-icon sk-icon-counted">
+              <Heart size={22} strokeWidth={1.5} />
+              {wishlistCount > 0 && <span className="sk-icon-badge" aria-hidden="true">{wishlistCount > 99 ? "99+" : wishlistCount}</span>}
+            </Link>
+            <Link href="/cart" aria-label={`Shopping bag, ${cartCount} items`} className="sk-icon sk-icon-counted">
+              <ShoppingBag size={22} strokeWidth={1.5} />
+              {cartCount > 0 && <span className="sk-icon-badge" aria-hidden="true">{cartCount > 99 ? "99+" : cartCount}</span>}
+            </Link>
+
+            <a
+              href={whatsappUrl}
+              className="sk-whatsapp-cta"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Chat with Srikalahasti Kalamkari on WhatsApp"
+            >
+              <span className="sk-wa-symbol" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none"
+                  width="19" height="19">
+                  <path
+                    d="M20.5 11.5a8.5 8.5 0 0 1-12.6 7.4L3.5 20l1.2-4.1a8.5 8.5 0 1 1 15.8-4.4Z"
+                    stroke="currentColor"
+                    strokeWidth="1.7"
+                    strokeLinejoin="round"
+                  />
+                  <path
+                    d="M8.2 8.4c.2-.5.5-.5.8-.5h.5l1 2.2-.7.9c.8 1.5 1.8 2.5 3.4 3.2l.9-.8 2.2 1c0 .8-.5 1.4-1.4 1.6-2.5.4-6.8-3.8-7.1-6.3-.1-.5.1-1 .4-1.3Z"
+                    fill="currentColor"
+                  />
+                </svg>
+              </span>
+              <span>WhatsApp Us</span>
+              <span aria-hidden="true">↗</span>
+            </a>
+
+            <button
+              type="button"
+              className="sk-menu-toggle"
+              aria-label={mobileOpen ? "Close menu" : "Open menu"}
+              aria-expanded={mobileOpen}
+              onClick={() => setMobileOpen(!mobileOpen)}
+            >
+              {mobileOpen ? <X size={24} /> : <Menu size={24} />}
+            </button>
+          </div>
+        </div>
+
+        {/* SK CATEGORY NAV V3: one shared mega panel for SHOP and every top-level category */}
+        <nav className="sk-navigation" aria-label="Main navigation"
+          onMouseLeave={() => setShopOpen(false)}
+          onKeyDown={(event) => { if (event.key === "Escape") setShopOpen(false); }}>
+          <Link href="/" onMouseEnter={() => setShopOpen(false)}>Home</Link>
+          <div className="sk-shop">
+            <Link href="/shop" aria-expanded={shopOpen && activeNav === "shop"}
+              aria-controls="sk-mega-menu" onMouseEnter={() => { setActiveNav("shop"); setShopOpen(true); }}
+              onFocus={() => { setActiveNav("shop"); setShopOpen(true); }}
+              onClick={() => setShopOpen(false)}>
+              Shop <ChevronDown size={14}/>
+            </Link>
+          </div>
+          {categories.map((item) => (
+            <Link key={item.slug} href={`/${item.slug}`} className="sk-nav-category"
+              aria-expanded={shopOpen && activeNav === item.slug}
+              aria-controls="sk-mega-menu"
+              onMouseEnter={() => {
+                const index = megaCategories.findIndex(x => x.slug === item.slug);
+                if (index !== -1) { setSelectedMega(index); setActiveNav(item.slug); setShopOpen(true); }
+              }}
+              onFocus={() => {
+                const index = megaCategories.findIndex(x => x.slug === item.slug);
+                if (index !== -1) { setSelectedMega(index); setActiveNav(item.slug); setShopOpen(true); }
+              }}
+              onClick={() => setShopOpen(false)}>
+              {item.label} <ChevronDown size={12}/>
+            </Link>
+          ))}
+          {otherLinks.map((item) => (
+            <Link key={item.href} href={item.href} onMouseEnter={() => setShopOpen(false)}>{item.label}</Link>
+          ))}
+          {shopOpen && <div id="sk-mega-menu" className="sk-mega" onMouseEnter={() => setShopOpen(true)}>
+            <div className="sk-mega-inner">
+              <div className="sk-mega-sidebar">
+                <span className="sk-mega-eyebrow">DISCOVER OUR CRAFT</span>
+                {megaCategories.map((item,i) => <button key={item.slug} type="button"
+                  className={selectedMega===i ? "active" : ""}
+                  onMouseEnter={() => setSelectedMega(i)} onFocus={() => setSelectedMega(i)}
+                  onClick={() => setSelectedMega(i)} aria-pressed={selectedMega===i}>
+                  {item.label}<ChevronRight size={15}/>
+                </button>)}
+                <Link href="/shop" onClick={() => setShopOpen(false)} className="sk-mega-all">Explore all products ↗</Link>
+              </div>
+              <div className="sk-mega-content">
+                <div className="sk-mega-content-head"><div>
+                  <span className="sk-mega-eyebrow">HANDCRAFTED HERITAGE</span>
+                  <h3>{megaCategories[selectedMega].label}</h3>
+                </div><Link href={`/${megaCategories[selectedMega].slug}`} onClick={() => setShopOpen(false)}>
+                  SHOP ALL {megaCategories[selectedMega].label.toUpperCase()} ↗</Link></div>
+                <div className="sk-mega-subgrid">{megaCategories[selectedMega].subcategories.map(sub =>
+                  <Link key={sub} href={`/${megaCategories[selectedMega].slug}?subcategory=${encodeURIComponent(sub)}`}
+                    onClick={() => setShopOpen(false)} className="sk-mega-sub">
+                    <span className="sk-mega-thumb" aria-hidden="true"><span>✦</span></span><span>{sub}</span>
+                  </Link>)}</div>
+              </div>
+              <Link className="sk-mega-feature" href={`/${megaCategories[selectedMega].slug}`}
+                onClick={() => setShopOpen(false)}>
+                <div className="sk-mega-feature-art"><span>✦</span><strong>THE ART OF<br/>KALAMKARI</strong></div>
+                <span className="sk-mega-feature-bottom">Explore {megaCategories[selectedMega].label}<ChevronRight size={16}/></span>
+              </Link>
+            </div>
+          </div>}
+        </nav>
+        {mobileOpen && (
+          <nav className="sk-mobile-nav" aria-label="Mobile navigation" onKeyDown={(event) => { if (event.key === "Escape") { setMobileOpen(false); setMobileShopOpen(false); setMobileCategory(null); } }}>
+            <form className="sk-mobile-search" action="/shop" role="search"><input id="sk-mobile-search-input" type="search" name="q" aria-label="Search products" placeholder="Search Kalamkari..."/><button type="submit" aria-label="Search"><Search size={18}/></button></form>
+            <Link href="/shop" onClick={() => setMobileOpen(false)}>Shop All Products</Link>
+            <Link href="/" onClick={() => setMobileOpen(false)}>Home</Link>
+            <button type="button" className="sk-mobile-shop-toggle" aria-expanded={mobileShopOpen} onClick={() => setMobileShopOpen(v=>!v)}>Shop Collections <ChevronDown size={16}/></button>
+            {mobileShopOpen && <div className="sk-mobile-mega"><Link href="/shop" onClick={() => setMobileOpen(false)}>Shop All</Link>{megaCategories.map((item,i)=><div key={item.slug}><div className="sk-mobile-category-row"><Link href={`/${item.slug}`} onClick={()=>setMobileOpen(false)}>{item.label}</Link><button type="button" aria-label={`Show ${item.label} subcategories`} onClick={()=>setMobileCategory(v=>v===i?null:i)} aria-expanded={mobileCategory===i}><ChevronDown size={15}/></button></div>{mobileCategory===i && <div className="sk-mobile-subs"><Link href={`/${item.slug}`} onClick={()=>setMobileOpen(false)}>View all {item.label}</Link>{item.subcategories.map(sub=><Link key={sub} href={`/${item.slug}?subcategory=${encodeURIComponent(sub)}`} onClick={()=>setMobileOpen(false)}>{sub}</Link>)}</div>}</div>)}</div>}
+            {otherLinks.map((item) => (
+              <Link key={item.href} href={item.href} onClick={() => setMobileOpen(false)}>
+                {item.label}
+              </Link>
+            ))}
+          </nav>
+        )}
+      </header>
+    </>
+  );
+}
