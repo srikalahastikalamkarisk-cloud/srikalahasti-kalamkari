@@ -30,7 +30,11 @@ export async function POST(request: NextRequest) {
 
     const origin = request.headers.get("origin");
 
-    if (!origin || origin !== request.nextUrl.origin) {
+    const configuredOrigin = process.env.APP_BASE_URL
+      ? new URL(process.env.APP_BASE_URL).origin
+      : request.nextUrl.origin;
+
+    if (!origin || origin !== configuredOrigin) {
       return NextResponse.json(
         { error: "Invalid request origin" },
         { status: 403 }

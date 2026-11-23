@@ -11,7 +11,11 @@ const previewCookie = "sk_theme_private_preview";
 const themeSchema = z.object({ themeId: z.string().max(100) }).strict();
 
 async function readTheme(request: NextRequest) {
-  if (request.headers.get("origin") !== request.nextUrl.origin)
+  if (request.headers.get("origin") !== (
+    process.env.APP_BASE_URL
+      ? new URL(process.env.APP_BASE_URL).origin
+      : request.nextUrl.origin
+  ))
     return { error: "Invalid origin", status: 403 } as const;
   if (!request.body) return { error: "Missing request body", status: 400 } as const;
   if (Number(request.headers.get("content-length") || "0") > 1024)
@@ -46,7 +50,11 @@ export async function POST(request: NextRequest) {
 
 export async function DELETE(request: NextRequest) {
   if (!await getCurrentAdmin()) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  if (request.headers.get("origin") !== request.nextUrl.origin) return NextResponse.json({ error: "Invalid origin" }, { status: 403 });
+  if (request.headers.get("origin") !== (
+    process.env.APP_BASE_URL
+      ? new URL(process.env.APP_BASE_URL).origin
+      : request.nextUrl.origin
+  )) return NextResponse.json({ error: "Invalid origin" }, { status: 403 });
   const response = NextResponse.json({ success: true });
   response.cookies.set(previewCookie, "", { httpOnly: true, sameSite: "lax", secure: process.env.NODE_ENV === "production", path: "/", maxAge: 0 });
   return response;

@@ -4,7 +4,11 @@ import { ADMIN_COOKIE } from "@/lib/admin-auth";
 export async function POST(request: NextRequest) {
   const origin = request.headers.get("origin");
 
-  if (!origin || origin !== request.nextUrl.origin) {
+  if (!origin || origin !== (
+      process.env.APP_BASE_URL
+        ? new URL(process.env.APP_BASE_URL).origin
+        : request.nextUrl.origin
+    )) {
     return NextResponse.json(
       { error: "Invalid request origin" },
       { status: 403 }

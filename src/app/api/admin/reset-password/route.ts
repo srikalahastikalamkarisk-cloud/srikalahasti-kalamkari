@@ -15,7 +15,11 @@ function clientAddress(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    if (!request.headers.get("content-type")?.includes("application/json") || request.headers.get("origin") !== request.nextUrl.origin) {
+    if (!request.headers.get("content-type")?.includes("application/json") || request.headers.get("origin") !== (
+      process.env.APP_BASE_URL
+        ? new URL(process.env.APP_BASE_URL).origin
+        : request.nextUrl.origin
+    )) {
       return NextResponse.json({ error: "Invalid request" }, { status: 400 });
     }
     const raw = await request.text();

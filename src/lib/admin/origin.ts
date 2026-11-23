@@ -1,5 +1,9 @@
 import type { NextRequest } from "next/server";
 
 export function validOrigin(req: NextRequest) {
-  return req.headers.get("origin") === req.nextUrl.origin;
+  const configuredOrigin = process.env.APP_BASE_URL
+    ? new URL(process.env.APP_BASE_URL).origin
+    : req.nextUrl.origin;
+
+  return req.headers.get("origin") === configuredOrigin;
 }
