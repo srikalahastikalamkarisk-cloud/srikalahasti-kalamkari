@@ -1,0 +1,67 @@
+name: Srikalahasti Production Build
+
+on:
+  push:
+    branches:
+      - feature/50-palettes-v2
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: TypeScript check
+        run: npx tsc --noEmit
+
+      - name: Production build
+        run: npm run build
+
+      - name: Verify standalone package
+        shell: bash
+        run: |
+          test -f .next/standalone/server.js
+
+          python3 - <<'PY'
+          from pathlib import Path
+
+          root = Path(".next/standalone")
+
+          forbidden = [
+              p for p in root.rglob("*")
+              if p.is_file() and (
+                  p.name == ".env"
+                  or p.name.startswith(".env.")
+                  or ".git" in p.parts
+                  or "backups" in p.parts
+                  or "artifacts" in p.parts
+                  or p.suffix in {".pem", ".key"}
+              )
+          ]
+
+          print("Forbidden files:", len(forbidden))
+
+          if forbidden:
+              raise SystemExit("STOP: Unsafe standalone package")
+
+          print("PASS: Basic standalone safety check")
+          PY
+
+      - name: Report package size
+        run: du -sh .next/standalone
