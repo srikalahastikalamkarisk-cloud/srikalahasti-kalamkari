@@ -30,11 +30,11 @@ jobs:
       - name: Generate Prisma Client
         run: npx prisma generate
 
-      - name: TypeScript check
-        run: npx tsc --noEmit
-
       - name: Production build
         run: npm run build
+
+      - name: TypeScript check
+        run: npx tsc --noEmit
 
       - name: Verify standalone package
         shell: bash
