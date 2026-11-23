@@ -5,8 +5,8 @@ This runbook prepares a secure release; it does not authorize production activat
 ## Verified repository state
 
 - Branch: `feature/50-palettes-v2`.
-- Deployment implementation commit: `71b5836e18b50d0fc9a358de605f5a1b0d523c46`.
-- GitHub Actions `production-build.yml` succeeded for that exact commit and uploaded the verified standalone artifact (run `45245599384`). A follow-up updates the pinned actions to native Node.js 24 runtimes; its CI result must pass before using that newer commit.
+- Deployment implementation commit: `71b5836e18b50d0fc9a358de605f5a1b0d523c46`; its build and standalone artifact passed in run `45245599384`.
+- Current release-candidate commit, including native Node.js 24 GitHub Action pins: `6b527c5b634e5e6eab6fa97fa13b30c60fa7418f`. Its build, TypeScript, packaging checks, and standalone artifact upload passed in run `45246503636`; the artifact is `hostycare-standalone-6b527c5b634e5e6eab6fa97fa13b30c60fa7418f` (35,545,574 bytes).
 - CI builds on Ubuntu with Node.js 22 and Next.js standalone output. The build-only dummy `DATABASE_URL` is scoped to the build step and is never copied into the release as runtime configuration.
 - The local workspace contains hundreds of untracked items, mostly old snapshots/backups. The deployment commit staged only reviewed release files; the untracked items are not included in the CI checkout or release artifact. Do not run broad Git clean/add commands.
 - The current MySQL Prisma chain has 34 directories and a known ordering defect: `20261117082146_add_razorpay_payment_fields` alters `Order` before `20261117133000_add_orders` creates it. The fresh-install baseline is the safe path for a new empty production schema. Do not run the historical chain from empty and do not run `migrate reset`.
