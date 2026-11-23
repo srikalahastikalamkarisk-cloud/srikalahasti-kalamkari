@@ -1,14 +1,15 @@
-const ALWAYS_AVAILABLE_PAYMENT_ROUTES = new Set([
+const ALWAYS_AVAILABLE_ROUTES = new Set([
   "/api/payments/status",
   "/api/payments/verify",
   "/api/payments/webhook",
+  "/api/health",
 ]);
 
 export function isMaintenanceExemptPath(pathname: string) {
   return pathname === "/maintenance" ||
     pathname === "/admin" || pathname.startsWith("/admin/") ||
     pathname === "/api/admin" || pathname.startsWith("/api/admin/") ||
-    ALWAYS_AVAILABLE_PAYMENT_ROUTES.has(pathname);
+    ALWAYS_AVAILABLE_ROUTES.has(pathname);
 }
 
 export function isApiPath(pathname: string) {

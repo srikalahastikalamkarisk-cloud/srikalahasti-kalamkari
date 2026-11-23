@@ -10,7 +10,7 @@ import {
   shouldShowMaintenance,
 } from "../src/lib/maintenance/route-policy";
 
-test("maintenance is default-off and only exempts required admin and payment routes", () => {
+test("maintenance is default-off and exempts required admin, payment, and health routes", () => {
   const publicPaths = ["/", "/shop", "/product/item", "/api/checkout/preview", "/api/media/products/example.png", "/api/payments/create-order"];
   for (const path of publicPaths) {
     assert.equal(shouldShowMaintenance(path, false), false, `${path} should be live when disabled`);
@@ -19,6 +19,7 @@ test("maintenance is default-off and only exempts required admin and payment rou
   const exempt = [
     "/maintenance", "/admin", "/admin/settings", "/api/admin/settings/website-status",
     "/api/payments/status", "/api/payments/verify", "/api/payments/webhook",
+    "/api/health",
   ];
   for (const path of exempt) {
     assert.equal(isMaintenanceExemptPath(path), true, `${path} must stay available`);
@@ -61,7 +62,7 @@ test("isolated maintenance fixture returns 503s while LIVE and exempt routes con
 
   const live = createMaintenanceResponse(new NextRequest("http://localhost/shop"), false);
   assert.equal(live.headers.get("x-middleware-next"), "1");
-  for (const path of ["/admin/settings", "/api/admin/settings/website-status", "/api/payments/webhook", "/api/payments/verify", "/api/payments/status"]) {
+  for (const path of ["/admin/settings", "/api/admin/settings/website-status", "/api/payments/webhook", "/api/payments/verify", "/api/payments/status", "/api/health"]) {
     const passThrough = createMaintenanceResponse(new NextRequest(`http://localhost${path}`), true);
     assert.equal(passThrough.headers.get("x-middleware-next"), "1", `${path} must remain reachable`);
   }
