@@ -1,6 +1,6 @@
 # HostyCare production release runbook
 
-This runbook prepares a secure release; it does not authorize production activation. The HostyCare deployment workflow has a manual dispatch, a disabled-by-default repository variable, and a protected GitHub Environment. Do not enable that variable or approve the Environment until every prerequisite below is confirmed.
+This runbook prepares a secure release; it does not authorize production activation. The HostyCare deployment workflow has a manual dispatch that defaults to artifact-verification-only, a disabled-by-default repository variable, and a protected GitHub Environment. Contacting HostyCare requires explicitly disabling verify-only, enabling the repository gate, and passing the protected Environment review. Do not do those actions until every prerequisite below is confirmed.
 
 ## Verified repository state
 
