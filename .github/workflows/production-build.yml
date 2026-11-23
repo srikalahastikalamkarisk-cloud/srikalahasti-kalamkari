@@ -1,0 +1,100 @@
+name: Srikalahasti Production Build
+
+on:
+  push:
+    branches:
+      - feature/50-palettes-v2
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: "22"
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate Prisma Client
+        run: npx prisma generate
+
+      - name: Production build
+        env:
+          DATABASE_URL: mysql://build_only:unused@127.0.0.1:3306/build_placeholder
+        run: npm run build
+
+      - name: TypeScript check
+        run: npx tsc --noEmit
+
+      - name: Verify standalone package
+        shell: bash
+        run: |
+          test -f .next/standalone/server.js
+
+          python3 - <<'PY'
+          from pathlib import Path
+
+          root = Path(".next/standalone")
+
+          forbidden = [
+              p for p in root.rglob("*")
+              if p.is_file() and (
+                  p.name == ".env"
+                  or p.name.startswith(".env.")
+                  or ".git" in p.parts
+                  or "backups" in p.parts
+                  or "artifacts" in p.parts
+                  or p.suffix in {".pem", ".key"}
+              )
+          ]
+
+          print("Forbidden files:", len(forbidden))
+
+          if forbidden:
+              raise SystemExit("STOP: Unsafe standalone package")
+
+          print("PASS: Basic standalone safety check")
+          PY
+
+      - name: Test release packager
+        run: node --test scripts/package-standalone.test.mjs
+
+      - name: Assemble allowlisted Linux release
+        env:
+          RELEASE_SHA: ${{ github.sha }}
+        run: |
+          release_dir="$RUNNER_TEMP/srikalahasti-release-$RELEASE_SHA"
+          archive="$RUNNER_TEMP/srikalahasti-release-$RELEASE_SHA.tar.gz"
+          node scripts/package-standalone.mjs "$release_dir"
+          printf '%s\n' "$RELEASE_SHA" > "$release_dir/RELEASE_SHA"
+          tar -C "$release_dir" -czf "$archive" .
+          (cd "$RUNNER_TEMP" && sha256sum "$(basename "$archive")" > "$(basename "$archive").sha256")
+          test -s "$archive"
+          test -s "$archive.sha256"
+
+      - name: Upload verified release artifact
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: hostycare-standalone-${{ github.sha }}
+          path: |
+            ${{ runner.temp }}/srikalahasti-release-${{ github.sha }}.tar.gz
+            ${{ runner.temp }}/srikalahasti-release-${{ github.sha }}.tar.gz.sha256
+          if-no-files-found: error
+          retention-days: 7
+
+      - name: Report package size
+        run: du -sh "$RUNNER_TEMP/srikalahasti-release-${GITHUB_SHA}.tar.gz"
