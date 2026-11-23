@@ -31,6 +31,8 @@ jobs:
         run: npx prisma generate
 
       - name: Production build
+        env:
+          DATABASE_URL: mysql://build_only:unused@127.0.0.1:3306/build_placeholder
         run: npm run build
 
       - name: TypeScript check
