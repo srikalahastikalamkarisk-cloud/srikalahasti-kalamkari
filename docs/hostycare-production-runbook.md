@@ -5,10 +5,10 @@ This runbook prepares a secure release; it does not authorize production activat
 ## Verified repository state
 
 - Branch: `feature/50-palettes-v2`.
-- Source commit: `3df5b88372cbc8b92833f9588cd2d0a4711d12e8`.
-- GitHub Actions `production-build.yml` succeeded for that exact commit (run `45236977850`).
+- Deployment implementation commit: `71b5836e18b50d0fc9a358de605f5a1b0d523c46`.
+- GitHub Actions `production-build.yml` succeeded for that exact commit and uploaded the verified standalone artifact (run `45245599384`). A follow-up updates the pinned actions to native Node.js 24 runtimes; its CI result must pass before using that newer commit.
 - CI builds on Ubuntu with Node.js 22 and Next.js standalone output. The build-only dummy `DATABASE_URL` is scoped to the build step and is never copied into the release as runtime configuration.
-- The branch has no tracked modifications, but the local checkout has hundreds of untracked items, mostly old snapshots/backups. They are not included in the CI checkout or release artifact. Do not run broad Git clean/add commands.
+- The local workspace contains hundreds of untracked items, mostly old snapshots/backups. The deployment commit staged only reviewed release files; the untracked items are not included in the CI checkout or release artifact. Do not run broad Git clean/add commands.
 - The current MySQL Prisma chain has 34 directories and a known ordering defect: `20261117082146_add_razorpay_payment_fields` alters `Order` before `20261117133000_add_orders` creates it. The fresh-install baseline is the safe path for a new empty production schema. Do not run the historical chain from empty and do not run `migrate reset`.
 - Prisma validation passes and a schema diff between `prisma/fresh-install/baseline.prisma` and `prisma/schema.prisma` reports no difference.
 
@@ -16,7 +16,7 @@ This runbook prepares a secure release; it does not authorize production activat
 
 HostyCare's public hosting page advertises cPanel, Node.js, SSH/Git, MySQL/MariaDB and SSL. That does not confirm this account's Node application type, incoming SSH reachability, filesystem permissions, process manager, or persistent storage. The cPanel Node.js setup tool can use Passenger and a `tmp/restart.txt` marker, but confirm the actual account before relying on it. See [HostyCare hosting](https://www.hostycare.com/hosting/), [cPanel Node.js deployment docs](https://docs.cpanel.net/knowledge-base/web-services/how-to-install-a-node.js-application/), and [cPanel restart instructions](https://support.cpanel.net/hc/en-us/articles/1500002443862-How-to-restart-an-application-that-s-using-cPanel-s-Application-Manager).
 
-In this workspace, SSH hostname lookup failed for the supplied server name, and the GitHub CLI credentials are invalid. No server or GitHub mutation was attempted. The workflow is prepared but cannot be pushed or tested against HostyCare until access is repaired.
+In this workspace, SSH hostname lookup failed for the supplied server name. The deployment implementation was pushed to GitHub and its production build/artifact passed; no HostyCare server mutation has been attempted. HostyCare automation remains blocked until the owner confirms SSH reachability, the host fingerprint, cPanel runtime/restart support, production database, persistent media location, and rollback release.
 
 ## Release contents and deployment flow
 
