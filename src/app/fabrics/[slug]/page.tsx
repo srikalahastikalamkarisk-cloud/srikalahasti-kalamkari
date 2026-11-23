@@ -2,9 +2,21 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { fabrics } from "@/lib/fabric-collections";
+import type { Metadata } from "next";
 
 export function generateStaticParams() {
   return fabrics.map((fabric) => ({ slug: fabric.slug }));
+}
+
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  const { slug } = await params;
+  const fabric = fabrics.find(item => item.slug === slug);
+  if (!fabric) return { title: "Fabric Not Found | Srikalahasti Kalamkari", robots: { index: false, follow: false } };
+  return {
+    title: `${fabric.name} | Srikalahasti Kalamkari`,
+    description: `${fabric.name} fabric information from Srikalahasti Kalamkari. Product listings will be added when the fabric collection is connected to the catalog.`,
+    robots: { index: false, follow: true },
+  };
 }
 
 export default async function FabricPage({
@@ -17,14 +29,12 @@ export default async function FabricPage({
   if (!fabric) notFound();
 
   return (
-    <main style={{
+    <main className="sk-fabric-detail" style={{
       minHeight: "75vh",
-      background: "#f8f3e9",
-      color: "#10213b",
       padding: "80px 24px",
       textAlign: "center"
     }}>
-      <Link href="/" style={{ color: "#98743b" }}>
+      <Link href="/" className="sk-fabric-detail-back">
         ← Back to Home
       </Link>
       <h1 style={{

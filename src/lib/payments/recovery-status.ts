@@ -4,7 +4,7 @@ export type RecoveryOrder = {
   paymentAttempts: Array<{ status: string }>;
 } | null;
 
-export function recoveryStatusFromOrder(order: RecoveryOrder) {
+export function recoveryStatusFromOrder(order: RecoveryOrder, retryAllowed = false) {
   if (!order) {
     return {
       success: true,
@@ -26,7 +26,7 @@ export function recoveryStatusFromOrder(order: RecoveryOrder) {
     return {
       success: true,
       status: "FAILED",
-      retryAllowed: false,
+      retryAllowed,
     };
   }
 

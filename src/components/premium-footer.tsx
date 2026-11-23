@@ -70,7 +70,22 @@ export default async function PremiumFooter() {
           <span className="skf-hours">{d.hours}</span>
         </section>
       </div>
-      <div className="skf-bottom"><span>© {new Date().getFullYear()} {brand}. All rights reserved.</span>{d.legal.length > 0 && <nav aria-label="Legal links">{d.legal.map(x=><Link key={x.label} href={x.href}>{x.label}</Link>)}</nav>}</div>
+      <div className="skf-developer-credit">
+          <span className="skf-developer-label">Website Developed by</span>
+          <a
+            className="skf-developer-brand"
+            href="https://venutrinity.in/"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Venu Trinity <span aria-hidden="true">↗</span>
+          </a>
+          <span className="skf-developer-separator" aria-hidden="true">|</span>
+          <a className="skf-developer-phone" href="tel:+919849743774">
+            +91 98497 43774
+          </a>
+        </div>
+        <div className="skf-bottom"><span>© {new Date().getFullYear()} {brand}. All rights reserved.</span>{d.legal.length > 0 && <nav aria-label="Legal links">{d.legal.map(x=><Link key={x.label} href={x.href}>{x.label}</Link>)}</nav>}</div>
     </div>
   </footer>;
 }

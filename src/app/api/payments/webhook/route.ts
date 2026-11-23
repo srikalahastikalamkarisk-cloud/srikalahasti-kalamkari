@@ -5,6 +5,8 @@ import { reconcilePaidInventory } from "@/lib/payments/reconcile-paid-inventory"
 import { verifyWebhookSignature } from "@/lib/payments/signatures";
 import { readBoundedBody } from "@/lib/payments/request-guard-stream";
 import { reconcileCouponRedemption } from "@/lib/checkout/reconcile-coupon-redemption";
+import { isAuthoritativePaidOrder } from "@/lib/payments/order-paid-validation";
+import { getRazorpayClient } from "@/lib/payments/razorpay";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -28,7 +30,24 @@ type WebhookBody = {
     payment?: {
       entity?: PaymentEntity;
     };
+    order?: {
+      entity?: {
+        id?: unknown;
+        amount?: unknown;
+        amount_paid?: unknown;
+        currency?: unknown;
+        status?: unknown;
+      };
+    };
   };
+};
+
+type PaidOrderEntity = {
+  id?: unknown;
+  amount?: unknown;
+  amount_paid?: unknown;
+  currency?: unknown;
+  status?: unknown;
 };
 
 function response(
@@ -44,6 +63,8 @@ function response(
 export async function POST(request: NextRequest) {
   let verifiedEventType: string | undefined;
   let verifiedPayment: PaymentEntity | undefined;
+  let verifiedOrder: PaidOrderEntity | undefined;
+  let authoritativeOrderPaid = false;
 
   try {
     const signature = request.headers.get(
@@ -135,6 +156,7 @@ export async function POST(request: NextRequest) {
     }
 
     const payment = body.payload?.payment?.entity;
+    const paidOrder = body.payload?.order?.entity;
 
     if (
       eventType === "payment.captured" ||
@@ -186,6 +208,34 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    if (eventType === "order.paid") {
+      if (
+        !paidOrder ||
+        typeof paidOrder.id !== "string" ||
+        !/^order_[A-Za-z0-9]+$/.test(paidOrder.id) ||
+        !Number.isSafeInteger(paidOrder.amount) ||
+        !Number.isSafeInteger(paidOrder.amount_paid) ||
+        (paidOrder.amount as number) <= 0 ||
+        paidOrder.amount_paid !== paidOrder.amount ||
+        paidOrder.currency !== "INR" ||
+        paidOrder.status !== "paid"
+      ) {
+        return response({ error: "Invalid paid-order event payload." }, 400);
+      }
+
+      verifiedOrder = paidOrder;
+      // A signed webhook is necessary but the provider's current order record
+      // is also checked before this event can mark a local order as paid.
+      const providerOrder = await getRazorpayClient().orders.fetch(paidOrder.id);
+      // Local amount is checked again under the order lock below.
+      authoritativeOrderPaid = isAuthoritativePaidOrder({
+        expectedOrderId: paidOrder.id,
+        expectedAmountPaise: paidOrder.amount as number,
+        payload: paidOrder,
+        provider: providerOrder,
+      });
+    }
+
     // These values are available to the duplicate-event catch handler
     // only after the webhook signature and payload checks pass.
     verifiedEventType = eventType;
@@ -196,6 +246,12 @@ export async function POST(request: NextRequest) {
         data: {
           eventId,
           eventType,
+          razorpayOrderId:
+            typeof payment?.order_id === "string"
+              ? payment.order_id
+              : typeof paidOrder?.id === "string"
+                ? paidOrder.id
+                : null,
           status: "RECEIVED",
         },
       });
@@ -214,14 +270,17 @@ export async function POST(request: NextRequest) {
       // but never treated as successful payments.
       if (
         eventType !== "payment.captured" &&
-        eventType !== "payment.failed"
+        eventType !== "payment.failed" &&
+        eventType !== "order.paid"
       ) {
         await finishEvent("IGNORED");
         return "IGNORED" as const;
       }
 
-      const paymentOrderId = payment!.order_id as string;
-      const paymentId = payment!.id as string;
+      const paymentOrderId = eventType === "order.paid"
+        ? paidOrder!.id as string
+        : payment!.order_id as string;
+      const paymentId = payment?.id as string | undefined;
 
       const initialAttempt = await tx.paymentAttempt.findFirst({
         where: {
@@ -267,11 +326,16 @@ export async function POST(request: NextRequest) {
 
       if (
         order.razorpayOrderId !== paymentOrderId ||
-        Number(order.totalAmount) * 100 !==
-          (payment!.amount as number) ||
-        attempt.amountPaise !==
-          (payment!.amount as number) ||
-        attempt.currency !== payment!.currency
+        Number(order.totalAmount) * 100 !== attempt.amountPaise ||
+        order.currency !== "INR" ||
+        attempt.currency !== "INR" ||
+        (eventType === "order.paid"
+          ? !authoritativeOrderPaid ||
+            paidOrder!.amount !== attempt.amountPaise ||
+            paidOrder!.amount_paid !== attempt.amountPaise ||
+            paidOrder!.currency !== attempt.currency
+          : attempt.amountPaise !== payment!.amount ||
+            attempt.currency !== payment!.currency)
       ) {
         await finishEvent("REVIEW");
         return "REVIEW" as const;
@@ -283,11 +347,40 @@ export async function POST(request: NextRequest) {
         return "REVIEW" as const;
       }
 
+      if (eventType === "order.paid") {
+        if (order.paymentStatus === "PAID") {
+          await finishEvent("PROCESSED");
+          return "ALREADY_PAID" as const;
+        }
+
+        await tx.paymentAttempt.update({
+          where: { id: attempt.id },
+          data: { status: "CAPTURED" },
+        });
+        await tx.order.update({
+          where: { id: order.id },
+          data: { paymentStatus: "PAID", paidAt: order.paidAt ?? new Date() },
+        });
+        await finishEvent("PROCESSED");
+        return "PAID" as const;
+      }
+
       if (eventType === "payment.captured") {
         if (order.paymentStatus === "PAID") {
-          if (order.paymentId !== paymentId) {
+          if (order.paymentId && order.paymentId !== paymentId) {
             await finishEvent("REVIEW");
             return "REVIEW" as const;
+          }
+
+          if (!order.paymentId) {
+            await tx.paymentAttempt.update({
+              where: { id: attempt.id },
+              data: { razorpayPaymentId: paymentId, status: "CAPTURED" },
+            });
+            await tx.order.update({
+              where: { id: order.id },
+              data: { paymentId, paidAt: order.paidAt ?? new Date() },
+            });
           }
 
           await finishEvent("PROCESSED");
@@ -351,11 +444,11 @@ export async function POST(request: NextRequest) {
     let couponStatus: string | undefined;
 
     if (
-      eventType === "payment.captured" &&
+      (eventType === "payment.captured" || eventType === "order.paid") &&
       (result === "PAID" || result === "ALREADY_PAID")
     ) {
       const paidAttempt = await prisma.paymentAttempt.findFirst({
-        where: { razorpayOrderId: payment!.order_id as string },
+        where: { razorpayOrderId: eventType === "order.paid" ? paidOrder!.id as string : payment!.order_id as string },
         select: { orderId: true },
       });
 
@@ -454,6 +547,37 @@ export async function POST(request: NextRequest) {
                   inventoryStatus = await reconcilePaidInventory(
                     attempt.orderId
                   );
+                }
+              }
+            }
+
+            if (
+              existing.eventType === "order.paid" &&
+              existing.status === "PROCESSED" &&
+              verifiedEventType === "order.paid" &&
+              authoritativeOrderPaid &&
+              verifiedOrder &&
+              typeof verifiedOrder.id === "string" &&
+              typeof verifiedOrder.amount === "number" &&
+              verifiedOrder.currency === "INR"
+            ) {
+              const attempt = await prisma.paymentAttempt.findFirst({
+                where: {
+                  razorpayOrderId: verifiedOrder.id,
+                  status: "CAPTURED",
+                  amountPaise: verifiedOrder.amount,
+                  currency: "INR",
+                },
+                select: { orderId: true },
+              });
+              if (attempt) {
+                const order = await prisma.order.findUnique({
+                  where: { id: attempt.orderId },
+                  select: { paymentStatus: true, razorpayOrderId: true },
+                });
+                if (order?.paymentStatus === "PAID" && order.razorpayOrderId === verifiedOrder.id) {
+                  couponStatus = await reconcileCouponRedemption(attempt.orderId);
+                  inventoryStatus = await reconcilePaidInventory(attempt.orderId);
                 }
               }
             }

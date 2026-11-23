@@ -20,7 +20,7 @@
 .sim4-number{position:absolute;top:12px;left:12px;background:#10213bdc;color:#fff;padding:7px 10px;border-radius:30px;font:11px Arial,sans-serif;z-index:2}
 .sim4-sound{position:absolute;top:11px;right:11px;width:36px;height:36px;border-radius:50%;border:0;background:#fffef0;color:#10213b;font-size:20px;cursor:pointer;z-index:3}
 .sim4-external{position:absolute;bottom:72px;left:50%;transform:translateX(-50%);z-index:3;white-space:nowrap;background:#fff;color:#10213b;border-radius:30px;padding:9px 15px;font-size:11px}
-.sim4-overlay{position:absolute;bottom:0;left:0;right:0;padding:45px 15px 17px;background:linear-gradient(0deg,#07182dcc,transparent);color:#fff;display:flex;flex-direction:column;gap:5px;pointer-events:none}
+.sim4-overlay{position:absolute;bottom:0;left:0;right:0;padding:45px 15px 17px;background:linear-gradient(0deg,color-mix(in srgb,var(--sk-theme-foreground,#07182d) 98%,transparent) 0%,color-mix(in srgb,var(--sk-theme-foreground,#07182d) 96%,transparent) 70%,color-mix(in srgb,var(--sk-theme-foreground,#07182d) 96%,transparent) 100%);color:#fff;display:flex;flex-direction:column;gap:5px;pointer-events:none}
 .sim4-overlay span{font-size:8px;letter-spacing:.18em;color:#e9c98b}.sim4-overlay strong{font:400 clamp(14px,1.2vw,18px) Georgia,serif}
 .sim4-footer{width:min(1350px,90%);margin:8px auto 0;display:grid;grid-template-columns:1fr 1fr 1fr;align-items:center;gap:16px}
 .sim4-current{display:flex;flex-direction:column;gap:7px}.sim4-current span{font:10px Arial,sans-serif;letter-spacing:.13em;color:#b58a43}.sim4-current strong{font:400 19px Georgia,serif}

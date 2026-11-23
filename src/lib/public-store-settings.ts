@@ -45,6 +45,13 @@ function optionalLogoUrl(value: string | null) {
   return optionalHttpsUrl(normalized);
 }
 
+function optionalFaviconUrl(value: string | null) {
+  const normalized = optionalText(value);
+  if (!normalized) return null;
+  if (/^\/api\/media\/products\/[a-f0-9-]{36}\.(png|jpg|webp|ico)$/.test(normalized)) return normalized;
+  return optionalHttpsUrl(normalized);
+}
+
 export const getPublicStoreSettings = cache(async (): Promise<PublicStoreSettings | null> => {
   try {
     const settings = await prisma.storeSettings.findUnique({
@@ -71,7 +78,7 @@ export const getPublicStoreSettings = cache(async (): Promise<PublicStoreSetting
       storeName: optionalText(settings.storeName),
       description: optionalText(settings.description),
       logoUrl: optionalLogoUrl(settings.logoUrl),
-      faviconUrl: optionalHttpsUrl(settings.faviconUrl),
+      faviconUrl: optionalFaviconUrl(settings.faviconUrl),
       contactEmail: optionalText(settings.contactEmail),
       contactPhone: optionalText(settings.contactPhone),
       whatsappNumber: optionalText(settings.whatsappNumber),

@@ -1,4 +1,4 @@
-export const dynamic = "force-dynamic";
+import type { Metadata } from "next";
 
 import PremiumFooter from "@/components/premium-footer";
 import HeritageIntro from "@/components/heritage-intro";
@@ -17,6 +17,22 @@ import { getHomepageHeroSlides } from "@/lib/hero-slides";
 import { getHomepageVideoStories } from "@/lib/video-stories";
 import ShopByCategory from "@/components/shop-by-category";
 import { getStorefrontProducts } from "@/lib/storefront-products";
+import HomeSeoIntro from "@/components/home-seo-intro";
+import { HomeOrganizationJsonLd } from "@/components/seo-jsonld";
+
+export const dynamic = "force-dynamic";
+
+const siteUrl = "https://srikalahastikalamkari.in";
+const homeTitle = "Srikalahasti Kalamkari | Hand-Painted Kalamkari Sarees";
+const homeDescription = "Explore traditional Srikalahasti Kalamkari sarees featuring intricate hand-drawn and hand-painted artistry. Discover authentic Kalamkari craftsmanship and timeless designs.";
+
+export const metadata: Metadata = {
+  title: homeTitle,
+  description: homeDescription,
+  alternates: { canonical: `${siteUrl}/` },
+  openGraph: { title: homeTitle, description: homeDescription, url: `${siteUrl}/`, type: "website", images: [{ url: "/intro/heritage-logo.png", alt: "Srikalahasti Kalamkari" }] },
+  twitter: { card: "summary_large_image", title: homeTitle, description: homeDescription, images: ["/intro/heritage-logo.png"] },
+};
 
 export default async function Home() {
   const aboutKalamkari = await getHomepageAboutKalamkari();
@@ -38,6 +54,7 @@ export default async function Home() {
       <main id="main-content">
         <HeroSlider slides={heroSlides} />
         <ShopByCategory />
+        <HomeSeoIntro />
         <BestCollection variant="discover" products={products} />
         <BestCollection variant="best" products={products.filter(p => p.isFeatured)} />
         {false && <CollectionsAndFabrics />}
@@ -50,6 +67,7 @@ export default async function Home() {
         
       </main>
       <PremiumFooter />
+      <HomeOrganizationJsonLd storeName={storeSettings?.storeName || "Srikalahasti Kalamkari"} logoUrl={storeSettings?.logoUrl || "/intro/heritage-logo.png"} email={storeSettings?.contactEmail} phone={storeSettings?.contactPhone} />
     </>
   );
 }

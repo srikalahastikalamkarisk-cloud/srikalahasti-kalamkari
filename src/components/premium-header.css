@@ -1210,3 +1210,65 @@
     background:#193b60;
   }
 }
+
+
+/* STEP 337 — CONDITIONAL GRADIENT HEADER */
+
+/*
+  This styling activates only when an alternative theme
+  is explicitly assigned to an ancestor element.
+
+  The original Navy & Gold theme remains unchanged.
+*/
+
+[data-storefront-theme]:not(
+  [data-storefront-theme="royal-navy-gold-01"]
+) .sk-heritage-bar {
+  background: var(--sk-theme-navigation);
+  border-bottom-color: var(--sk-theme-border);
+}
+
+[data-storefront-theme]:not(
+  [data-storefront-theme="royal-navy-gold-01"]
+) .sk-header {
+  background: var(--sk-theme-header);
+  border-bottom-color: var(--sk-theme-border);
+}
+
+[data-storefront-theme]:not(
+  [data-storefront-theme="royal-navy-gold-01"]
+) .sk-heritage-set span,
+[data-storefront-theme]:not(
+  [data-storefront-theme="royal-navy-gold-01"]
+) .sk-heritage-set b {
+  color: var(--sk-theme-color-accentOnDark);
+}
+
+
+/* STEP 373 — CHAMPAGNE SCROLLING TEXT */
+[data-storefront-theme]:not(
+  [data-storefront-theme="royal-navy-gold-01"]
+) .sk-heritage-set span,
+[data-storefront-theme]:not(
+  [data-storefront-theme="royal-navy-gold-01"]
+) .sk-heritage-set b {
+  color: var(--sk-theme-color-accentOnDark) !important;
+  opacity: 1 !important;
+}
+
+/* Keep expandable mobile category labels and their chevrons on one aligned row. */
+@media (max-width: 1050px) {
+  .sk-mobile-category-row { width: 100%; min-width: 0; gap: 6px; }
+  .sk-mobile-category-row > a {
+    flex: 1 1 auto;
+    min-width: 0;
+    white-space: nowrap;
+    overflow-wrap: normal;
+  }
+  .sk-mobile-category-row > button {
+    width: 44px;
+    min-width: 44px;
+    flex: 0 0 44px;
+    justify-content: center;
+  }
+}

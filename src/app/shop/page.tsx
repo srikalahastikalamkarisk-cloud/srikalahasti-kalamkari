@@ -8,10 +8,13 @@ import { getStorefrontProducts } from "@/lib/storefront-products";
 
 export const dynamic = "force-dynamic";
 
-export const metadata: Metadata = {
-  title: "Shop Handcrafted Kalamkari | Srikalahasti Kalamkari",
-  description: "Explore Srikalahasti Kalamkari sarees, dupattas, fabrics, lehengas and more.",
-};
+const siteUrl = "https://srikalahastikalamkari.in";
+export async function generateMetadata({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }): Promise<Metadata> {
+  const query = await searchParams;
+  const title = "Shop Srikalahasti Kalamkari Sarees & Textiles";
+  const description = "Browse currently available Srikalahasti Kalamkari sarees, textiles and handcrafted pieces. Check each listing for its materials, technique, price and availability.";
+  return { title, description, alternates: { canonical: `${siteUrl}/shop` }, ...(query.q ? { robots: { index: false, follow: true } } : {}), openGraph: { title, description, url: `${siteUrl}/shop`, type: "website" }, twitter: { card: "summary", title, description } };
+}
 export default async function ShopPage() {
   const [products, categories] = await Promise.all([
     getStorefrontProducts(),

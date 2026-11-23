@@ -134,3 +134,25 @@
     font-size: 10px;
   }
 }
+
+
+/* STEP 344 — WHITE-FIRST HOMEPAGE THEME */
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"]) .skfp-section {
+  background: #ffffff;
+  color: var(--sk-theme-foreground);
+}
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"]) .skfp-heading h2 {
+  color: var(--sk-theme-foreground);
+}
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"]) .skfp-eyebrow,
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"]) .skfp-heading h2 em {
+  color: var(--sk-theme-color-accentForeground);
+}
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"]) .skfp-card {
+  background: #ffffff;
+  border-color: var(--sk-theme-border);
+}
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"]) .skfp-actions button:hover {
+  background: var(--sk-theme-primaryButton);
+  color: var(--sk-theme-onDark);
+}

@@ -3,6 +3,7 @@ import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { getCurrentAdmin } from "@/lib/admin-auth";
 import { readBoundedBody } from "@/lib/payments/request-guard-stream";
+import { revalidatePath } from "next/cache";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -29,7 +30,10 @@ const settingsSchema = z.object({
       "Choose a valid uploaded logo image"
     ),
   ]),
-  faviconUrl: optionalUrl,
+  faviconUrl: z.union([
+    optionalUrl,
+    z.string().regex(/^\/api\/media\/products\/[a-f0-9-]{36}\.(png|jpg|webp|ico)$/, "Choose a valid uploaded favicon image"),
+  ]),
   contactEmail: z.union([
     z.literal(""),
     z.email().max(191),
@@ -165,6 +169,8 @@ export async function PUT(request: NextRequest) {
       create: { id: "primary", ...parsed.data },
       update: parsed.data,
     });
+
+    revalidatePath("/", "layout");
 
     return NextResponse.json(
       { success: true, settings },

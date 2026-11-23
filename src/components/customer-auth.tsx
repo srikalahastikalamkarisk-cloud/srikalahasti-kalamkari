@@ -2,6 +2,7 @@
 
 import { useState, type FormEvent } from "react";
 import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
   Eye, EyeOff, ArrowRight, ShieldCheck,
   Mail, LockKeyhole
@@ -12,14 +13,35 @@ type Mode = "login" | "register" | "forgot";
 
 export default function CustomerAuth({ mode }: { mode: Mode }) {
   const [visible, setVisible] = useState(false);
-  const [notice, setNotice] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [message, setMessage] = useState("");
+  const [error, setError] = useState("");
+  const router = useRouter();
+  const searchParams = useSearchParams();
 
   const isRegister = mode === "register";
   const isForgot = mode === "forgot";
 
-  function submit(e: FormEvent<HTMLFormElement>) {
+  async function submit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    setNotice(true);
+    setBusy(true); setError(""); setMessage("");
+    const data = new FormData(e.currentTarget);
+    const payload = Object.fromEntries(data.entries());
+    try {
+      const endpoint = isRegister ? "/api/customer/register" : isForgot ? "/api/customer/forgot-password" : "/api/customer/login";
+      const response = await fetch(endpoint, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...payload, termsAccepted: data.get("termsAccepted") === "on", returnTo: searchParams.get("returnTo") }) });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || "Unable to complete this request.");
+      if (isRegister) setMessage("Your account has been created. Check your inbox for a verification link. Verify your email before signing in and checking out.");
+      else if (isForgot) setMessage(result.message);
+          else if (result.verificationRequired) setMessage("Please verify your email first. You can request a new link below.");
+      else {
+        const destination = typeof result.returnTo === "string" ? result.returnTo : "/account";
+        router.replace(destination);
+        router.refresh();
+      }
+    } catch (caught) { setError(caught instanceof Error ? caught.message : "Unable to complete this request."); }
+    finally { setBusy(false); }
   }
 
   return (
@@ -61,7 +83,7 @@ export default function CustomerAuth({ mode }: { mode: Mode }) {
 
           <p className="skauth-intro">
             {isForgot
-              ? "Password recovery will be available when customer accounts launch."
+                ? "We’ll send a secure link if an account matches your email."
               : isRegister
               ? "Begin your journey with Srikalahasti Kalamkari."
               : "Your favourite pieces and heritage discoveries, all in one place."}
@@ -72,22 +94,14 @@ export default function CustomerAuth({ mode }: { mode: Mode }) {
           {isRegister && (
             <div className="skauth-name-row">
               <label>
-                First name
+              Full name
                 <input
-                  name="firstName"
-                  autoComplete="given-name"
-                  placeholder="First name"
+                  name="name"
+                  autoComplete="name"
+                  placeholder="Your full name"
                   required
-                />
-              </label>
-
-              <label>
-                Last name
-                <input
-                  name="lastName"
-                  autoComplete="family-name"
-                  placeholder="Last name"
-                  required
+                  minLength={2}
+                  maxLength={120}
                 />
               </label>
             </div>
@@ -107,21 +121,7 @@ export default function CustomerAuth({ mode }: { mode: Mode }) {
             </div>
           </label>
 
-          {isRegister && (
-            <label>
-              Mobile number
-              <input
-                name="phone"
-                type="tel"
-                autoComplete="tel"
-                inputMode="tel"
-                placeholder="+91 98765 43210"
-                required
-                pattern="[+0-9 ()-]{10,18}"
-                title="Enter a valid mobile number"
-              />
-            </label>
-          )}
+          {isRegister && <label>Mobile number (optional)<input name="phone" type="tel" autoComplete="tel" inputMode="tel" placeholder="+91 98765 43210" pattern="[+0-9 ()-]{10,18}" title="Enter a valid mobile number" /></label>}
 
           {!isForgot && (
             <label>
@@ -135,9 +135,10 @@ export default function CustomerAuth({ mode }: { mode: Mode }) {
                   autoComplete={
                     isRegister ? "new-password" : "current-password"
                   }
-                  minLength={8}
-                  placeholder="Minimum 8 characters"
+                minLength={isRegister ? 12 : 1}
+                placeholder={isRegister ? "12+ characters, mixed case, number and symbol" : "Your password"}
                   required
+                maxLength={128}
                 />
 
                 <button
@@ -161,9 +162,10 @@ export default function CustomerAuth({ mode }: { mode: Mode }) {
                 name="confirmPassword"
                 type={visible ? "text" : "password"}
                 autoComplete="new-password"
-                minLength={8}
+                minLength={12}
                 placeholder="Confirm your password"
                 required
+                maxLength={128}
               />
             </label>
           )}
@@ -178,15 +180,12 @@ export default function CustomerAuth({ mode }: { mode: Mode }) {
 
           {isRegister && (
             <p className="skauth-terms">
-              By continuing, you acknowledge our{" "}
-              <Link href="/shipping-policy">Shipping Policy</Link>
-              {" "}and{" "}
-              <Link href="/refund-policy">Refund Policy</Link>.
+              <label className="skauth-terms"><input type="checkbox" name="termsAccepted" required /> I agree to the <Link href="/terms">Terms of Service</Link> and <Link href="/privacy-policy">Privacy Policy</Link>.</label>
             </p>
           )}
 
           <button className="skauth-submit" type="submit">
-            {isRegister
+            {busy ? "Please wait…" : isRegister
               ? "Create account"
               : isForgot
               ? "Request password reset"
@@ -194,17 +193,14 @@ export default function CustomerAuth({ mode }: { mode: Mode }) {
             <ArrowRight size={17} />
           </button>
 
-          {notice && (
+          {error && <div role="alert" className="skauth-notice"><strong>Unable to continue</strong><span>{error}</span></div>}
+          {message && (
             <div role="status" className="skauth-notice">
-              <strong>Customer accounts are not enabled yet.</strong>
-              <span>
-                This is a design preview. No account was created,
-                no sign-in occurred, and no email was sent.
-                Please <Link href="/contact">contact our team</Link>
-                {" "}for assistance.
-              </span>
+              <strong>{isRegister ? "Account created" : "Request received"}</strong>
+              <span>{message} {isRegister && <span className="skauth-confirm-actions"><Link href="/login">Go to sign in</Link><Link href="/resend-verification">Resend verification</Link></span>} {message.includes("verify your email") && <Link href="/resend-verification">Resend verification</Link>}</span>
             </div>
           )}
+          {!isRegister && !isForgot && <Link href="/resend-verification">Resend verification email</Link>}
         </form>
 
         <div className="skauth-switch">

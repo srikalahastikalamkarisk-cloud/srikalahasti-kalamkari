@@ -1,7 +1,7 @@
 import "server-only";
 import { createHash } from "node:crypto";
 import { prisma } from "@/lib/prisma";
-import { resetLimitAllowed } from "./password-reset-core";
+import { resetLimitAllowed } from "./password-reset-validation";
 
 type RateLimitKind = "request" | "redeem";
 

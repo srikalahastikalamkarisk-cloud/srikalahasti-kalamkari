@@ -219,6 +219,67 @@ model AdminPasswordResetToken {
   @@index([expiresAt])
 }
 
+model Customer {
+  id                    String   @id @default(cuid())
+  name                  String
+  email                 String   @unique
+  phone                 String?
+  passwordHash          String
+  emailVerifiedAt       DateTime?
+  sessionVersion        Int      @default(0)
+  verificationTokens    CustomerVerificationToken[]
+  passwordResetTokens   CustomerPasswordResetToken[]
+  addresses             CustomerAddress[]
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  @@index([emailVerifiedAt])
+}
+
+model CustomerVerificationToken {
+  id         String   @id @default(cuid())
+  customerId String
+  tokenHash  String   @unique @db.Char(64)
+  expiresAt  DateTime
+  usedAt     DateTime?
+  createdAt  DateTime @default(now())
+  customer   Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+
+  @@index([customerId, expiresAt])
+  @@index([expiresAt])
+}
+
+model CustomerPasswordResetToken {
+  id         String   @id @default(cuid())
+  customerId String
+  tokenHash  String   @unique @db.Char(64)
+  expiresAt  DateTime
+  usedAt     DateTime?
+  createdAt  DateTime @default(now())
+  customer   Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+
+  @@index([customerId, expiresAt])
+  @@index([expiresAt])
+}
+
+model CustomerAddress {
+  id         String   @id @default(cuid())
+  customerId String
+  name       String
+  phone      String
+  address    String   @db.Text
+  landmark   String?
+  city       String
+  state      String
+  pincode    String
+  isDefault  Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  customer   Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+
+  @@index([customerId, isDefault])
+}
+
 // Customer order records
 model Order {
   id          String @id @default(cuid())
@@ -320,14 +381,16 @@ model PaymentAttempt {
 model PaymentWebhookEvent {
   id String @id @default(cuid())
 
-  eventId   String @unique
-  eventType String
-  status    String @default("RECEIVED")
+  eventId         String  @unique
+  eventType       String
+  razorpayOrderId String? @db.VarChar(191)
+  status          String  @default("RECEIVED")
 
   receivedAt  DateTime  @default(now())
   processedAt DateTime?
 
   @@index([status])
+  @@index([razorpayOrderId, status])
 }
 
 model PaymentRateLimit {
@@ -395,6 +458,8 @@ model CouponReservation {
 
 
 model StoreSettings {
+  themeId           String   @default("royal-navy-gold-01") @db.VarChar(100)
+  maintenanceMode   Boolean  @default(false)
   id                String   @id @default("primary")
   storeName         String   @default("Srikalahasti Kalamkari")
   description       String?  @db.Text
@@ -420,8 +485,8 @@ model HeroSlide {
   sortOrder      Int      @default(0)
 
   mediaType      String   @default("image") @db.VarChar(20)
-  desktopImage   String   @default("") @db.Text
-  mobileImage    String   @default("") @db.Text
+  desktopImage   String   @default(dbgenerated("(_utf8mb4\\'\\')")) @db.Text
+  mobileImage    String   @default(dbgenerated("(_utf8mb4\\'\\')")) @db.Text
   desktopVideo   String?  @db.Text
   mobileVideo    String?  @db.Text
   videoUrl       String?  @db.Text
@@ -430,7 +495,7 @@ model HeroSlide {
   eyebrow        String   @default("") @db.VarChar(191)
   title          String   @default("") @db.VarChar(191)
   highlight      String   @default("") @db.VarChar(191)
-  description    String   @default("") @db.Text
+  description    String   @default(dbgenerated("(_utf8mb4\\'\\')")) @db.Text
 
   primaryLabel   String   @default("") @db.VarChar(191)
   primaryHref    String   @default("") @db.VarChar(500)
@@ -531,4 +596,17 @@ model AboutPageContent {
   content   Json
   updatedAt DateTime @updatedAt
   createdAt DateTime @default(now())
+}
+
+// Audit log for storefront palette publishing.
+model StoreThemeHistory {
+  id          String   @id @default(cuid()) @db.VarChar(191)
+  themeId     String   @db.VarChar(64)
+  previousId  String?  @map("previousThemeId") @db.VarChar(64)
+  action      String   @default("PUBLISH") @db.VarChar(32)
+  adminId     String?  @db.VarChar(191)
+  createdAt   DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([adminId, createdAt])
 }

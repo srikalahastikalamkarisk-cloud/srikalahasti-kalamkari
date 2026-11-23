@@ -53,7 +53,7 @@ export default function FeaturedProducts({ products }: Props) {
                     className="skfp-product-link"
                     aria-label={`View ${product.name}`}
                   />
-                  {image ? <img src={image} alt={`Illustrative preview image for ${product.name}`} loading="lazy" /> : (
+                  {image ? <img src={image} alt={product.name} loading="lazy" /> : (
                     <div className="skfp-placeholder"><ImageIcon size={25} strokeWidth={1.2} /><span>SRIKALAHASTI</span><small>KALAMKARI</small></div>
                   )}
                   {discount !== null && discount > 0 && <span className="skfp-badge">{discount}% OFF</span>}

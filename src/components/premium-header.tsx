@@ -32,6 +32,7 @@ type HeaderCategory = {
 type HeaderProps = {
   categoriesFromDb?: HeaderCategory[];
   storeSettings?: Pick<PublicStoreSettings, "storeName" | "logoUrl" | "whatsappNumber"> | null;
+  isAuthenticated?: boolean;
 };
 
 const otherLinks = [
@@ -43,6 +44,7 @@ const otherLinks = [
 export default function PremiumHeader({
   categoriesFromDb = [],
   storeSettings = null,
+  isAuthenticated = false,
 }: HeaderProps) {
   const storeName = storeSettings?.storeName || "Srikalahasti Kalamkari";
   const whatsappDigits = storeSettings?.whatsappNumber?.replace(/\D/g, "") || "";
@@ -166,7 +168,7 @@ export default function PremiumHeader({
             
             
 
-            <Link href="/login" aria-label="My account" className="sk-icon">
+            <Link href={isAuthenticated ? "/account" : "/login"} prefetch={false} aria-label={isAuthenticated ? "My account" : "Sign in to your account"} className="sk-icon">
               <UserRound size={22} strokeWidth={1.5} />
             </Link>
             <Link href="/wishlist" aria-label={`Wishlist, ${wishlistCount} saved products`} className="sk-icon sk-icon-counted">
@@ -316,7 +318,7 @@ export default function PremiumHeader({
         <Link href="/shop" className="sk-dock-link" onClick={() => setMobileOpen(false)}><Search size={20}/><span>Search</span></Link>
         <Link href="/shop" className={`sk-dock-link sk-dock-collections ${pathname === "/shop" || categories.some(c => pathname.startsWith(`/${c.slug}`)) ? "is-active" : ""}`} aria-current={pathname === "/shop" ? "page" : undefined} onClick={() => setMobileOpen(false)}><Grid2X2 size={20}/><span>Collections</span></Link>
         <Link href="/cart" className={`sk-dock-link ${pathname.startsWith("/cart") ? "is-active" : ""}`} aria-current={pathname === "/cart" ? "page" : undefined} onClick={() => setMobileOpen(false)}><span className="sk-dock-icon-wrap"><ShoppingBag size={20}/>{cartCount > 0 && <span className="sk-dock-count">{cartCount > 99 ? "99+" : cartCount}</span>}</span><span>Cart</span></Link>
-        <Link href="/login" className={`sk-dock-link ${["/login", "/register", "/forgot-password", "/account"].some(p => pathname.startsWith(p)) ? "is-active" : ""}`} aria-current={pathname === "/account" ? "page" : undefined} onClick={() => setMobileOpen(false)}><UserRound size={20}/><span>Profile</span></Link>
+        <Link href={isAuthenticated ? "/account" : "/login"} prefetch={false} className={`sk-dock-link ${["/login", "/register", "/forgot-password", "/account"].some(p => pathname.startsWith(p)) ? "is-active" : ""}`} aria-current={pathname === "/account" ? "page" : undefined} onClick={() => setMobileOpen(false)}><UserRound size={20}/><span>Profile</span></Link>
       </nav>
     </>
   );

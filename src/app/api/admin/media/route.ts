@@ -6,6 +6,7 @@ import { prisma } from "@/lib/prisma";
 import { getCurrentAdmin } from "@/lib/admin-auth";
 import { validOrigin } from "@/lib/admin/origin";
 import { mediaStorageRoot } from "@/lib/admin/media-storage";
+import { inspectFaviconImage, MAX_FAVICON_BYTES } from "@/lib/favicon-image";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -33,19 +34,33 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   if (!await getCurrentAdmin()) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   if (!validOrigin(req)) return NextResponse.json({ error: "Invalid origin" }, { status: 403 });
+  const announcedLength = Number(req.headers.get("content-length") ?? "0");
+  if (announcedLength > MAX_SIZE + 128 * 1024) return NextResponse.json({ error: "Upload is too large" }, { status: 413 });
   let root: string;
   try { root = await mediaStorageRoot(); }
   catch (error) { return NextResponse.json({ error: error instanceof Error ? error.message : "Persistent media storage is unavailable" }, { status: 503 }); }
   const form = await req.formData().catch(() => null);
   const file = form?.get("file");
   const folderId = form?.get("folderId");
-  if (!(file instanceof File) || file.size < 1 || file.size > MAX_SIZE) return NextResponse.json({ error: "Choose an image up to 5 MB" }, { status: 400 });
+  const purpose = form?.get("purpose");
+  const isFavicon = purpose === "favicon";
+  const maxSize = isFavicon ? MAX_FAVICON_BYTES : MAX_SIZE;
+  if (purpose !== null && purpose !== "favicon") return NextResponse.json({ error: "Invalid upload purpose" }, { status: 400 });
+  if (!(file instanceof File) || file.size < 1 || file.size > maxSize) return NextResponse.json({ error: isFavicon ? "Choose a favicon up to 1 MB" : "Choose an image up to 5 MB" }, { status: 400 });
   const bytes = new Uint8Array(await file.arrayBuffer());
-  const type = detect(bytes);
-  if (!type || file.type !== type.mime) return NextResponse.json({ error: "Only valid JPG, PNG and WebP images are accepted" }, { status: 400 });
+  const favicon = isFavicon ? inspectFaviconImage(bytes, file.type, file.name) : null;
+  const type = favicon ? { ext: favicon.extension, mime: favicon.mimeType } : isFavicon ? null : detect(bytes);
+  if (!type || (!isFavicon && file.type !== type.mime)) {
+    return NextResponse.json({ error: isFavicon ? "Use a valid square PNG, JPG, WebP or ICO from 16 to 512 pixels" : "Only valid JPG, PNG and WebP images are accepted" }, { status: 400 });
+  }
   const checksum = createHash("sha256").update(bytes).digest("hex");
   const duplicate = await prisma.mediaAsset.findUnique({ where: { checksum } });
-  if (duplicate) return NextResponse.json({ error: "This image is already in the library", assetId: duplicate.id }, { status: 409 });
+  if (duplicate) {
+    if (isFavicon && !duplicate.deletionPending && duplicate.storageKey.endsWith(`.${type.ext}`)) {
+      return NextResponse.json({ success: true, asset: duplicate, reused: true });
+    }
+    return NextResponse.json({ error: "This image is already in the library", assetId: duplicate.id }, { status: 409 });
+  }
   if (typeof folderId === "string" && folderId) {
     if (!await prisma.mediaFolder.findUnique({ where: { id: folderId }, select: { id: true } })) return NextResponse.json({ error: "Folder not found" }, { status: 400 });
   }

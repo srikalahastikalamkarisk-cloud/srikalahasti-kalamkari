@@ -1087,3 +1087,97 @@ section.skp-section.skp-royal-best {
   outline: 2px solid #b58a43;
   outline-offset: 3px;
 }
+
+
+/* STEP 344 — WHITE-FIRST HOMEPAGE THEME */
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"]) .skp-section {
+  background: #ffffff;
+  color: var(--sk-theme-foreground);
+}
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"]) .skp-heading h2 {
+  color: var(--sk-theme-foreground);
+}
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"]) .skp-eyebrow {
+  color: var(--sk-theme-accent);
+}
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"]) .skp-card {
+  background: #ffffff;
+  border-color: var(--sk-theme-border);
+}
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"]) .skp-navigation button:hover {
+  background: var(--sk-theme-primaryButton);
+  color: var(--sk-theme-onDark);
+}
+
+
+/* STEP 349 — BEST COLLECTION GRADIENT FIX */
+/* Alternative themes only. Original Navy & Gold unchanged. */
+
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"])
+section.skp-section.skp-royal-best {
+  background: var(--sk-theme-primary);
+  color: var(--sk-theme-onDark);
+}
+
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"])
+.skp-royal-best .skp-heading h2,
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"])
+.skp-royal-best .skp-editorial-copy p {
+  color: var(--sk-theme-onDark);
+}
+
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"])
+.skp-royal-best .skp-eyebrow,
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"])
+.skp-royal-best .skp-editorial-signature {
+  color: var(--sk-theme-color-accentOnDark);
+}
+
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"])
+.skp-royal-best .skp-editorial-rule {
+  background: var(--sk-theme-accent);
+}
+
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"])
+.skp-royal-best .skp-navigation button {
+  border-color: var(--sk-theme-borderOnDark);
+  color: var(--sk-theme-onDark);
+}
+
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"])
+.skp-royal-best .skp-best-auto-track .skp-card {
+  background: #ffffff;
+  border-color: var(--sk-theme-border);
+}
+
+
+/* STEP 393 — BURGUNDY SHOP PRODUCTS */
+
+/* Add to Cart: Rich Burgundy Gradient */
+[data-storefront-theme="burgundy-rose-gold-01"]
+.skp-auto-section .skp-heritage-cart-button {
+  background: linear-gradient(
+    105deg,
+    #64283D,
+    #93465F
+  ) !important;
+  color: #FFF9F4 !important;
+}
+
+/* Hover: slightly brighter Burgundy */
+[data-storefront-theme="burgundy-rose-gold-01"]
+.skp-auto-section .skp-heritage-cart-button:hover {
+  background: linear-gradient(
+    105deg,
+    #753149,
+    #A4526D
+  ) !important;
+}
+
+/* Discount Badge: Burgundy + Champagne Gold */
+[data-storefront-theme="burgundy-rose-gold-01"]
+.skp-auto-section .skp-heritage-card .skp-discount {
+  background: #64283D !important;
+  background-image: none !important;
+  color: #E8C99B !important;
+}

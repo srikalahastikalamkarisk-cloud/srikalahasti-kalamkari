@@ -1,0 +1,1485 @@
+/* STEP 443 — Universal alternate palette finish.
+ * Derived from Burgundy STEP 375–442 visual coverage.
+ * Excludes only the original Navy & Gold design.
+ * Each other palette uses its own --sk-theme-* values.
+ */
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"]) {
+  --navy: var(--sk-theme-foreground);
+  --gold: var(--sk-theme-color-accentForeground);
+  --gold-on-dark: var(--sk-theme-color-accentOnDark);
+  --ivory: var(--sk-theme-color-pageBackground);
+  --sk-ink: var(--sk-theme-color-body);
+  --sk-muted: var(--sk-theme-muted);
+}
+
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"]) .sk-store-theme {
+  min-height: 100vh;
+  color: var(--sk-theme-color-body);
+  background-color: var(--sk-theme-color-pageBackground);
+  background-image: var(--sk-theme-pageBackground);
+}
+
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"]) :is(
+  .heritage-announcement,
+  .luxury-header
+) {
+  background: var(--sk-theme-navigation) !important;
+  color: var(--sk-theme-color-navigationText) !important;
+  border-color: var(--sk-theme-border) !important;
+}
+
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"]) :is(
+  input:not([type="checkbox"]):not([type="radio"]),
+  select,
+  textarea
+) {
+  background-color: var(--sk-theme-color-inputBackground) !important;
+  color: var(--sk-theme-color-body) !important;
+  border-color: var(--sk-theme-border) !important;
+}
+
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"]) :is(
+  input:not([type="checkbox"]):not([type="radio"]),
+  select,
+  textarea
+):focus-visible {
+  outline-color: var(--sk-theme-focus) !important;
+  border-color: var(--sk-theme-focus) !important;
+}
+
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"]) :is(
+  input:not([type="checkbox"]):not([type="radio"]),
+  select,
+  textarea
+)::placeholder {
+  color: var(--sk-theme-muted) !important;
+  opacity: 1;
+}
+
+/* STEP 375 — TICKER GOLD FIX */
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"])
+.sk-heritage-bar .sk-heritage-set span,
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"])
+.sk-heritage-bar .sk-heritage-set b {
+  color: var(--sk-theme-color-accentOnDark) !important;
+  opacity: 1 !important;
+}
+
+
+/* STEP 398 — BEST COLLECTION BURGUNDY */
+
+/* Add to Cart */
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"])
+.skp-royal-best .skp-buttons .skp-cart {
+  background: var(--sk-theme-primaryButton) !important;
+  background-image: var(--sk-theme-primaryButton) !important;
+  color: var(--sk-theme-onDark) !important;
+}
+
+/* Discount Badge */
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"])
+.skp-royal-best .skp-discount {
+  background: var(--sk-theme-badge) !important;
+  background-image: var(--sk-theme-badge) !important;
+  color: var(--sk-theme-buttonText) !important;
+}
+
+
+
+/* STEP 411 — ABOUT WHITE GOLD PERMANENT */
+
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"])
+.sk-about .sk-about-content h2,
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"])
+.sk-about .sk-about-copy,
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"])
+.sk-about .sk-about-copy em,
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"])
+.sk-about .sk-about-categories a {
+  color: var(--sk-theme-onDark) !important;
+}
+
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"])
+.sk-about .sk-about-content h2 em,
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"])
+.sk-about .sk-about-eyebrow,
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"])
+.sk-about .sk-about-image-note,
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"])
+.sk-about .sk-about-ornament {
+  color: var(--sk-theme-color-accentOnDark) !important;
+}
+
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"])
+.sk-about .sk-about-ornament::before,
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"])
+.sk-about .sk-about-ornament::after {
+  background: var(--sk-theme-accent) !important;
+}
+
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"])
+.sk-about .sk-about-categories a {
+  border-color: var(--sk-theme-borderOnDark) !important;
+}
+
+/* STEP 422 — BURGUNDY PRODUCT DETAIL BUTTONS
+   Scope only to Burgundy storefront; preserve original Navy & Gold and functionality. */
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"]) .skpd .skpd-buy,
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"]) .skpd .skpd-v5-actions button:not(:disabled) {
+  background:var(--sk-theme-primaryButton)!important;
+  background-image:var(--sk-theme-primaryButton)!important;
+  color:var(--sk-theme-onDark)!important;
+  border-color:var(--sk-theme-borderOnDark)!important;
+}
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"]) .skpd .skpd-buy:hover:not(:disabled),
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"]) .skpd .skpd-v5-actions button:hover:not(:disabled) {
+  background:var(--sk-theme-primaryButton)!important;
+  background-image:var(--sk-theme-primaryButton)!important;
+}
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"]) .skpd .skpd-add {
+  background:var(--sk-theme-onDark)!important;
+  background-image:none!important;
+  color:var(--sk-theme-foreground)!important;
+  border-color:var(--sk-theme-border)!important;
+}
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"]) .skpd .skpd-add:hover:not(:disabled) {
+  background:var(--sk-theme-surfaceSoft)!important;
+  color:var(--sk-theme-foreground)!important;
+}
+
+
+/* STEP 427 — EXACT BURGUNDY PRODUCT COLORS */
+
+/* Main product title */
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"])
+.skpd .skpd-info h1 {
+  color:var(--sk-theme-foreground)!important;
+  -webkit-text-fill-color:var(--sk-theme-foreground)!important;
+}
+
+/* Main discount badge */
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"])
+.skpd .skpd-price > span {
+  background:var(--sk-theme-foreground)!important;
+  color:var(--sk-theme-onDark)!important;
+  -webkit-text-fill-color:var(--sk-theme-onDark)!important;
+}
+
+/* Related products heading */
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"])
+.skpd .skpd-related h2 {
+  color:var(--sk-theme-foreground)!important;
+  -webkit-text-fill-color:var(--sk-theme-foreground)!important;
+}
+
+/* Related product names */
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"])
+.skpd .skpd-v5-related .skpd-v5-name {
+  color:var(--sk-theme-foreground)!important;
+  -webkit-text-fill-color:var(--sk-theme-foreground)!important;
+}
+
+/* Related discount badges */
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"])
+.skpd .skpd-v5-related .skpd-v5-discount {
+  background:var(--sk-theme-foreground)!important;
+  color:var(--sk-theme-onDark)!important;
+  -webkit-text-fill-color:var(--sk-theme-onDark)!important;
+}
+
+/* STEP 428 — Burgundy account pages: wishlist, cart, checkout.
+   Scoped to preview theme; original Navy & Gold remains unchanged. */
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"]) .skaccount :is(h1,h2),
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"]) .skaccount .skaccount-summary strong,
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"]) .skaccount .skaccount-item :is(h2,p),
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"]) .skaccount .skcheckout :is(h2,h3),
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"]) .skaccount .skcheckout :is(.skcheckout-total,.skcheckout-grand,.skcheckout-total-heading,.skcheckout-products-heading) {
+  color:var(--sk-theme-foreground)!important;
+  -webkit-text-fill-color:var(--sk-theme-foreground)!important;
+}
+/* Primary actions only; leave quantity, remove, and secondary controls intact. */
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"]) .skaccount--wishlist .skaccount-item > div > button:not(.skaccount-remove),
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"]) .skaccount--cart .skaccount-summary > button,
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"]) .skaccount--checkout :is(.skcheckout-submit,.skcheckout-payment-actions button) {
+  background:var(--sk-theme-primaryButton)!important;
+  background-image:var(--sk-theme-primaryButton)!important;
+  color:var(--sk-theme-onDark)!important;
+  -webkit-text-fill-color:var(--sk-theme-onDark)!important;
+  border-color:var(--sk-theme-foreground)!important;
+}
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"]) .skaccount--wishlist .skaccount-item > div > button:not(.skaccount-remove):hover,
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"]) .skaccount--cart .skaccount-summary > button:hover,
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"]) .skaccount--checkout :is(.skcheckout-submit,.skcheckout-payment-actions button):hover {
+  filter:brightness(1.1);
+}
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"]) .skaccount :is(input,textarea,select):focus-visible {
+  outline-color:var(--sk-theme-focus)!important;
+}
+
+/* STEP 429 — Burgundy About page and header counter finish. */
+/* Only Burgundy preview; default Navy & Gold remains unchanged. */
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"]) .ska {
+  --navy:var(--sk-theme-foreground);
+  --gold:var(--sk-theme-color-accentForeground);
+}
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"]) .ska :is(h1,h2,h3,.ska-values strong,.ska-person h3){
+  color:var(--sk-theme-foreground)!important;
+}
+/* Preserve white text in the dark craft-process section. */
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"]) .ska .ska-process{
+  background:linear-gradient(125deg,var(--sk-theme-foreground) 0%,var(--sk-theme-foreground) 50%,var(--sk-theme-foreground) 100%)!important;
+  color:var(--sk-theme-onDark)!important;
+}
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"]) .ska .ska-process :is(h2,h3,.ska-process-overlay strong){
+  color:var(--sk-theme-onDark)!important;
+}
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"]) .ska .ska-process .ska-step-dot{
+  background:var(--sk-theme-foreground)!important;
+}
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"]) .ska .ska-process .is-active .ska-step-dot{
+  background:var(--sk-theme-accent)!important;
+}
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"]) .ska .ska-process .ska-process-overlay{
+  background:linear-gradient(transparent 18%,color-mix(in srgb,var(--sk-theme-foreground) 90%,transparent))!important;
+}
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"]) .ska :is(.ska-cta,.ska-story-photo span){
+  background:var(--sk-theme-primaryButton)!important;
+  color:var(--sk-theme-buttonText)!important;
+}
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"]) .ska .ska-hero-scroll{
+  color:var(--sk-theme-foreground)!important;
+}
+/* Small wishlist/cart number circles; keep gold ring, remove navy fill. */
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"]) :is(header,.sk-header,.skh,.skp-header,.premium-header)
+:is(.wishlist-count,.cart-count,.wishlist-badge,.cart-badge,.header-badge,.icon-count,.badge-count,.skh-count,.skh-badge,.sk-header-count,.sk-header-badge,.sk-cart-count,.sk-wishlist-count){
+  background:var(--sk-theme-foreground)!important;
+  color:var(--sk-theme-onDark)!important;
+  -webkit-text-fill-color:var(--sk-theme-onDark)!important;
+  border:1px solid var(--sk-theme-accent)!important;
+}
+
+
+/* STEP 430 — BURGUNDY HEADER COUNT BADGES */
+
+/* Wishlist and Cart count circles */
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"])
+:is(
+  .sk-header,
+  .sk-premium-header,
+  .premium-header,
+  header
+)
+:is(
+  .wishlist-count,
+  .cart-count,
+  .icon-count,
+  .header-badge,
+  .count-badge,
+  .sk-header-count,
+  .sk-cart-count,
+  .sk-wishlist-count
+) {
+  background:var(--sk-theme-foreground)!important;
+  background-image:linear-gradient(135deg,var(--sk-theme-foreground),var(--sk-theme-accent))!important;
+  color:var(--sk-theme-onDark)!important;
+  -webkit-text-fill-color:var(--sk-theme-onDark)!important;
+  border:1px solid var(--sk-theme-accent)!important;
+}
+
+
+/* STEP 431 — BURGUNDY NAVIGATION FINISH */
+
+/* Navigation bar in Burgundy theme only */
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"])
+:is(
+  .sk-header-nav,
+  .sk-nav,
+  .premium-nav,
+  .skh-nav,
+  .skh-nav-row,
+  .skh-bottom,
+  .skh-menu
+) {
+  background:linear-gradient(
+    110deg,
+    var(--sk-theme-foreground) 0%,
+    var(--sk-theme-foreground) 55%,
+    var(--sk-theme-foreground) 100%
+  )!important;
+  border-color:var(--sk-theme-borderOnDark)!important;
+}
+
+/* Navigation links remain white */
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"])
+:is(
+  .sk-header-nav,
+  .sk-nav,
+  .premium-nav,
+  .skh-nav,
+  .skh-nav-row,
+  .skh-bottom,
+  .skh-menu
+) a {
+  color:var(--sk-theme-onDark)!important;
+}
+
+
+/* STEP 433 — EXACT BURGUNDY NAVIGATION FIX */
+
+/* Replace the navy overlay with a burgundy overlay */
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"])
+.sk-header nav.sk-navigation {
+  background:color-mix(in srgb,var(--sk-theme-foreground) 35%,transparent)!important;
+  background-image:none!important;
+  border-color:var(--sk-theme-borderOnDark)!important;
+}
+
+/* Preserve white navigation links */
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"])
+.sk-header nav.sk-navigation a {
+  color:var(--sk-theme-onDark)!important;
+}
+
+
+/* STEP 434 — GOLD NAVIGATION AND BURGUNDY FINISH */
+
+/* Burgundy navigation without navy transparency */
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"])
+.sk-header nav.sk-navigation {
+  background:var(--sk-theme-foreground)!important;
+  background-image:linear-gradient(
+    110deg,
+    var(--sk-theme-foreground) 0%,
+    var(--sk-theme-foreground) 55%,
+    var(--sk-theme-foreground) 100%
+  )!important;
+  border-color:var(--sk-theme-borderOnDark)!important;
+}
+
+/* Champagne Gold menu text */
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"])
+.sk-header nav.sk-navigation a {
+  color:var(--sk-theme-color-accentOnDark)!important;
+  -webkit-text-fill-color:var(--sk-theme-color-accentOnDark)!important;
+}
+
+/* Brighter gold on hover */
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"])
+.sk-header nav.sk-navigation a:hover {
+  color:var(--sk-theme-color-accentOnDark)!important;
+  -webkit-text-fill-color:var(--sk-theme-color-accentOnDark)!important;
+}
+
+
+/* STEP 435 — CONTACT HERO BURGUNDY GOLD */
+
+/* Contact page hero left background */
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"])
+:is(.sk-contact-hero,.skc-hero,.sk-contact-hero-content) {
+  background:linear-gradient(
+    115deg,
+    var(--sk-theme-foreground) 0%,
+    var(--sk-theme-foreground) 48%,
+    var(--sk-theme-foreground) 100%
+  )!important;
+}
+
+/* Conversation heading champagne gold */
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"])
+:is(.sk-contact-hero,.skc-hero)
+:is(h1 em,h1 i,h1 span,.sk-contact-highlight) {
+  color:var(--sk-theme-color-accentOnDark)!important;
+  -webkit-text-fill-color:var(--sk-theme-color-accentOnDark)!important;
+}
+
+
+/* STEP 437 — EXACT CONTACT HERO BURGUNDY GOLD */
+
+/* Preserve existing right-side Kalamkari image */
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"])
+.sk-final-contact .sk-final-hero {
+  background-color:var(--sk-theme-foreground)!important;
+  background-image:
+    linear-gradient(
+      110deg,
+      var(--sk-theme-foreground) 0%,
+      var(--sk-theme-foreground) 45%,
+      color-mix(in srgb,var(--sk-theme-foreground) 78%,transparent) 55%,
+      color-mix(in srgb,var(--sk-theme-foreground) 8%,transparent) 75%
+    ),
+    url("/contact-heritage-art.jpg")!important;
+}
+
+/* Champagne Gold italic heading */
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"])
+.sk-final-contact .sk-final-hero-copy h1 :is(em,i,span) {
+  color:var(--sk-theme-color-accentOnDark)!important;
+  -webkit-text-fill-color:var(--sk-theme-color-accentOnDark)!important;
+}
+
+
+/* STEP 439 — EXACT HEADER BADGE FIX */
+
+/* Wishlist and Cart count badges — Burgundy theme only */
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"])
+.sk-header .sk-icon-counted .sk-icon-badge {
+  background:var(--sk-theme-foreground)!important;
+  background-image:linear-gradient(
+    135deg,
+    var(--sk-theme-foreground) 0%,
+    var(--sk-theme-accent) 100%
+  )!important;
+
+  color:var(--sk-theme-onDark)!important;
+  -webkit-text-fill-color:var(--sk-theme-onDark)!important;
+
+  border:1px solid var(--sk-theme-accent)!important;
+  box-shadow:0 2px 8px color-mix(in srgb,var(--sk-theme-foreground) 22%,transparent)!important;
+}
+
+
+/* STEP 442 — BURGUNDY SPLASH WARM GOLD */
+
+/* Deep Burgundy background without cool blue side glows */
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"])
+.sk-heritage-intro {
+  background-color:var(--sk-theme-foreground)!important;
+  background-image:
+    radial-gradient(
+      ellipse at 50% 48%,
+      color-mix(in srgb,var(--sk-theme-accent) 10%,transparent) 0%,
+      color-mix(in srgb,var(--sk-theme-accent) 12%,transparent) 32%,
+      transparent 65%
+    ),
+    linear-gradient(
+      115deg,
+      var(--sk-theme-foreground) 0%,
+      var(--sk-theme-foreground) 50%,
+      var(--sk-theme-foreground) 100%
+    )!important;
+}
+
+/* Warm gold breathing glow behind the logo */
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"])
+.sk-heritage-intro .sk-heritage-light {
+  background:
+    radial-gradient(
+      circle at 50% 49%,
+      color-mix(in srgb,var(--sk-theme-accent) 16%,transparent) 0%,
+      color-mix(in srgb,var(--sk-theme-accent) 7%,transparent) 24%,
+      transparent 43%
+    )!important;
+}
+
+/* STEP 443: palette-native gradients for exact verified components. */
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"]) .sk-header nav.sk-navigation {background:var(--sk-theme-navigation)!important;background-image:var(--sk-theme-navigation)!important;}
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"]) .sk-heritage-intro {background:var(--sk-theme-loading)!important;background-image:var(--sk-theme-loading)!important;}
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"]) .ska .ska-process {background:var(--sk-theme-primary)!important;}
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"]) .skaccount--cart .skaccount-summary > button {background:var(--sk-theme-primaryButton)!important;}
+
+/* Contrast-safe accent text and interactive surfaces across storefront routes. */
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"]) :is(
+  .sk-header,
+  .sk-heritage-bar,
+  .sk-mobile-nav,
+  .sk-mobile-mega,
+  .sk-mega,
+  .skf,
+  .skp-royal-best,
+  .sk-about,
+  .sk-heritage-intro,
+  .sk-final-hero,
+  .ska .ska-process
+) {
+  --gold: var(--sk-theme-color-accentOnDark);
+}
+
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"]) :is(
+  .sk-category-section,
+  .skfp-section,
+  .skshop,
+  .skaccount,
+  .skpolicy,
+  .skauth-shell
+) :is(
+  .sk-category-eyebrow,
+  .skfp-eyebrow,
+  .skfp-heading h2 em,
+  .clp-eyebrow,
+  .sim4-eyebrow,
+  .skshop-eyebrow,
+  .skshop-product-category,
+  .skshop-breadcrumb a,
+  .skpolicy__intro span,
+  .skauth-overline,
+  .skauth-brand span,
+  .skauth-ornament
+) {
+  color: var(--sk-theme-color-accentForeground) !important;
+  -webkit-text-fill-color: var(--sk-theme-color-accentForeground) !important;
+}
+
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"]) :is(
+  .sk-header,
+  .sk-mobile-nav,
+  .sk-mega,
+  .skf,
+  .sk-about,
+  .skp-royal-best,
+  .sk-heritage-intro,
+  .sk-final-hero,
+  .ska .ska-process
+) :is(a:hover,button:hover,[aria-current="page"],[aria-expanded="true"]) {
+  color: var(--sk-theme-color-accentOnDark) !important;
+  -webkit-text-fill-color: var(--sk-theme-color-accentOnDark) !important;
+}
+
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"]) .sk-header :is(
+  .sk-navigation,
+  .sk-mega,
+  .sk-mobile-nav,
+  .sk-mobile-mega
+) {
+  background: var(--sk-theme-navigation) !important;
+  background-image: var(--sk-theme-navigation) !important;
+  color: var(--sk-theme-navigationText) !important;
+  border-color: var(--sk-theme-borderOnDark) !important;
+}
+
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"]) .sk-bottom-dock {
+  background: color-mix(in srgb, var(--sk-theme-surface) 96%, transparent) !important;
+  border-color: var(--sk-theme-border) !important;
+}
+
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"]) .sk-bottom-dock .sk-dock-link {
+  color: var(--sk-theme-foreground) !important;
+}
+
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"]) .sk-bottom-dock .sk-dock-link.is-active {
+  background: var(--sk-theme-primaryButton) !important;
+  color: var(--sk-theme-buttonText) !important;
+}
+
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"]) .sk-bottom-dock .sk-dock-link.is-active svg {
+  color: var(--sk-theme-buttonText) !important;
+}
+
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"]) :is(
+  .sk-icon-badge,
+  .sk-dock-count,
+  .skshop-availability-badge,
+  .skshop-tag,
+  .skfp-badge,
+  .skp-discount
+) {
+  background: var(--sk-theme-badge) !important;
+  background-image: var(--sk-theme-badge) !important;
+  color: var(--sk-theme-buttonText) !important;
+  -webkit-text-fill-color: var(--sk-theme-buttonText) !important;
+  border-color: var(--sk-theme-borderOnDark) !important;
+}
+
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"]) :is(
+  .skaccount,
+  .skpolicy,
+  .skauth-page
+) {
+  background-color: var(--sk-theme-color-pageBackground) !important;
+  background-image: var(--sk-theme-pageBackground) !important;
+  color: var(--sk-theme-color-body) !important;
+}
+
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"]) :is(
+  .skaccount-item,
+  .skaccount-summary,
+  .skaccount-empty,
+  .skpolicy__body,
+  .skauth-shell,
+  .skshop-product,
+  .skshop-ref-card,
+  .skshop-quick-dialog,
+  .skfp-card
+) {
+  background: var(--sk-theme-card) !important;
+  color: var(--sk-theme-color-body) !important;
+  border-color: var(--sk-theme-border) !important;
+}
+
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"]) :is(
+  .skaccount :is(h1,h2,h3,p,small,label),
+  .skpolicy__body :is(h1,h2,h3,p,li,summary),
+  .skauth-shell :is(h1,h2,h3,p,label),
+  .skshop :is(.skshop-product-title,.skshop-price,.skshop-count,.skshop-filter-group h3)
+) {
+  color: var(--sk-theme-color-body) !important;
+  -webkit-text-fill-color: var(--sk-theme-color-body) !important;
+}
+
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"]) :is(
+  .skpolicy__body a,
+  .skaccount-wrap > a,
+  .skaccount-summary a
+) {
+  color: var(--sk-theme-color-accentForeground) !important;
+}
+
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"]) :is(
+  .skshop-cart-toast,
+  .skaccount-summary button,
+  .skaccount-empty a,
+  .skcheckout-submit,
+  .skauth-submit,
+  .skshop-mobile-filter,
+  .skshop-empty button
+) {
+  background: var(--sk-theme-primaryButton) !important;
+  background-image: var(--sk-theme-primaryButton) !important;
+  color: var(--sk-theme-buttonText) !important;
+  -webkit-text-fill-color: var(--sk-theme-buttonText) !important;
+  border-color: var(--sk-theme-borderOnDark) !important;
+}
+
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"]) :is(
+  .sk-store-theme button,
+  .sk-store-theme a
+) svg {
+  color: inherit;
+}
+
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"]) .sk-store-theme :is(
+  button,
+  a,
+  input,
+  select,
+  textarea,
+  summary
+):focus-visible {
+  outline-color: var(--sk-theme-focus) !important;
+}
+
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"]) :is(
+  .sk-header,
+  .sk-mobile-nav,
+  .sk-mega,
+  .skf,
+  .sk-about,
+  .skp-royal-best,
+  .sk-heritage-intro,
+  .sk-final-hero
+) :is(button,a,input,select,textarea,summary):focus-visible {
+  outline-color: var(--sk-theme-color-focusOnDark) !important;
+}
+
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"]) input[type="checkbox"],
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"]) input[type="radio"] {
+  accent-color: var(--sk-theme-focus);
+}
+
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"]) .sk-store-theme :disabled {
+  opacity: .82;
+  cursor: not-allowed;
+}
+
+/* STEP 473 — shared theme surfaces for remaining legacy storefront sections.
+   Original Navy & Gold keeps its established component styling. */
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"]) .sk-cinematic-hero,
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"]) .sk-cinematic-empty {
+  background: var(--sk-theme-primary) !important;
+  background-image: var(--sk-theme-primary) !important;
+  color: var(--sk-theme-onDark);
+}
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"]) .sk-cinematic-background {
+  background: var(--sk-theme-primary) !important;
+  background-image: var(--sk-theme-primary) !important;
+}
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"]) .sk-cinematic-overlay {
+  background: var(--sk-theme-heroOverlay) !important;
+}
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"]) :is(
+  .sk-cinematic-title, .sk-cinematic-description, .sk-hero-empty-content,
+  .sk-hero-empty-content h1, .sk-cinematic-primary, .sk-cinematic-secondary,
+  .sk-hero-sound, .sk-hero-media-status
+) { color: var(--sk-theme-onDark) !important; }
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"]) :is(
+  .sk-cinematic-title span, .sk-cinematic-secondary::after
+) { color: var(--sk-theme-color-accentOnDark) !important; }
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"]) :is(
+  .sk-cinematic-dots button.active, .sk-cinematic-dot-progress
+) { background: var(--sk-theme-accent) !important; }
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"]) :is(
+  .sk-cinematic-primary, .sk-cinematic-arrows button, .sk-hero-sound,
+  .sk-hero-media-status, .sk-hero-media-status button
+) { border-color: var(--sk-theme-borderOnDark) !important; }
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"]) .sk-cinematic-primary:hover,
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"]) .sk-cinematic-arrows button:hover {
+  background: var(--sk-theme-accent) !important;
+  color: var(--sk-theme-color-accentText) !important;
+}
+
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"]) .skf-custom {
+  color: var(--sk-theme-onDark) !important;
+}
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"]) .skf-custom h2,
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"]) .skf-custom p,
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"]) .skf-note {
+  color: var(--sk-theme-onDark) !important;
+}
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"]) .skf-btn-outline {
+  color: var(--sk-theme-onDark) !important;
+  border-color: var(--sk-theme-borderOnDark) !important;
+}
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"]) .skf-btn-outline:hover {
+  background: var(--sk-theme-accent) !important;
+  color: var(--sk-theme-color-accentText) !important;
+}
+
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"]) .sk-fabric-detail {
+  color: var(--sk-theme-foreground);
+  background: var(--sk-theme-pageBackground);
+  background-image: var(--sk-theme-pageBackground);
+}
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"]) .sk-fabric-detail-back {
+  color: var(--sk-theme-accentForeground);
+}
+
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"]) .skp-section.skp-royal-best {
+  background: var(--sk-theme-primary) !important;
+  background-image: var(--sk-theme-primary) !important;
+}
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"]) .skp-section.skp-royal-best .skp-navigation button {
+  background: color-mix(in srgb, var(--sk-theme-onDark) 10%, transparent);
+}
+
+/* Final homepage pass: bring remaining legacy sections and controls onto the
+   shared semantic palette without changing the original Navy & Gold theme. */
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"]) .sk-about {
+  background: var(--sk-theme-primary) !important;
+  background-image: var(--sk-theme-primary) !important;
+  color: var(--sk-theme-onDark) !important;
+}
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"]) .sim4-section {
+  background: var(--sk-theme-sectionBackground) !important;
+  background-image: var(--sk-theme-sectionBackground) !important;
+  color: var(--sk-theme-foreground) !important;
+}
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"]) .sim4-section :is(
+  .sim4-heading h2, .sim4-current strong
+) { color: var(--sk-theme-foreground) !important; }
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"]) .sim4-section :is(
+  .sim4-eyebrow, .sim4-heading h2 em, .sim4-current span
+) { color: var(--sk-theme-color-accentForeground) !important; }
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"]) .sim4-frame {
+  background: var(--sk-theme-card) !important;
+  background-image: var(--sk-theme-card) !important;
+  border-color: var(--sk-theme-border) !important;
+}
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"]) .sim4-frame > video {
+  background: var(--sk-theme-primary) !important;
+}
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"]) .sim4-number,
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"]) .sim4-sound {
+  background: var(--sk-theme-primaryButton) !important;
+  color: var(--sk-theme-onDark) !important;
+  border-color: var(--sk-theme-borderOnDark) !important;
+}
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"]) .sim4-controls button {
+  background: var(--sk-theme-secondaryButton) !important;
+  color: var(--sk-theme-foreground) !important;
+  border-color: var(--sk-theme-border) !important;
+}
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"]) .sim4-controls button:hover,
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"]) .sim4-progress button.is-active {
+  background: var(--sk-theme-accent) !important;
+  color: var(--sk-theme-color-accentText) !important;
+}
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"]) .skfp-purchase-actions .skfp-cart,
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"]) .skfp-cart-icon {
+  background: var(--sk-theme-primaryButton) !important;
+  color: var(--sk-theme-onDark) !important;
+  -webkit-text-fill-color: var(--sk-theme-onDark) !important;
+  background-image: var(--sk-theme-primaryButton) !important;
+  border-color: var(--sk-theme-borderOnDark) !important;
+}
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"]) .skfp-purchase-actions .skfp-cart:hover:not(:disabled),
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"]) .skfp-cart-icon:hover:not(:disabled) {
+  background: var(--sk-theme-buttonHover) !important;
+  color: var(--sk-theme-onDark) !important;
+}
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"]) .skp-eyebrow {
+  color: var(--sk-theme-color-accentForeground) !important;
+}
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"]) .sk-cinematic-secondary {
+  background: transparent !important;
+  color: var(--sk-theme-onDark) !important;
+  border: 1px solid var(--sk-theme-borderOnDark) !important;
+}
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"]) .heritage-announcement {
+  background: var(--sk-theme-sectionBackground) !important;
+  background-image: var(--sk-theme-sectionBackground) !important;
+  color: var(--sk-theme-color-accentForeground) !important;
+}
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"]) .sk-whatsapp-cta {
+  background: var(--sk-theme-primaryButton) !important;
+  background-image: var(--sk-theme-primaryButton) !important;
+  color: var(--sk-theme-onDark) !important;
+  border-color: var(--sk-theme-borderOnDark) !important;
+  box-shadow: 0 5px 18px color-mix(in srgb, var(--sk-theme-color-accent) 30%, transparent) !important;
+  transition: transform .25s ease, box-shadow .25s ease, background .25s ease;
+}
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"]) .sk-whatsapp-cta:hover {
+  box-shadow: 0 8px 25px color-mix(in srgb, var(--sk-theme-color-accent) 42%, transparent) !important;
+}
+html[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"])
+.sk-store-theme .sk-whatsapp-cta > span {
+  color: var(--sk-theme-onDark) !important;
+  -webkit-text-fill-color: var(--sk-theme-onDark) !important;
+}
+html[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"])
+.sk-store-theme .sk-whatsapp-cta:focus-visible {
+  outline: 2px solid var(--sk-theme-color-focusOnDark) !important;
+  outline-offset: 3px;
+}
+html[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"])
+.sk-store-theme .sk-heritage-bar {
+  background: var(--sk-theme-navigation) !important;
+  background-image: var(--sk-theme-navigation) !important;
+  border-bottom-color: var(--sk-theme-borderOnDark) !important;
+}
+html[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"])
+.sk-store-theme .sk-heritage-bar .sk-heritage-set span,
+html[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"])
+.sk-store-theme .sk-heritage-bar .sk-heritage-set b {
+  color: var(--sk-theme-color-navigationText) !important;
+}
+html[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"])
+.sk-store-theme .sk-cinematic-primary {
+  background: var(--sk-theme-primaryButton) !important;
+  background-image: var(--sk-theme-primaryButton) !important;
+  color: var(--sk-theme-onDark) !important;
+  border-color: var(--sk-theme-borderOnDark) !important;
+}
+html[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"])
+.sk-store-theme .sk-cinematic-primary:hover:not(:disabled),
+html[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"])
+.sk-store-theme .sk-cinematic-primary:active:not(:disabled) {
+  background: var(--sk-theme-buttonHover) !important;
+  background-image: var(--sk-theme-buttonHover) !important;
+  color: var(--sk-theme-onDark) !important;
+}
+html[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"])
+.sk-store-theme .skf-whatsapp {
+  color: var(--sk-theme-color-accentOnDark) !important;
+}
+
+/* Shop catalog cards use a local legacy --navy value. Rebind that surface and
+   explicitly theme its standalone controls, cards, filters and dialogs. */
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"]) .skshop {
+  --navy: var(--sk-theme-color-primary);
+  --gold: var(--sk-theme-color-accentForeground);
+  --ivory: var(--sk-theme-color-pageBackground);
+  color: var(--sk-theme-foreground);
+  background: var(--sk-theme-pageBackground);
+  background-image: var(--sk-theme-pageBackground);
+}
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"]) .skshop-intro,
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"]) .skshop-tabs,
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"]) .skshop-collection-card,
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"]) .skshop-ref-card,
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"]) .skshop-ref-card > .skshop-ref-actions,
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"]) .skshop-ref-card > .skshop-product-details,
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"]) .skshop-quick-dialog {
+  background: var(--sk-theme-card) !important;
+  background-image: var(--sk-theme-card) !important;
+  color: var(--sk-theme-foreground) !important;
+  border-color: var(--sk-theme-border) !important;
+}
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"]) .skshop :is(
+  h1,h2,h3,h4,p,span,strong,label,a,.skshop-product-category,.skshop-demo
+) { color: var(--sk-theme-foreground); }
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"]) .skshop :is(
+  .skshop-eyebrow,.skshop-breadcrumb,.skshop-inquire,.skshop-collection-body>span:first-child
+) { color: var(--sk-theme-color-accentForeground) !important; }
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"]) .skshop-sidebar {
+  background: var(--sk-theme-primary) !important;
+  background-image: var(--sk-theme-primary) !important;
+  color: var(--sk-theme-onDark) !important;
+  border-color: var(--sk-theme-borderOnDark) !important;
+}
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"]) .skshop-sidebar :is(h2,h3,p,small,.skshop-filter-option,.skshop-clear),
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"]) .skshop-close {
+  color: var(--sk-theme-onDark) !important;
+}
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"]) .skshop-sidebar h2 em {
+  color: var(--sk-theme-color-accentOnDark) !important;
+}
+/* Keep filter headings on the sidebar's contrast context. A broad shop text
+   rule also sets -webkit-text-fill-color, which otherwise wins in Chromium. */
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"]) .skshop-sidebar .skshop-filter-group h3 {
+  color: var(--sk-theme-color-accentOnDark) !important;
+  -webkit-text-fill-color: var(--sk-theme-color-accentOnDark) !important;
+}
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"]) .skshop-tabs button.active,
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"]) .skshop-mobile-filter,
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"]) .skshop-collection-action,
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"]) .skshop-ref-card .skshop-ref-buy,
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"]) .skshop-quick-dialog button:not(.skshop-quick-close),
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"]) .skshop-empty button {
+  background: var(--sk-theme-primaryButton) !important;
+  background-image: var(--sk-theme-primaryButton) !important;
+  color: var(--sk-theme-onDark) !important;
+  -webkit-text-fill-color: var(--sk-theme-onDark) !important;
+  border-color: var(--sk-theme-borderOnDark) !important;
+}
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"]) .skshop-tabs button:not(.active),
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"]) .skshop-ref-card .skshop-ref-cart,
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"]) .skshop-ref-card .skshop-heart,
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"]) .skshop-ref-card .skshop-ref-zoom,
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"]) .skshop-quick-close {
+  background: var(--sk-theme-secondaryButton) !important;
+  background-image: var(--sk-theme-secondaryButton) !important;
+  color: var(--sk-theme-foreground) !important;
+  border-color: var(--sk-theme-border) !important;
+}
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"]) .skshop :is(
+  .skshop-ref-buy,.skshop-mobile-filter,.skshop-collection-action,.skshop-quick-dialog button:not(.skshop-quick-close)
+):hover:not(:disabled) {
+  background: var(--sk-theme-buttonHover) !important;
+  background-image: var(--sk-theme-buttonHover) !important;
+  color: var(--sk-theme-onDark) !important;
+}
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"]) .skshop :is(
+  .skshop-search,.skshop-toolbar select,.skshop-tabs button,.skshop-ref-card .skshop-ref-actions button
+) { border-color: var(--sk-theme-border) !important; }
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"]) .skshop-cart-toast {
+  background: var(--sk-theme-primary) !important;
+  background-image: var(--sk-theme-primary) !important;
+  color: var(--sk-theme-onDark) !important;
+}
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"]) .skshop-cart-toast a {
+  color: var(--sk-theme-color-accentOnDark) !important;
+}
+html[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"])
+.sk-store-theme .skshop :disabled {
+  opacity: 1 !important;
+}
+html[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"])
+.sk-store-theme .skshop .skshop-pagination button:disabled {
+  background: var(--sk-theme-secondaryButton) !important;
+  background-image: var(--sk-theme-secondaryButton) !important;
+  color: var(--sk-theme-muted) !important;
+  -webkit-text-fill-color: var(--sk-theme-muted) !important;
+  border-color: var(--sk-theme-border) !important;
+}
+html[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"])
+.sk-store-theme .skshop .skshop-results .skshop-ref-card .skshop-ref-buy:disabled,
+html[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"])
+.sk-store-theme .skshop .skshop-results .skshop-ref-card .skshop-ref-cart:disabled {
+  background: var(--sk-theme-secondaryButton) !important;
+  background-image: var(--sk-theme-secondaryButton) !important;
+  color: var(--sk-theme-muted) !important;
+  -webkit-text-fill-color: var(--sk-theme-muted) !important;
+  border-color: var(--sk-theme-border) !important;
+}
+html[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"])
+.sk-store-theme .skshop .skshop-results .skshop-ref-card .skshop-ref-buy,
+html[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"])
+.sk-store-theme .skshop .skshop-results .skshop-ref-card .skshop-ref-cart {
+  background: var(--sk-theme-primaryButton) !important;
+  background-image: var(--sk-theme-primaryButton) !important;
+  color: var(--sk-theme-onDark) !important;
+  -webkit-text-fill-color: var(--sk-theme-onDark) !important;
+  border-color: var(--sk-theme-borderOnDark) !important;
+}
+html[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"])
+.sk-store-theme .skshop .skshop-results .skshop-ref-card .skshop-ref-buy:hover:not(:disabled),
+html[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"])
+.sk-store-theme .skshop .skshop-results .skshop-ref-card .skshop-ref-cart:hover:not(:disabled) {
+  background: var(--sk-theme-buttonHover) !important;
+  background-image: var(--sk-theme-buttonHover) !important;
+}
+
+/* Keep the mega menu's premium dark surface, while deriving foreground and
+   interaction colors from each alternate palette's contrast-tested tokens. */
+html[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"])
+.sk-store-theme .sk-mega :is(.sk-mega-eyebrow,.sk-mega-all,.sk-mega-content-head>a,
+.sk-mega-sidebar button:hover,.sk-mega-sidebar button.active,.sk-mega-sub svg) {
+  color: var(--sk-theme-color-accentOnDark) !important;
+  -webkit-text-fill-color: var(--sk-theme-color-accentOnDark) !important;
+}
+html[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"])
+.sk-store-theme .sk-mega :is(.sk-mega-sidebar button,.sk-mega-content-head h3,
+.sk-mega-sub,.sk-mega-feature,.sk-mega-feature-bottom) {
+  color: var(--sk-theme-onDark) !important;
+  -webkit-text-fill-color: var(--sk-theme-onDark) !important;
+}
+html[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"])
+.sk-store-theme .sk-mega :is(a,button):focus-visible {
+  outline: 2px solid var(--sk-theme-color-focusOnDark) !important;
+  outline-offset: 2px;
+}
+html[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"])
+.sk-store-theme .sk-mobile-nav :is(a,button) {
+  color: var(--sk-theme-color-navigationText) !important;
+  -webkit-text-fill-color: var(--sk-theme-color-navigationText) !important;
+}
+html[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"])
+.sk-store-theme .sk-mobile-nav :is(a:hover,button:hover,[aria-current="page"],[aria-expanded="true"]) {
+  color: var(--sk-theme-color-accentOnDark) !important;
+  -webkit-text-fill-color: var(--sk-theme-color-accentOnDark) !important;
+}
+
+/* STEP 481 follow-up — finish palette coverage for contact, reviews, and
+   product actions. The original Navy & Gold theme intentionally keeps its
+   established component styling. */
+html[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"])
+.sk-store-theme .sk-final-contact {
+  --sk-navy: var(--sk-theme-foreground);
+  --sk-gold: var(--sk-theme-color-accentForeground);
+  --sk-ink: var(--sk-theme-foreground);
+  --sk-muted: var(--sk-theme-muted);
+  color: var(--sk-theme-foreground) !important;
+  background: var(--sk-theme-pageBackground) !important;
+  background-image: var(--sk-theme-pageBackground) !important;
+}
+html[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"])
+.sk-store-theme .sk-final-contact .sk-final-hero {
+  background-color: var(--sk-theme-color-primary) !important;
+  background-image:
+    linear-gradient(110deg,
+      color-mix(in srgb, var(--sk-theme-color-primary) 98%, transparent) 0%,
+      color-mix(in srgb, var(--sk-theme-color-primary) 94%, transparent) 43%,
+      color-mix(in srgb, var(--sk-theme-color-primary) 76%, transparent) 61%,
+      color-mix(in srgb, var(--sk-theme-color-primary) 22%, transparent) 100%),
+    url("/contact-heritage-art.jpg") !important;
+  color: var(--sk-theme-onDark) !important;
+}
+html[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"])
+.sk-store-theme .sk-final-contact .sk-final-hero::before {
+  /* The legacy pseudo overlay painted an opaque navy layer above the new
+     palette gradient. The themed parent background now owns that overlay. */
+  background: none !important;
+}
+html[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"])
+.sk-store-theme .sk-final-contact .sk-final-hero :is(h1, p, .sk-final-eyebrow, .sk-final-actions a) {
+  color: var(--sk-theme-onDark) !important;
+  -webkit-text-fill-color: var(--sk-theme-onDark) !important;
+}
+html[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"])
+.sk-store-theme .sk-final-contact .sk-final-hero h1 :is(em, i, span) {
+  color: var(--sk-theme-color-accentOnDark) !important;
+  -webkit-text-fill-color: var(--sk-theme-color-accentOnDark) !important;
+}
+html[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"])
+.sk-store-theme .sk-final-contact .sk-final-hero .sk-final-actions a:first-child {
+  background: var(--sk-theme-primaryButton) !important;
+  background-image: var(--sk-theme-primaryButton) !important;
+  border-color: var(--sk-theme-borderOnDark) !important;
+}
+html[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"])
+.sk-store-theme .sk-final-contact :is(.sk-final-stores, .sk-final-hours) {
+  background: var(--sk-theme-pageBackground) !important;
+  background-image: var(--sk-theme-pageBackground) !important;
+  color: var(--sk-theme-foreground) !important;
+}
+html[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"])
+.sk-store-theme .sk-final-contact .sk-final-heading :is(h2, p) {
+  color: var(--sk-theme-foreground) !important;
+}
+html[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"])
+.sk-store-theme .sk-final-contact .sk-final-heading h2 em {
+  color: color-mix(in srgb, var(--sk-theme-color-accentForeground) 80%, var(--sk-theme-foreground)) !important;
+}
+html[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"])
+.sk-store-theme .sk-final-contact .sk-final-store-card {
+  background: var(--sk-theme-card) !important;
+  background-image: var(--sk-theme-card) !important;
+  color: var(--sk-theme-foreground) !important;
+  border-color: var(--sk-theme-border) !important;
+}
+html[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"])
+.sk-store-theme .sk-final-contact .sk-final-store-card :is(h3, p, a, span) {
+  color: var(--sk-theme-foreground) !important;
+  -webkit-text-fill-color: var(--sk-theme-foreground) !important;
+}
+html[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"])
+.sk-store-theme .sk-final-contact .sk-final-store-card :is(.sk-final-store-type, .sk-final-numbers > span) {
+  color: color-mix(in srgb, var(--sk-theme-color-accentForeground) 80%, var(--sk-theme-foreground)) !important;
+  -webkit-text-fill-color: color-mix(in srgb, var(--sk-theme-color-accentForeground) 80%, var(--sk-theme-foreground)) !important;
+}
+html[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"])
+.sk-store-theme .sk-final-contact .sk-final-store-card svg {
+  color: color-mix(in srgb, var(--sk-theme-color-accentForeground) 80%, var(--sk-theme-foreground)) !important;
+}
+html[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"])
+.sk-store-theme .sk-final-contact .sk-final-directions,
+html[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"])
+.sk-store-theme .sk-final-contact .sk-final-form button {
+  background: var(--sk-theme-primaryButton) !important;
+  background-image: var(--sk-theme-primaryButton) !important;
+  color: var(--sk-theme-onDark) !important;
+  -webkit-text-fill-color: var(--sk-theme-onDark) !important;
+  border: 1px solid var(--sk-theme-borderOnDark) !important;
+}
+html[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"])
+.sk-store-theme .sk-final-contact :is(.sk-final-directions, .sk-final-form button):hover {
+  background: var(--sk-theme-buttonHover) !important;
+  background-image: var(--sk-theme-buttonHover) !important;
+}
+html[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"])
+.sk-store-theme .sk-final-contact .sk-final-connect {
+  background: var(--sk-theme-footer) !important;
+  background-image: var(--sk-theme-footer) !important;
+  color: var(--sk-theme-onDark) !important;
+}
+html[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"])
+.sk-store-theme .sk-final-contact .sk-final-connect :is(h2, h3, p, a, .sk-final-email, .sk-final-social-links a) {
+  color: var(--sk-theme-onDark) !important;
+  -webkit-text-fill-color: var(--sk-theme-onDark) !important;
+}
+html[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"])
+.sk-store-theme .sk-final-contact .sk-final-connect :is(.sk-final-eyebrow, svg) {
+  color: var(--sk-theme-color-accentOnDark) !important;
+  -webkit-text-fill-color: var(--sk-theme-color-accentOnDark) !important;
+}
+html[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"])
+.sk-store-theme .sk-final-contact .sk-final-form {
+  background: var(--sk-theme-color-surface) !important;
+  color: var(--sk-theme-foreground) !important;
+  border-color: var(--sk-theme-border) !important;
+}
+html[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"])
+.sk-store-theme .sk-final-contact .sk-final-form :is(h3, p, label) {
+  color: var(--sk-theme-foreground) !important;
+  -webkit-text-fill-color: var(--sk-theme-foreground) !important;
+}
+html[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"])
+.sk-store-theme .sk-final-contact .sk-final-connect .sk-final-form :is(h3, p, label) {
+  color: var(--sk-theme-foreground) !important;
+  -webkit-text-fill-color: var(--sk-theme-foreground) !important;
+}
+html[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"])
+.sk-store-theme .sk-final-contact .sk-final-form :is(input, select, textarea) {
+  background: var(--sk-theme-input) !important;
+  background-color: var(--sk-theme-color-inputBackground) !important;
+  color: var(--sk-theme-foreground) !important;
+  border-color: var(--sk-theme-border) !important;
+}
+html[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"])
+.sk-store-theme .sk-final-contact .sk-final-form :is(input, select, textarea)::placeholder {
+  color: var(--sk-theme-muted) !important;
+  opacity: 1;
+}
+html[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"])
+.sk-store-theme .sk-final-contact .sk-final-form :is(input, select, textarea):focus-visible,
+html[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"])
+.sk-store-theme .sk-final-contact :is(a, button):focus-visible {
+  outline: 2px solid var(--sk-theme-color-focus) !important;
+  outline-offset: 3px;
+}
+html[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"])
+.sk-store-theme .sk-final-contact .sk-final-hours svg {
+  color: color-mix(in srgb, var(--sk-theme-color-accentForeground) 80%, var(--sk-theme-foreground)) !important;
+}
+
+/* Reviews use a stable themed light canvas so body text stays readable, while
+   accents and hover/focus states retain each palette's own identity. */
+html[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"])
+.sk-store-theme .clp-section {
+  --navy: var(--sk-theme-foreground);
+  --gold: color-mix(in srgb, var(--sk-theme-color-accentForeground) 80%, var(--sk-theme-foreground));
+  --ivory: var(--sk-theme-color-pageBackground);
+  color: var(--sk-theme-foreground) !important;
+  background: var(--sk-theme-sectionBackground) !important;
+  background-image: var(--sk-theme-sectionBackground) !important;
+}
+html[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"])
+.sk-store-theme .clp-section :is(h2, h3, h4, strong, .clp-review, .clp-empty, .clp-modal p) {
+  color: var(--sk-theme-foreground) !important;
+  -webkit-text-fill-color: var(--sk-theme-foreground) !important;
+}
+html[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"])
+.sk-store-theme .clp-section :is(p, .clp-review-text, .clp-note, .clp-bottom, .clp-author-info small, .clp-modal small) {
+  color: var(--sk-theme-foreground) !important;
+  -webkit-text-fill-color: var(--sk-theme-foreground) !important;
+}
+html[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"])
+.sk-store-theme .clp-section :is(.clp-eyebrow, .clp-panel-head > span, .clp-heading em, .clp-panel-head em, .clp-stars, .clp-quote, .clp-read-more, .clp-modal-kicker, .clp-modal-stars) {
+  color: color-mix(in srgb, var(--sk-theme-color-accentForeground) 80%, var(--sk-theme-foreground)) !important;
+  -webkit-text-fill-color: color-mix(in srgb, var(--sk-theme-color-accentForeground) 80%, var(--sk-theme-foreground)) !important;
+}
+html[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"])
+.sk-store-theme .clp-section :is(.clp-review, .clp-empty, .clp-modal) {
+  background: var(--sk-theme-card) !important;
+  background-image: var(--sk-theme-card) !important;
+  border-color: var(--sk-theme-border) !important;
+}
+html[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"])
+.sk-store-theme .clp-section .clp-review:hover {
+  background: var(--sk-theme-hover) !important;
+  background-image: var(--sk-theme-hover) !important;
+  border-color: var(--sk-theme-border) !important;
+}
+html[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"])
+.sk-store-theme .clp-section .clp-avatar {
+  background: var(--sk-theme-color-surfaceSoft) !important;
+  color: var(--sk-theme-color-accentText) !important;
+}
+html[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"])
+.sk-store-theme .clp-modal-backdrop {
+  background: color-mix(in srgb, var(--sk-theme-color-primary) 78%, transparent) !important;
+}
+html[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"])
+.sk-store-theme .clp-modal-close {
+  color: var(--sk-theme-foreground) !important;
+  border-color: var(--sk-theme-border) !important;
+}
+html[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"])
+.sk-store-theme .clp-section :is(button, a):focus-visible {
+  outline: 2px solid var(--sk-theme-color-focus) !important;
+  outline-offset: 3px;
+}
+
+/* The disabled out-of-stock product button used to bypass the palette rule
+   and inherit the legacy blue. Keep its disabled opacity, theme its colors. */
+html[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"])
+.sk-store-theme .skpd .skpd-v5-actions button {
+  background: var(--sk-theme-primaryButton) !important;
+  background-image: var(--sk-theme-primaryButton) !important;
+  color: var(--sk-theme-onDark) !important;
+  -webkit-text-fill-color: var(--sk-theme-onDark) !important;
+  border-color: var(--sk-theme-borderOnDark) !important;
+}
+html[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"])
+.sk-store-theme .skpd .skpd-v5-actions button:hover:not(:disabled) {
+  background: var(--sk-theme-buttonHover) !important;
+  background-image: var(--sk-theme-buttonHover) !important;
+}
+html[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"])
+.sk-store-theme .skpd .skpd-v5-actions button:focus-visible {
+  outline: 2px solid var(--sk-theme-color-focus) !important;
+  outline-offset: 2px;
+}
+html[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"])
+.sk-store-theme .skpd .skpd-v5-actions button:disabled {
+  background: var(--sk-theme-secondaryButton) !important;
+  background-image: var(--sk-theme-secondaryButton) !important;
+  color: var(--sk-theme-foreground) !important;
+  -webkit-text-fill-color: var(--sk-theme-foreground) !important;
+  border-color: var(--sk-theme-border) !important;
+  opacity: 1 !important;
+}
+
+/* Best Collection's carousel CTA belongs to the selected palette too. */
+html[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"])
+.sk-store-theme .skp-auto-section :is(.skp-heritage-cart-button, .skp-buttons .skp-cart) {
+  background: var(--sk-theme-primaryButton) !important;
+  background-image: var(--sk-theme-primaryButton) !important;
+  color: var(--sk-theme-onDark) !important;
+  -webkit-text-fill-color: var(--sk-theme-onDark) !important;
+  border-color: var(--sk-theme-borderOnDark) !important;
+}
+html[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"])
+.sk-store-theme .skp-auto-section :is(.skp-heritage-cart-button, .skp-buttons .skp-cart):hover:not(:disabled) {
+  background: var(--sk-theme-buttonHover) !important;
+  background-image: var(--sk-theme-buttonHover) !important;
+}
+html[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"])
+.sk-store-theme .skp-auto-section :is(.skp-heritage-cart-button, .skp-buttons .skp-cart):focus-visible {
+  outline: 2px solid var(--sk-theme-color-focus) !important;
+  outline-offset: 2px;
+}
+
+/* Hero CTAs contain an ivory circular arrow; give that icon a dark palette
+   foreground instead of inheriting the light label color used on the button. */
+html[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"])
+.sk-store-theme .sk-cinematic-primary svg {
+  color: var(--sk-theme-foreground) !important;
+  -webkit-text-fill-color: var(--sk-theme-foreground) !important;
+}
+html[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"])
+.sk-store-theme .sk-cinematic-primary:hover svg {
+  color: var(--sk-theme-foreground) !important;
+  -webkit-text-fill-color: var(--sk-theme-foreground) !important;
+}
+
+/* Keep store-direction labels on the dark palette button light; the card's
+   general link color rule must not override this nested action. */
+html[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"])
+.sk-store-theme .sk-final-contact .sk-final-store-card .sk-final-directions {
+  color: var(--sk-theme-onDark) !important;
+  -webkit-text-fill-color: var(--sk-theme-onDark) !important;
+}
+html[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"])
+.sk-store-theme .sk-final-contact .sk-final-store-card .sk-final-directions svg {
+  color: var(--sk-theme-onDark) !important;
+}
+
+/* Mega-menu feature cards have separate hardcoded artwork and footer fills.
+   Keep the light decorative card surface and dark action surface themed
+   independently so both the category label and footer stay legible. */
+html[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"])
+.sk-store-theme .sk-mega .sk-mega-feature {
+  border-color: var(--sk-theme-borderOnDark) !important;
+}
+html[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"])
+.sk-store-theme .sk-mega .sk-mega-feature-art {
+  background: var(--sk-theme-card) !important;
+  background-image: var(--sk-theme-card) !important;
+  color: var(--sk-theme-foreground) !important;
+}
+html[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"])
+.sk-store-theme .sk-mega .sk-mega-feature-art :is(span, strong, small) {
+  color: var(--sk-theme-foreground) !important;
+  -webkit-text-fill-color: var(--sk-theme-foreground) !important;
+}
+html[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"])
+.sk-store-theme .sk-mega .sk-mega-preview-placeholder {
+  background: var(--sk-theme-card) !important;
+  background-image: var(--sk-theme-card) !important;
+  color: var(--sk-theme-foreground) !important;
+}
+html[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"])
+.sk-store-theme .sk-mega .sk-mega-preview-placeholder::before {
+  border-color: var(--sk-theme-border) !important;
+}
+html[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"])
+.sk-store-theme .sk-mega .sk-mega-feature-bottom {
+  background: var(--sk-theme-primaryButton) !important;
+  background-image: var(--sk-theme-primaryButton) !important;
+  color: var(--sk-theme-onDark) !important;
+  -webkit-text-fill-color: var(--sk-theme-onDark) !important;
+  border-top: 1px solid var(--sk-theme-borderOnDark) !important;
+}
+html[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"])
+.sk-store-theme .sk-mega .sk-mega-feature:hover .sk-mega-feature-bottom {
+  background: var(--sk-theme-buttonHover) !important;
+  background-image: var(--sk-theme-buttonHover) !important;
+}
+html[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"])
+.sk-store-theme .sk-mega .sk-mega-feature:focus-visible {
+  outline: 2px solid var(--sk-theme-color-focusOnDark) !important;
+  outline-offset: 3px;
+}
+
+/* Customer login uses the selected palette's recognizable jewel hue behind
+   its light form card (blue for Sapphire, rose for Burgundy, and so on). */
+html[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"])
+.sk-store-theme .skauth-page {
+  background-color: var(--sk-theme-color-primary) !important;
+  background-image:
+    radial-gradient(ellipse at 50% 0%, color-mix(in srgb, var(--sk-theme-color-accent) 24%, transparent), transparent 62%),
+    repeating-radial-gradient(circle at 50% 115%, transparent 0 115px, color-mix(in srgb, var(--sk-theme-color-accent) 9%, transparent) 116px 117px, transparent 118px 220px),
+    linear-gradient(145deg, var(--sk-theme-color-primary), color-mix(in srgb, var(--sk-theme-color-primary) 78%, black)) !important;
+}
+
+/* Customer auth surfaces use the active theme's exact gradients and tokens. */
+html[data-storefront-theme] .sk-store-theme .skauth-page {
+  background-color: var(--sk-theme-color-primary) !important;
+  background-image:
+    radial-gradient(ellipse at 50% 0%, color-mix(in srgb, var(--sk-theme-color-accent) 24%, transparent), transparent 62%),
+    repeating-radial-gradient(circle at 50% 115%, transparent 0 115px, color-mix(in srgb, var(--sk-theme-color-accent) 9%, transparent) 116px 117px, transparent 118px 220px),
+    linear-gradient(145deg, var(--sk-theme-color-primary), color-mix(in srgb, var(--sk-theme-color-primary) 78%, black)) !important;
+  color: var(--sk-theme-color-body) !important;
+}
+
+html[data-storefront-theme] .sk-store-theme :is(.skauth-shell, .skauth-reset-shell) {
+  border-color: var(--sk-theme-border) !important;
+  background: var(--sk-theme-card) !important;
+  color: var(--sk-theme-color-body) !important;
+}
+
+html[data-storefront-theme] .sk-store-theme .skauth-page :is(h1, h2, h3, label, .skauth-brand strong) {
+  color: var(--sk-theme-color-heading) !important;
+  -webkit-text-fill-color: var(--sk-theme-color-heading) !important;
+}
+
+html[data-storefront-theme] .sk-store-theme .skauth-page :is(p, li, .skauth-switch, .skauth-back, .skauth-password-strength, .skauth-password-rules) {
+  color: var(--sk-theme-color-muted) !important;
+  -webkit-text-fill-color: var(--sk-theme-color-muted) !important;
+}
+
+html[data-storefront-theme] .sk-store-theme .skauth-page .skauth-overline,
+html[data-storefront-theme] .sk-store-theme .skauth-page .skauth-brand span {
+  color: var(--sk-theme-color-accentForeground) !important;
+  -webkit-text-fill-color: var(--sk-theme-color-accentForeground) !important;
+}
+
+html[data-storefront-theme] .sk-store-theme .skauth-page :is(input:not([type="checkbox"]), select, textarea) {
+  background: var(--sk-theme-input) !important;
+  color: var(--sk-theme-color-body) !important;
+  border-color: var(--sk-theme-border) !important;
+}
+
+html[data-storefront-theme] .sk-store-theme .skauth-page :is(input, select, textarea):focus-visible {
+  border-color: var(--sk-theme-color-focus) !important;
+  outline-color: var(--sk-theme-color-focus) !important;
+}
+
+html[data-storefront-theme] .sk-store-theme .skauth-page :is(a, .skauth-page-link) {
+  color: var(--sk-theme-color-accentForeground);
+}
+
+html[data-storefront-theme] .sk-store-theme .skauth-page :is(.skauth-submit, .skauth-result-button) {
+  background: var(--sk-theme-primaryButton) !important;
+  background-image: var(--sk-theme-primaryButton) !important;
+  color: var(--sk-theme-buttonText) !important;
+  -webkit-text-fill-color: var(--sk-theme-buttonText) !important;
+}
+
+html[data-storefront-theme] .sk-store-theme .skauth-page :is(.skauth-submit, .skauth-result-button):hover {
+  background: var(--sk-theme-buttonHover) !important;
+  background-image: var(--sk-theme-buttonHover) !important;
+}
+
+html[data-storefront-theme] .sk-store-theme .skauth-page .skauth-secondary-button {
+  background: var(--sk-theme-secondaryButton) !important;
+  color: var(--sk-theme-color-body) !important;
+  border-color: var(--sk-theme-border) !important;
+}
+
+html[data-storefront-theme] .sk-store-theme .skauth-page .skauth-result-icon.is-loading {
+  color: var(--sk-theme-color-accentForeground) !important;
+  background: var(--sk-theme-surfaceSoft) !important;
+}
+
+html[data-storefront-theme] .sk-store-theme .skauth-page .skauth-result-icon.is-success { color: var(--sk-theme-color-success) !important; }
+html[data-storefront-theme] .sk-store-theme .skauth-page .skauth-result-icon.is-error { color: var(--sk-theme-color-error) !important; }
+html[data-storefront-theme] .sk-store-theme .skauth-page :is(.skauth-notice-error, .skauth-notice-success) {
+  background: var(--sk-theme-card) !important;
+  color: var(--sk-theme-color-body) !important;
+  border-color: var(--sk-theme-border) !important;
+}
+
+html[data-storefront-theme] .sk-store-theme .skauth-page :is(button, a):focus-visible {
+  outline-color: var(--sk-theme-color-focus) !important;
+}
+
+/* Keep alternate-theme navigation labels legible on their dark palette
+   gradients; hover/expanded items use the palette's contrasting accent. */
+html[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"])
+.sk-store-theme .sk-header .sk-navigation :is(a, button) {
+  color: var(--sk-theme-onDark) !important;
+  -webkit-text-fill-color: var(--sk-theme-onDark) !important;
+}
+html[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"])
+.sk-store-theme .sk-header .sk-navigation :is(a, button):is(:hover, :focus-visible, [aria-expanded="true"], .is-active) {
+  color: var(--sk-theme-color-accentOnDark) !important;
+  -webkit-text-fill-color: var(--sk-theme-color-accentOnDark) !important;
+}
+
+/* The hero ticker and header WhatsApp action retain legacy Navy/green paint
+   and shadow declarations. Rebind their visible surfaces to the active theme. */
+html[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"])
+.sk-store-theme .sk-reference-ticker {
+  background: var(--sk-theme-navigation) !important;
+  background-image: var(--sk-theme-navigation) !important;
+  border-top-color: var(--sk-theme-borderOnDark) !important;
+}
+html[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"])
+.sk-store-theme .sk-reference-ticker-set span {
+  color: var(--sk-theme-color-navigationText) !important;
+}
+html[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"])
+.sk-store-theme .sk-reference-ticker-set b {
+  color: var(--sk-theme-color-accentOnDark) !important;
+}

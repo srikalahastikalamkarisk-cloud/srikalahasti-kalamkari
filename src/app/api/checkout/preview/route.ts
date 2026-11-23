@@ -9,12 +9,16 @@ import {
   verifyCheckoutProducts,
 } from "@/lib/checkout/verify-products";
 import { SHIPPING_AMOUNT_PAISE } from "@/lib/checkout/shipping-policy";
+import { getCurrentCustomer } from "@/lib/customer-auth";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export async function POST(request: NextRequest) {
   try {
+    const customer = await getCurrentCustomer();
+    if (!customer) return NextResponse.json({ error: "Sign in to continue to checkout.", loginRequired: true }, { status: 401 });
+    if (!customer.emailVerifiedAt) return NextResponse.json({ error: "Verify your email to continue to checkout.", verificationRequired: true }, { status: 403 });
     const contentType = request.headers.get("content-type") ?? "";
 
     if (!contentType.toLowerCase().includes("application/json")) {
@@ -69,6 +73,9 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
+
+    if (parsed.data.customer.email.trim().toLowerCase() !== customer.email) return NextResponse.json({ error: "Checkout email must match your signed-in account." }, { status: 403 });
+    parsed.data.customer.name = customer.name;
 
     const verified = await verifyCheckoutProducts(
       parsed.data.items

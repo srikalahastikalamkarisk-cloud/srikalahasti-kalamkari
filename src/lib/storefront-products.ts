@@ -27,6 +27,7 @@ export type StorefrontProduct = {
   categoryPath: string[];
   categoryId: string;
   categorySlug: string;
+  categoryParentSlug?: string | null;
   price: number;
   originalPrice?: number;
   image: string;
@@ -71,7 +72,7 @@ export async function getStorefrontProducts(): Promise<StorefrontProduct[]> {
   const rows = await prisma.product.findMany({
     where: { isActive: true, category: { isActive: true } },
     include: {
-      category: { select: { id: true, name: true, slug: true, parent: { select: { name: true } } } },
+      category: { select: { id: true, name: true, slug: true, parent: { select: { name: true, slug: true } } } },
       variants: { orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }] },
     },
     orderBy: [{ isFeatured: "desc" }, { createdAt: "desc" }],
@@ -81,7 +82,7 @@ export async function getStorefrontProducts(): Promise<StorefrontProduct[]> {
     const images = storefrontImageList(product.images);
     return {
       id: product.id, name: product.name, slug: product.slug,
-      category: product.category.name, categoryPath: [...(product.category.parent ? [product.category.parent.name] : []), product.category.name], categoryId: product.category.id, categorySlug: product.category.slug,
+      category: product.category.name, categoryPath: [...(product.category.parent ? [product.category.parent.name] : []), product.category.name], categoryId: product.category.id, categorySlug: product.category.slug, categoryParentSlug: product.category.parent?.slug ?? null,
       price: Number(product.price), originalPrice: product.originalPrice == null ? undefined : Number(product.originalPrice),
       image: images[0] || "", images, stock: product.stock,
       availabilityStatus: normalizeAvailabilityStatus(product.availabilityStatus),

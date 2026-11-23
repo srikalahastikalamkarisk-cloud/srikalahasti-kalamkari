@@ -13,11 +13,13 @@ import {
   CheckoutValidationError,
 } from "@/lib/checkout/verify-products";
 import { getRazorpayClient, getRazorpayPublicKey } from "@/lib/payments/razorpay";
+import { canRetryRazorpayOrder } from "@/lib/payments/retry-eligibility";
 import {
   reserveCoupon,
   CouponReservationError,
 } from "@/lib/checkout/reserve-coupon";
 import { SHIPPING_AMOUNT_PAISE } from "@/lib/checkout/shipping-policy";
+import { getCurrentCustomer } from "@/lib/customer-auth";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -34,6 +36,10 @@ export async function POST(request: NextRequest) {
   const guardedRequest = await paymentRequestGuard(request);
   if (guardedRequest instanceof NextResponse) return guardedRequest;
   request = guardedRequest;
+
+  const customer = await getCurrentCustomer();
+  if (!customer) return NextResponse.json({ error: "Sign in to continue to checkout.", loginRequired: true }, { status: 401 });
+  if (!customer.emailVerifiedAt) return NextResponse.json({ error: "Verify your email to continue to checkout.", verificationRequired: true }, { status: 403 });
 
   let createdAttemptId: string | null = null;
 
@@ -64,6 +70,8 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
+    if (parsed.data.customer.email.trim().toLowerCase() !== customer.email) return NextResponse.json({ error: "Checkout email must match your signed-in account." }, { status: 403 });
+    parsed.data.customer.name = customer.name;
 
     // Never trust an amount supplied by the browser.
     const verified = await verifyCheckoutProducts(parsed.data.items);
@@ -328,13 +336,33 @@ export async function POST(request: NextRequest) {
     }
 
     if (attemptResult.kind === "existing") {
+      const existingAttempt = attemptResult.attempt;
+      if (!existingAttempt.razorpayOrderId) {
+        return NextResponse.json({ error: "Payment needs reconciliation before it can be retried." }, { status: 409 });
+      }
+      const [providerOrder, providerPayments] = await Promise.all([
+        razorpay.orders.fetch(existingAttempt.razorpayOrderId),
+        razorpay.orders.fetchPayments(existingAttempt.razorpayOrderId),
+      ]);
+      const retrySafe = canRetryRazorpayOrder({
+        expectedOrderId: existingAttempt.razorpayOrderId,
+        expectedAmountPaise: existingAttempt.amountPaise,
+        order: providerOrder,
+        payments: providerPayments.items,
+      });
+      if (!retrySafe) {
+        return NextResponse.json(
+          { error: "Payment status is still being confirmed. Check its status before trying again." },
+          { status: 409, headers: { "Cache-Control": "no-store" } }
+        );
+      }
       return NextResponse.json(
         {
           success: true,
           orderId: order.id,
           orderNumber: order.orderNumber,
-          razorpayOrderId: attemptResult.attempt.razorpayOrderId,
-          amount: attemptResult.attempt.amountPaise,
+          razorpayOrderId: existingAttempt.razorpayOrderId,
+          amount: existingAttempt.amountPaise,
           currency: "INR",
           keyId: getRazorpayPublicKey(),
         },

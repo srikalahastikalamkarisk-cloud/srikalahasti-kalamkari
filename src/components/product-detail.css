@@ -1181,6 +1181,7 @@
   min-height: 100px;
   padding: 7px;
   font-size: 10px;
+  color: var(--sk-theme-color-muted, #626e7d);
 }
 
 /* Tablet: four cards visible */

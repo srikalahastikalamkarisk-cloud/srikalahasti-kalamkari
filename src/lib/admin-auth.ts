@@ -2,7 +2,7 @@ import "server-only";
 import { SignJWT, jwtVerify } from "jose";
 import { cookies } from "next/headers";
 import { prisma } from "@/lib/prisma";
-import { isAdminSessionVersionValid } from "@/lib/admin/password-reset-core";
+import { isAdminSessionVersionValid } from "@/lib/admin/password-reset-validation";
 
 export const ADMIN_COOKIE = "sk_admin_session";
 

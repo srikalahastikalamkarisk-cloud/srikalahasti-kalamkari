@@ -1,0 +1,109 @@
+/* STEP 369 — Contrast and brand readability. Alternative palettes only. */
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"]) .sk-header .sk-brand .sk-brand-name {
+ color:var(--sk-theme-onDark,#fff9f4)!important;
+ opacity:1!important;
+}
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"]) .sk-header .sk-brand .sk-brand-sub {
+ color:var(--sk-theme-onDark,#fff9f4)!important;
+ opacity:.96!important;
+}
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"]) .sk-header .sk-brand .sk-brand-caption {
+ color:var(--sk-theme-onDark,#fff9f4)!important;
+ opacity:.88!important;
+}
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"]) .skf .skf-main h3 {
+ color:var(--sk-theme-onDark,#fff9f4)!important;
+ opacity:1!important;
+}
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"]) .skfp-section .skfp-card .skfp-badge {
+ background:#64283D!important;
+ background-image:none!important;
+ color:#E8C99B!important;
+ border-color:#64283D!important;
+}
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"]) .skfp-section .skfp-card .skfp-purchase-actions .skfp-cart-icon {
+ background:var(--sk-theme-primaryButton)!important;
+ background-image:var(--sk-theme-primaryButton)!important;
+ color:var(--sk-theme-onDark,#fff9f4)!important;
+ border-color:var(--sk-theme-border)!important;
+}
+
+
+/* STEP 372 — consolidated finishing rules; non-original palettes only.
+   This block intentionally changes colors, not dimensions or animations. */
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"]) {
+  --sk-finish-light: var(--sk-theme-onDark, #fffdf8);
+  --sk-finish-jewel: var(--sk-theme-accent, #d6aa78);
+}
+[data-storefront-theme^="burgundy-rose-gold-"] {
+  --sk-finish-jewel: #e8c9a3;
+  --sk-finish-button: linear-gradient(105deg, #64283D, #93465F);
+}
+/* Brand + moving heritage announcement */
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"]) .sk-header .sk-brand .sk-brand-sub,
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"]) .sk-header .sk-brand .sk-brand-caption {color:var(--sk-finish-jewel)!important;opacity:1!important}
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"]) .sk-heritage-bar .sk-heritage-set span,
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"]) .sk-heritage-bar .sk-heritage-set b {color:var(--sk-finish-champagne)!important;opacity:1!important}
+/* Footer text on a dark gradient needs a light, not muted, foreground. */
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"]) .skf .skf-main h3,
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"]) .skf .skf-details b {color:var(--sk-finish-light)!important;opacity:1!important}
+/* Buttons, sale badges and shop CTA: only color, no sizing. */
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"]) .skfp-section .skfp-card .skfp-purchase-actions .skfp-cart-icon,
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"]) .skp-royal-best .skp-cart,
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"]) .skshop .skshop-ref-buy,
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"]) .sk-cinematic-primary {
+  background:var(--sk-finish-button,var(--sk-theme-primaryButton))!important;
+  color:var(--sk-finish-light)!important;
+  border-color:var(--sk-theme-border)!important;
+}
+/* Hero media fallback and overlays must follow the selected palette. */
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"]) .sk-cinematic-empty,
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"]) .sk-cinematic-background {background-color:var(--sk-theme-foreground)!important}
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"]) .sk-cinematic-empty {background-image:var(--sk-theme-header)!important}
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"]) .sk-cinematic-overlay {background:var(--sk-theme-heroOverlay)!important}
+/* Contact image's ::before layer contains hardcoded navy. */
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"]) .sk-final-hero::before {
+  background:linear-gradient(90deg, color-mix(in srgb,var(--sk-theme-foreground) 97%,black) 0%,color-mix(in srgb,var(--sk-theme-foreground) 94%,transparent) 40%,transparent 100%)!important;
+}
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"]) .sk-final-hero p {color:var(--sk-finish-light)!important;opacity:1!important}
+/* Preserve the fine concentric decorative lines in both login screens. */
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"]) :is(.skauth-page,.sk-admin-login) {
+  background:
+    radial-gradient(ellipse at 50% 0%,color-mix(in srgb,var(--sk-theme-accent) 20%,transparent),transparent 60%),
+    repeating-radial-gradient(circle at 50% 115%,transparent 0 115px,color-mix(in srgb,var(--sk-theme-accent) 15%,transparent) 116px 117px,transparent 118px 220px),
+    var(--sk-theme-primary)!important;
+}
+
+/* STEP 417 — CONSOLIDATED BURGUNDY FOOTER COLORS
+   Scoped to the Burgundy palette; the original Navy & Gold is untouched. */
+[data-storefront-theme="burgundy-rose-gold-01"] .skf .skf-main h3 {
+  color:#E8C99B!important;
+  -webkit-text-fill-color:#E8C99B!important;
+  opacity:1!important;
+}
+/* Brand description, GI registration and GSTIN in champagne gold. */
+[data-storefront-theme="burgundy-rose-gold-01"] .skf .skf-main .skf-brand-col > p,
+[data-storefront-theme="burgundy-rose-gold-01"] .skf .skf-main .skf-brand-col .skf-details,
+[data-storefront-theme="burgundy-rose-gold-01"] .skf .skf-main .skf-brand-col .skf-details * {
+  color:#E8C99B!important;
+  opacity:1!important;
+}
+/* Footer body and links, excluding the white customization card. */
+[data-storefront-theme="burgundy-rose-gold-01"] .skf .skf-main :is(.skf-links a,.skf-contact a,.skf-store-list a,.skf-store-list p,.skf-hours),
+[data-storefront-theme="burgundy-rose-gold-01"] .skf .skf-bottom,
+[data-storefront-theme="burgundy-rose-gold-01"] .skf .skf-bottom a {
+  color:#FFFFFF!important;
+  opacity:1!important;
+}
+/* Use stronger specificity than earlier general footer link rules. */
+[data-storefront-theme="burgundy-rose-gold-01"] .skf .skf-main .skf-links a:hover,
+[data-storefront-theme="burgundy-rose-gold-01"] .skf .skf-main .skf-contact a:hover,
+[data-storefront-theme="burgundy-rose-gold-01"] .skf .skf-main .skf-store-list a:hover,
+[data-storefront-theme="burgundy-rose-gold-01"] .skf .skf-main a:hover,
+[data-storefront-theme="burgundy-rose-gold-01"] .skf .skf-bottom a:hover {
+  color:#E8C99B!important;
+}
+[data-storefront-theme="burgundy-rose-gold-01"] .skf .skf-social a:hover {
+  color:#E8C99B!important;
+  border-color:#E8C99B!important;
+}

@@ -118,3 +118,99 @@
     padding-top:32px;
   }
 }
+
+
+/* STEP 338 — CONDITIONAL GRADIENT FOOTER */
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"]) .skf {
+  background: var(--sk-theme-footer);
+  color: var(--sk-theme-onDark);
+  border-top-color: var(--sk-theme-border);
+  --gold: var(--sk-theme-color-accentOnDark);
+  --navy: var(--sk-theme-foreground);
+}
+
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"]) .skf-custom {
+  background: var(--sk-theme-primary);
+  border-color: var(--sk-theme-border);
+}
+
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"]) .skf-main h3,
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"]) .skf-kicker {
+  color: var(--sk-theme-color-accentOnDark);
+}
+
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"]) .skf-custom h2 em {
+  color: var(--sk-theme-color-accentOnDark);
+}
+
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"]) .skf-links a,
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"]) .skf-brand,
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"]) .skf-contact {
+  color: var(--sk-theme-onDark);
+}
+
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"]) .skf-bottom {
+  border-top-color: var(--sk-theme-border);
+  color: var(--sk-theme-onDark);
+}
+
+
+
+
+/* STEP 507F — FINAL PREMIUM DEVELOPER CREDIT */
+.skf-developer-credit {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 18px 8px;
+  text-align: center;
+  font-size: 12px;
+  letter-spacing: .01em;
+  color: #e8dce5;
+}
+
+.skf-developer-label {
+  color: #d7b986;
+}
+
+.skf-developer-brand {
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 650;
+  text-decoration: none;
+}
+
+.skf-developer-brand span {
+  font-size: 12px;
+}
+
+.skf-developer-phone {
+  color: #e8dce5;
+  text-decoration: none;
+}
+
+.skf-developer-separator {
+  color: #a68b9b;
+}
+
+.skf-developer-credit a:hover {
+  color: #fac826;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"])
+.skf-developer-credit {
+  color: var(--sk-theme-onDark);
+}
+
+@media (max-width: 680px) {
+  .skf-developer-credit {
+    gap: 6px;
+    padding: 16px 5px;
+    font-size: 11px;
+  }
+}

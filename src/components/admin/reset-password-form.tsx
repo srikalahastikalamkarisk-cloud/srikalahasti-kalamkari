@@ -3,7 +3,7 @@
 import { useEffect, useState, type FormEvent } from "react";
 import Link from "next/link";
 import { Eye, EyeOff, LockKeyhole, ShieldCheck } from "lucide-react";
-import { getPasswordRequirements, isAdminResetTokenFormatValid } from "@/lib/admin/password-reset-core";
+import { getPasswordRequirements, isAdminResetTokenFormatValid } from "@/lib/admin/password-reset-validation";
 
 export default function ResetPasswordForm() {
   const [token, setToken] = useState("");

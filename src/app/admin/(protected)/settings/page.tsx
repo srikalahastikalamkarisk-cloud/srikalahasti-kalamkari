@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import WebsiteStatusControl from "@/components/admin/website-status-control";
 import "./settings.css";
 
 type Settings = {
@@ -53,7 +54,6 @@ const sections: Section[] = [
       { key: "storeName", label: "Store name" },
       { key: "description", label: "Store description", type: "textarea" },
       { key: "logoUrl", label: "Logo URL", type: "url", hint: "Use an HTTPS image URL. Leave blank to keep the current logo." },
-      { key: "faviconUrl", label: "Favicon URL", type: "url", hint: "Use an HTTPS image URL. Leave blank to keep the current icon." },
     ],
   },
   {
@@ -101,6 +101,7 @@ export default function StoreSettingsPage() {
   const [loadAttempt, setLoadAttempt] = useState(0);
   const [saving, setSaving] = useState(false);
   const [uploadingLogo, setUploadingLogo] = useState(false);
+  const [uploadingFavicon, setUploadingFavicon] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [fieldErrors, setFieldErrors] = useState<Partial<Record<keyof Settings, string>>>({});
@@ -229,6 +230,34 @@ export default function StoreSettingsPage() {
     }
   }
 
+  async function uploadFavicon(file: File) {
+    if (!/^(image\/(png|jpeg|webp|x-icon|vnd\.microsoft\.icon)|application\/octet-stream)$/.test(file.type) && !(file.type === "" && file.name.toLowerCase().endsWith(".ico"))) {
+      setError("Choose a PNG, JPG, WebP or ICO favicon.");
+      return;
+    }
+    if (file.size > 1024 * 1024) {
+      setError("Favicon must be 1 MB or smaller.");
+      return;
+    }
+    setUploadingFavicon(true);
+    setError("");
+    setMessage("");
+    try {
+      const body = new FormData();
+      body.set("file", file);
+      body.set("purpose", "favicon");
+      const response = await fetch("/api/admin/media", { method: "POST", credentials: "same-origin", body });
+      const data = await response.json() as { error?: string; asset?: { storageKey?: string } };
+      if (!response.ok || !data.asset?.storageKey) throw new Error(data.error || "Favicon upload failed.");
+      update("faviconUrl", `/api/media/products/${data.asset.storageKey}`);
+      setMessage("Favicon uploaded. Click Save settings to activate it.");
+    } catch (uploadError) {
+      setError(uploadError instanceof Error ? uploadError.message : "Favicon upload failed.");
+    } finally {
+      setUploadingFavicon(false);
+    }
+  }
+
   function retryLoad() {
     setLoading(true);
     setError("");
@@ -305,6 +334,8 @@ export default function StoreSettingsPage() {
         {dirty && <span className="sk-settings-dirty" role="status">Unsaved changes</span>}
       </header>
 
+      <WebsiteStatusControl />
+
       {loading ? (
         <div className="sk-settings-skeleton" role="status" aria-label="Loading store settings">
           <span /><span /><span />
@@ -321,11 +352,33 @@ export default function StoreSettingsPage() {
       ) : (
         <>
           <nav className="sk-settings-tabs" aria-label="Store settings sections">
+            <a href="#favicon">Browser favicon</a>
             {sections.map(section => <a key={section.id} href={`#${section.id}`}>{section.title}</a>)}
             <a href="#checkout-safety">Checkout & payments</a>
           </nav>
 
           <form onSubmit={save} noValidate>
+            <section className="sk-settings-card" id="favicon" aria-labelledby="favicon-title">
+              <div className="sk-settings-card-heading"><div><h2 id="favicon-title">Browser favicon</h2><p>Shown in browser tabs, bookmarks and search results. Square PNG, JPG, WebP or ICO; 16–512 pixels and up to 1 MB.</p></div></div>
+              <div className="sk-settings-fields"><div className="sk-settings-field">
+                <label htmlFor="settings-faviconUrl">Favicon URL</label>
+                <input id="settings-faviconUrl" type="url" value={form.faviconUrl} onChange={event => update("faviconUrl", event.target.value)} aria-invalid={Boolean(fieldErrors.faviconUrl)} />
+                <small>{fieldErrors.faviconUrl || "Upload an icon or use an HTTPS image URL. Clearing this field restores the default Srikalahasti icon."}</small>
+                {(isHttpsUrl(form.faviconUrl) || /^\/api\/media\/products\/[a-f0-9-]{36}\.(png|jpg|webp|ico)$/.test(form.faviconUrl)) && (
+                  <div className="sk-settings-logo-preview sk-settings-favicon-preview">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={form.faviconUrl} alt="Favicon preview" />
+                    <span>Favicon preview</span>
+                  </div>
+                )}
+                <div className="sk-settings-logo-upload">
+                  <label htmlFor="sk-favicon-file" style={{ cursor: uploadingFavicon ? "wait" : "pointer" }}>{uploadingFavicon ? "Uploading favicon…" : form.faviconUrl ? "Replace Image (PNG, JPG, WebP, ICO)" : "Choose Image (PNG, JPG, WebP, ICO)"}</label>
+                  <input id="sk-favicon-file" type="file" accept="image/png,image/jpeg,image/webp,image/x-icon,image/vnd.microsoft.icon,.ico" disabled={uploadingFavicon || saving} onChange={event => { const file = event.target.files?.[0]; if (file) void uploadFavicon(file); event.target.value = ""; }} />
+                  <button type="button" className="sk-settings-secondary" disabled={!form.faviconUrl || saving || uploadingFavicon} onClick={() => { if (window.confirm("Remove the current favicon URL from the storefront? An uploaded file will remain in the media library.")) update("faviconUrl", ""); }}>Remove Image</button>
+                  <small>Upload or remove, then click Save settings. Removing it from the storefront keeps the file in your media library.</small>
+                </div>
+              </div></div>
+            </section>
             {sections.map(section => (
               <section className="sk-settings-card" id={section.id} key={section.id} aria-labelledby={`${section.id}-title`}>
                 <div className="sk-settings-card-heading">
@@ -387,13 +440,6 @@ export default function StoreSettingsPage() {
                               }}
                             />
                             <small>Upload first, then click Save settings to activate your logo.</small>
-                          </div>
-                        )}
-                        {field.key === "faviconUrl" && isHttpsUrl(form.faviconUrl) && (
-                          <div className="sk-settings-logo-preview sk-settings-favicon-preview">
-                            {/* eslint-disable-next-line @next/next/no-img-element */}
-                            <img src={form.faviconUrl} alt="Favicon preview" />
-                            <span>Favicon preview</span>
                           </div>
                         )}
                       </div>

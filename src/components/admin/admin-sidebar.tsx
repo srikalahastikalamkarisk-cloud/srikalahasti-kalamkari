@@ -6,7 +6,7 @@ import { usePathname } from "next/navigation";
 import {
   LayoutDashboard, Package, Layers3, Warehouse,
   ShoppingBag, Users, Images, Clapperboard,
-  Star, TicketPercent, Settings, LogOut,
+  Star, TicketPercent, Settings, Palette, LogOut,
   PanelLeftClose, PanelLeftOpen, Menu, X,
   ExternalLink, ShieldCheck, BookOpen
 } from "lucide-react";
@@ -48,6 +48,7 @@ const sections = [
     items: [
       { name: "Team Management", href: "/admin/team", icon: Users, ready: true },
       { name: "Store Settings", href: "/admin/settings", icon: Settings, ready: true },
+      { name: "Appearance & Themes", href: "/admin/appearance", icon: Palette, ready: true },
     ],
   },
 ];

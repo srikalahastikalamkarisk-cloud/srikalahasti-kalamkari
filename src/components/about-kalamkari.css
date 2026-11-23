@@ -127,3 +127,69 @@ section:has(.ska-editorial) {
 }
 
 /* ABOUT LUXURY COLORS END */
+
+
+/* STEP 345A — ABOUT GRADIENT THEME */
+
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"]) .sk-about {
+  background: var(--sk-theme-primary);
+  color: var(--sk-theme-onDark);
+}
+
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"]) .sk-about-content h2,
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"]) .sk-about-copy {
+  color: var(--sk-theme-onDark);
+}
+
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"]) .sk-about-eyebrow,
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"]) .sk-about-content h2 em,
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"]) .sk-about-ornament,
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"]) .sk-about-image-note {
+  color: var(--sk-theme-color-accentOnDark);
+}
+
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"]) .sk-about-arch-frame,
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"]) .sk-about-ornament::before,
+[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"]) .sk-about-ornament::after {
+  background: var(--sk-theme-accent);
+}
+
+
+/* STEP 400 — ABOUT BURGUNDY WHITE GOLD */
+
+[data-storefront-theme="burgundy-rose-gold-01"]
+.sk-about .sk-about-content h2,
+[data-storefront-theme="burgundy-rose-gold-01"]
+.sk-about .sk-about-copy {
+  color: #FFFFFF !important;
+}
+
+[data-storefront-theme="burgundy-rose-gold-01"]
+.sk-about .sk-about-eyebrow,
+[data-storefront-theme="burgundy-rose-gold-01"]
+.sk-about .sk-about-content h2 em,
+[data-storefront-theme="burgundy-rose-gold-01"]
+.sk-about .sk-about-ornament,
+[data-storefront-theme="burgundy-rose-gold-01"]
+.sk-about .sk-about-image-note {
+  color: #E8C99B !important;
+}
+
+[data-storefront-theme="burgundy-rose-gold-01"]
+.sk-about .sk-about-ornament::before,
+[data-storefront-theme="burgundy-rose-gold-01"]
+.sk-about .sk-about-ornament::after {
+  background: #E8C99B !important;
+}
+
+[data-storefront-theme="burgundy-rose-gold-01"]
+.sk-about .sk-about-categories a {
+  color: #FFFFFF !important;
+  border-color: #E8C99B !important;
+}
+
+[data-storefront-theme="burgundy-rose-gold-01"]
+.sk-about .sk-about-categories a:hover {
+  background: #E8C99B !important;
+  color: #351724 !important;
+}

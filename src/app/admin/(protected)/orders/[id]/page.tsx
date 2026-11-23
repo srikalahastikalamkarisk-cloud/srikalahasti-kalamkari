@@ -43,10 +43,32 @@ export default async function OrderDetailsPage({
           createdAt: true,
         },
       },
+      paymentAttempts: {
+        orderBy: { createdAt: "desc" },
+        select: {
+          id: true,
+          razorpayOrderId: true,
+          status: true,
+          amountPaise: true,
+          currency: true,
+          createdAt: true,
+        },
+      },
     },
   });
 
   if (!order) notFound();
+
+  const webhookReviews = order.paymentAttempts.length
+    ? await prisma.paymentWebhookEvent.findMany({
+        where: {
+          razorpayOrderId: { in: order.paymentAttempts.map(attempt => attempt.razorpayOrderId).filter((id): id is string => Boolean(id)) },
+          status: "REVIEW",
+        },
+        select: { eventType: true, status: true, receivedAt: true },
+        orderBy: { receivedAt: "desc" },
+      })
+    : [];
 
   return (
     <div className="skad-app">
@@ -166,6 +188,18 @@ export default async function OrderDetailsPage({
                     <strong>{money(Number(order.totalAmount))}</strong>
                   </div>
                 </div>
+              </section>
+
+              <section className="skorders-panel skorder-section">
+                <div className="skorders-panel-heading"><h2>Payment Attempts</h2></div>
+                {order.paymentAttempts.length ? order.paymentAttempts.map(attempt => (
+                  <article className="skorder-info" key={attempt.id}>
+                    <strong>{attempt.status}</strong>
+                    <p>{attempt.currency} {(attempt.amountPaise / 100).toFixed(2)} · {attempt.createdAt.toLocaleString("en-IN", { timeZone: "Asia/Kolkata" })}</p>
+                    {attempt.razorpayOrderId && <p>Razorpay order: {attempt.razorpayOrderId}</p>}
+                  </article>
+                )) : <p>No payment attempts recorded.</p>}
+                {webhookReviews.length > 0 && <div role="alert" className="skorders-status"><strong>Webhook events need review</strong>{webhookReviews.map((event, index) => <p key={`${event.eventType}-${event.receivedAt.toISOString()}-${index}`}>{event.eventType} · {event.status} · {event.receivedAt.toLocaleString("en-IN", { timeZone: "Asia/Kolkata" })}</p>)}</div>}
               </section>
             </div>
 

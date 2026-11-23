@@ -14,7 +14,7 @@ export async function GET(_request: NextRequest, context: { params: Promise<{ fi
     const metadata = await stat(actual);
     if (!actual.startsWith(`${directory}${path.sep}`) || !metadata.isFile() || (metadata.mode & 0o022) !== 0) return new NextResponse(null, { status: 404 });
     const bytes = await readFile(actual);
-    const contentType = filename.endsWith(".jpg") ? "image/jpeg" : filename.endsWith(".png") ? "image/png" : "image/webp";
+    const contentType = filename.endsWith(".jpg") ? "image/jpeg" : filename.endsWith(".png") ? "image/png" : filename.endsWith(".ico") ? "image/x-icon" : "image/webp";
     return new NextResponse(bytes, { headers: { "Content-Type": contentType, "Cache-Control": "public, max-age=31536000, immutable", "X-Content-Type-Options": "nosniff" } });
   } catch { return new NextResponse(null, { status: 404 }); }
 }

@@ -8,6 +8,9 @@ import "./contact.css";
 export const metadata: Metadata = {
   title: "Contact Us | Srikalahasti Kalamkari",
   description: "Visit our Srikalahasti workshop and Tirupati store, or contact our team.",
+  alternates: { canonical: "https://srikalahastikalamkari.in/contact" },
+  openGraph: { title: "Contact Us | Srikalahasti Kalamkari", description: "Visit our Srikalahasti workshop and Tirupati store, or contact our team.", url: "https://srikalahastikalamkari.in/contact", type: "website" },
+  twitter: { card: "summary", title: "Contact Us | Srikalahasti Kalamkari" },
 };
 
 export const dynamic = "force-dynamic";

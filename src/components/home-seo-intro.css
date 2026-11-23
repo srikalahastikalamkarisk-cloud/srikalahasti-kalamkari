@@ -1,0 +1,7 @@
+.sk-home-seo { padding: clamp(32px, 5vw, 64px) 24px; background: var(--theme-surface, #fffaf0); color: var(--theme-text, #283244); }
+.sk-home-seo__inner { width: min(1120px, 100%); margin: 0 auto; }
+.sk-home-seo__eyebrow { margin: 0 0 10px; color: var(--theme-accent, #9b7a39); font-size: 12px; font-weight: 700; letter-spacing: .18em; }
+.sk-home-seo h2 { margin: 0 0 12px; font: 400 clamp(24px, 3vw, 36px)/1.2 Georgia, serif; }
+.sk-home-seo p:not(.sk-home-seo__eyebrow) { max-width: 760px; margin: 0; line-height: 1.75; }
+.sk-home-seo nav { display: flex; flex-wrap: wrap; gap: 10px 20px; margin-top: 20px; }
+.sk-home-seo nav a { color: inherit; text-decoration-thickness: 1px; text-underline-offset: 4px; }

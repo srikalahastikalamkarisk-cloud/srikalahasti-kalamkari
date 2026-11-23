@@ -6,7 +6,7 @@ import { TeamDisplay } from "@/components/about-team";
 import Link from "next/link";
 import "./about-page.css";
 
-export const metadata = { title: "Our Heritage | Srikalahasti Kalamkari", description: "Discover the heritage, makers and artistry behind Srikalahasti Kalamkari." };
+export const metadata = { title: "Our Heritage | Srikalahasti Kalamkari", description: "Discover the heritage, makers and freehand pen-drawing artistry behind Srikalahasti Kalamkari.", alternates: { canonical: "https://srikalahastikalamkari.in/about" }, openGraph: { title: "Our Heritage | Srikalahasti Kalamkari", description: "Discover the heritage, makers and freehand pen-drawing artistry behind Srikalahasti Kalamkari.", url: "https://srikalahastikalamkari.in/about", type: "article" as const } };
 export const dynamic = "force-dynamic";
 
 export default async function AboutPage() {

@@ -1,9 +1,11 @@
--- Align database defaults and width with prisma/schema.prisma.
--- Adding defaults and widening VARCHAR preserve existing row values.
+-- MySQL 9.3 rejects ALTER COLUMN ... SET DEFAULT for TEXT columns.
+-- MODIFY COLUMN with a parenthesized expression default is supported and preserves
+-- existing values while aligning the database with the Prisma model.
 ALTER TABLE `HeroSlide`
-  ALTER COLUMN `desktopImage` SET DEFAULT '',
-  ALTER COLUMN `mobileImage` SET DEFAULT '',
-  ALTER COLUMN `description` SET DEFAULT '';
+  MODIFY COLUMN `desktopImage` TEXT NOT NULL DEFAULT (''),
+  MODIFY COLUMN `mobileImage` TEXT NOT NULL DEFAULT (''),
+  MODIFY COLUMN `description` TEXT NOT NULL DEFAULT ('');
 
+-- Match Prisma's default MySQL String width while preserving existing values.
 ALTER TABLE `InventoryMovement`
-  MODIFY `movementType` VARCHAR(191) NOT NULL;
+  MODIFY COLUMN `movementType` VARCHAR(191) NOT NULL;

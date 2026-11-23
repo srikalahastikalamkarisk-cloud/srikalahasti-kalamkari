@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { clearPurchasedItems } from "@/lib/shop-state";
 
 type Customer = {
@@ -76,6 +77,8 @@ export default function CheckoutCustomerForm({
   }[];
 }) {
   const [customer, setCustomer] = useState<Customer>(initial);
+  const [accountState, setAccountState] = useState<"loading" | "guest" | "verified" | "unverified">("loading");
+  const router = useRouter();
   const [couponCode, setCouponCode] = useState("");
   const [preview, setPreview] = useState<Preview | null>(null);
   const [error, setError] = useState("");
@@ -92,6 +95,13 @@ export default function CheckoutCustomerForm({
   const [recoveryChecked, setRecoveryChecked] = useState(false);
 
   useEffect(() => {
+    fetch("/api/customer/me", { cache: "no-store" }).then(async response => {
+      const data = await response.json();
+      if (response.ok && data.customer) {
+        setCustomer(current => ({ ...current, name: data.customer.name || "", email: data.customer.email || "", phone: data.customer.phone || "" }));
+        setAccountState(data.customer.emailVerifiedAt ? "verified" : "unverified");
+      } else setAccountState("guest");
+    }).catch(() => setAccountState("guest"));
     const recover = () => {
       try {
         if (sessionStorage.getItem(pendingStorageKey)) {
@@ -105,6 +115,7 @@ export default function CheckoutCustomerForm({
 
     queueMicrotask(recover);
   }, []);
+
 
 
 
@@ -186,6 +197,8 @@ export default function CheckoutCustomerForm({
               )
           : [];
 
+        if (response.status === 401) { router.push(`/login?returnTo=${encodeURIComponent("/checkout")}`); return; }
+        if (response.status === 403 && result.verificationRequired === true) { router.push("/resend-verification"); return; }
         throw new Error(
           issues.length > 0
             ? issues.join(" | ")
@@ -280,6 +293,10 @@ export default function CheckoutCustomerForm({
         }
         setConfirmationPending(false);
         setError("");
+      } else if ((result.status === "FAILED" || result.status === "INTERRUPTED") && result.retryAllowed === true) {
+        checkoutKeyRef.current = stored.checkoutKey;
+        setConfirmationPending(false);
+        setRecoveryMessage("The existing Razorpay order is confirmed unpaid. Review your order and retry securely.");
       } else if (result.status === "FAILED") {
         setRecoveryMessage(
           "The payment was not captured. No inventory was deducted. Contact support before retrying."
@@ -488,6 +505,7 @@ export default function CheckoutCustomerForm({
 
   return (
     <section className="skcheckout">
+      {accountState === "loading" ? <p>Checking your account…</p> : accountState !== "verified" ? <><div className="skcheckout-heading"><h2>Sign in to checkout</h2><p>{accountState === "unverified" ? "Verify your email before placing an order." : "Your cart will stay on this device while you sign in or create an account."}</p></div><a href={accountState === "unverified" ? "/resend-verification" : `/login?returnTo=${encodeURIComponent("/checkout")}`} className="skcheckout-pay">{accountState === "unverified" ? "Resend verification email" : "Sign in or create an account"}</a></> : <>
       <div className="skcheckout-heading">
         <h2>Delivery Information</h2>
         <p>Enter your details to review your order securely.</p>
@@ -778,6 +796,7 @@ export default function CheckoutCustomerForm({
 
 
       </form>
+      </>}
     </section>
   );
 }
