@@ -26,9 +26,11 @@ function uploadRequest(origin: string) {
 test("authenticated product/category uploads persist, preview and replacement use isolated storage", async () => {
   const root = await mkdtemp(path.join(os.tmpdir(), "sk-media-test-"));
   const oldRoot = process.env.MEDIA_STORAGE_DIR;
+  const oldAppBaseUrl = process.env.APP_BASE_URL;
   const origin = "https://test.local";
   try {
     process.env.MEDIA_STORAGE_DIR = root;
+    process.env.APP_BASE_URL = origin;
     for (const area of ["products", "categories", "hero-videos", "story-videos"]) await mkdir(path.join(root, area));
     const admin = async () => ({ id: "isolated-admin-fixture" });
     let idIndex = 0;
@@ -65,6 +67,8 @@ test("authenticated product/category uploads persist, preview and replacement us
   } finally {
     if (oldRoot === undefined) delete process.env.MEDIA_STORAGE_DIR;
     else process.env.MEDIA_STORAGE_DIR = oldRoot;
+    if (oldAppBaseUrl === undefined) delete process.env.APP_BASE_URL;
+    else process.env.APP_BASE_URL = oldAppBaseUrl;
     await rm(root, { recursive: true, force: true });
   }
 });

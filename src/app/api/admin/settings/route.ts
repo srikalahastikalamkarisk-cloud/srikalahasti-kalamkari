@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { isValidRequestOrigin } from "@/lib/request-origin";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { getCurrentAdmin } from "@/lib/admin-auth";
@@ -109,11 +110,7 @@ export async function PUT(request: NextRequest) {
     );
   }
 
-  if (request.headers.get("origin") !== (
-    process.env.APP_BASE_URL
-      ? new URL(process.env.APP_BASE_URL).origin
-      : request.nextUrl.origin
-  )) {
+  if (!isValidRequestOrigin(request)) {
     return NextResponse.json(
       { error: "Invalid origin" },
       { status: 403 }

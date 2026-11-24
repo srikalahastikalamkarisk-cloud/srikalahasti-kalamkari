@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { isValidRequestOrigin } from "@/lib/request-origin";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { getCurrentCustomer } from "@/lib/customer-auth";
@@ -14,7 +15,7 @@ export async function GET() {
   return NextResponse.json({ profile, addresses, orders }, { headers: { "Cache-Control": "no-store" } });
 }
 export async function PATCH(request: NextRequest) {
-  if (request.headers.get("origin") !== request.nextUrl.origin) return NextResponse.json({ error: "Invalid request." }, { status: 400 });
+  if (!isValidRequestOrigin(request)) return NextResponse.json({ error: "Invalid request." }, { status: 400 });
   const customer = await getCurrentCustomer(); if (!customer) return NextResponse.json({ error: "Sign in required." }, { status: 401 });
   const parsed = z.object({ name: z.string().trim().min(2).max(120), phone: z.string().trim().max(24).optional().nullable() }).safeParse(await request.json());
   if (!parsed.success) return NextResponse.json({ error: "Enter a valid name and phone number." }, { status: 400 });
@@ -22,7 +23,7 @@ export async function PATCH(request: NextRequest) {
   return NextResponse.json({ profile });
 }
 export async function POST(request: NextRequest) {
-  if (request.headers.get("origin") !== request.nextUrl.origin) return NextResponse.json({ error: "Invalid request." }, { status: 400 });
+  if (!isValidRequestOrigin(request)) return NextResponse.json({ error: "Invalid request." }, { status: 400 });
   const customer = await getCurrentCustomer(); if (!customer) return NextResponse.json({ error: "Sign in required." }, { status: 401 });
   const parsed = addressSchema.safeParse(await request.json()); if (!parsed.success) return NextResponse.json({ error: "Enter valid address details." }, { status: 400 });
   const count = await prisma.customerAddress.count({ where: { customerId: customer.id } });

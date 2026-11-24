@@ -2,15 +2,17 @@ import "server-only";
 
 import { NextRequest, NextResponse } from "next/server";
 import { checkPaymentRequest } from "./request-guard-core";
+import { trustedPublicOrigin } from "@/lib/request-origin";
 import { readBoundedBody } from "./request-guard-stream";
 
 export async function paymentRequestGuard(
   request: NextRequest,
   maxBytes = 8192
 ): Promise<NextRequest | NextResponse> {
+  const publicOrigin = trustedPublicOrigin(request);
   const result = checkPaymentRequest({
     origin: request.headers.get("origin"),
-    requestOrigin: request.nextUrl.origin,
+    requestOrigin: publicOrigin ?? "",
     contentType: request.headers.get("content-type"),
     contentLength: request.headers.get("content-length"),
   }, maxBytes);

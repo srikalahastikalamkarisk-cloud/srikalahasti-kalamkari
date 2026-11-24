@@ -46,6 +46,7 @@ export async function POST(request: NextRequest) {
         customerEmail: true,
         orderNumber: true,
         paymentStatus: true,
+        orderStatus: true,
         paymentAttempts: {
           select: {
             status: true,
@@ -100,6 +101,7 @@ export async function POST(request: NextRequest) {
     let retryAllowed = false;
     let interrupted = false;
     if (
+      order.orderStatus !== "CANCELLED" &&
       order.paymentStatus !== "PAID" &&
       latestAttempt?.razorpayOrderId &&
       (latestAttempt.status === "FAILED" || latestAttempt.status === "CREATED")

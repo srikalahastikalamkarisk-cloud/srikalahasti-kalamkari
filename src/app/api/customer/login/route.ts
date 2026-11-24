@@ -1,4 +1,5 @@
 import { randomUUID } from "node:crypto";
+import { isValidRequestOrigin } from "@/lib/request-origin";
 import { compare } from "bcryptjs";
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
@@ -26,7 +27,7 @@ function reply(requestId: string, status: number, branch: string, body: Record<s
 export async function POST(request: NextRequest) {
   const requestId = randomUUID();
   try {
-    if (request.headers.get("origin") !== request.nextUrl.origin) {
+    if (!isValidRequestOrigin(request)) {
       diagnostic(requestId, { stage: "request", bodyParsed: false, emailPresent: false, emailType: "unavailable", passwordPresent: false, passwordType: "unavailable" });
       return reply(requestId, 400, "invalid_origin", { error: "Invalid request." });
     }

@@ -18,28 +18,38 @@ type Props = {
 const siteUrl = "https://srikalahastikalamkari.in";
 
 async function getCategory(slug: string) {
-  return prisma.category.findFirst({
-    where: {
-      slug,
-      isActive: true,
-      parentId: null,
-    },
-    select: {
-      id: true,
-      name: true,
-      slug: true,
-      children: {
-        where: { isActive: true },
-        orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
-        select: {
-          id: true,
-          name: true,
-          slug: true,
-          image: true,
-        },
-      },
-    },
+  const category = await prisma.category.findFirst({
+    where: { slug, isActive: true },
+    select: { id: true, parentId: true, name: true, slug: true },
   });
+  if (!category) return null;
+
+  const allCategories = await prisma.category.findMany({
+    select: { id: true, parentId: true, name: true, slug: true, image: true, isActive: true },
+  });
+  const byId = new Map(allCategories.map(item => [item.id, item]));
+  const chainFor = (item: typeof allCategories[number]) => {
+    const chain: typeof allCategories = [];
+    const visited = new Set<string>([item.id]);
+    let parentId = item.parentId;
+    while (parentId) {
+      if (visited.has(parentId)) return null;
+      visited.add(parentId);
+      const parent = byId.get(parentId);
+      if (!parent?.isActive) return null;
+      chain.push(parent);
+      parentId = parent.parentId;
+    }
+    return chain;
+  };
+  const ownRecord = byId.get(category.id);
+  if (!ownRecord || !chainFor(ownRecord)) return null;
+
+  const descendants = allCategories
+    .filter(item => item.id !== category.id && item.isActive && chainFor(item)?.some(parent => parent.id === category.id))
+    .sort((a, b) => a.name.localeCompare(b.name))
+    .map(({ id, name, slug: childSlug, image }) => ({ id, name, slug: childSlug, image }));
+  return { ...category, children: descendants };
 }
 
 export async function generateMetadata({

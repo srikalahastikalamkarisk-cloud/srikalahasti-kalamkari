@@ -1,4 +1,7 @@
 .skpm-page{
+  box-sizing:border-box;
+  width:100%;
+  min-width:0;
   padding:30px 38px 50px;
   max-width:1600px;
   margin:auto;
@@ -114,10 +117,12 @@
   margin-top:4px;
 }
 .skpm-panel{
+  box-sizing:border-box;
+  min-width:0;
   background:#fff;
   border:1px solid #e5e9ef;
   border-radius:12px;
-  overflow:hidden;
+  overflow:visible;
 }
 .skpm-panel-heading{
   padding:22px 24px;
@@ -177,7 +182,13 @@
   color:#34465c;
   font-size:12px;
 }
-.skpm-table-scroll{overflow-x:auto}
+.skpm-table-scroll{
+  width:100%;
+  max-width:100%;
+  min-width:0;
+  overflow-x:auto;
+  overscroll-behavior-x:contain;
+}
 .skpm-table{
   width:100%;
   min-width:850px;

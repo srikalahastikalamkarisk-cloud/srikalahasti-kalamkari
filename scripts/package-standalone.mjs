@@ -79,6 +79,16 @@ async function scanPackage(root) {
   if (!(await stat(path.join(root, "prisma/fresh-install/baseline.sql")).catch(() => null))?.isFile()) fail("fresh-install baseline is missing");
 }
 
+async function countFiles(root) {
+  let total = 0;
+  for (const entry of await readdir(root, { withFileTypes: true })) {
+    const item = path.join(root, entry.name);
+    if (entry.isDirectory()) total += await countFiles(item);
+    else if (entry.isFile()) total += 1;
+  }
+  return total;
+}
+
 export async function packageStandalone(options) {
   const output = path.resolve(options.outputDir);
   if (output === path.parse(output).root || output === path.resolve(options.projectRoot)) fail("refusing unsafe package output path");
@@ -93,7 +103,7 @@ export async function packageStandalone(options) {
     }
     await copyDirectory(path.join(options.standaloneDir, ".next"), path.join(output, ".next"));
     await copyDirectory(path.join(options.standaloneDir, "node_modules"), path.join(output, "node_modules"));
-    await copyDirectory(path.join(options.standaloneDir, "src", "generated", "prisma"), path.join(output, "src", "generated", "prisma"));
+    await copyDirectory(path.join(options.projectRoot, "src", "generated", "prisma"), path.join(output, "src", "generated", "prisma"));
     await copyDirectory(path.join(options.projectRoot, "node_modules", "dotenv"), path.join(output, "node_modules", "dotenv"));
     await copyDirectory(options.staticDir, path.join(output, ".next", "static"));
     for (const [source, target] of [
@@ -133,7 +143,7 @@ async function main() {
     trackedPublicFiles,
     outputDir,
   });
-  const files = execFileSync("find", [outputDir, "-type", "f"], { encoding: "utf8" }).trim().split("\n").filter(Boolean).length;
+  const files = await countFiles(outputDir);
   console.log(`Standalone release package verified (${files} files).`);
 }
 

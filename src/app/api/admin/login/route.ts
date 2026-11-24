@@ -3,6 +3,7 @@ import { compare } from "bcryptjs";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { ADMIN_COOKIE, createAdminSession } from "@/lib/admin-auth";
+import { isValidRequestOrigin } from "@/lib/request-origin";
 
 export const runtime = "nodejs";
 
@@ -28,13 +29,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const origin = request.headers.get("origin");
-
-    const configuredOrigin = process.env.APP_BASE_URL
-      ? new URL(process.env.APP_BASE_URL).origin
-      : request.nextUrl.origin;
-
-    if (!origin || origin !== configuredOrigin) {
+    if (!isValidRequestOrigin(request)) {
       return NextResponse.json(
         { error: "Invalid request origin" },
         { status: 403 }

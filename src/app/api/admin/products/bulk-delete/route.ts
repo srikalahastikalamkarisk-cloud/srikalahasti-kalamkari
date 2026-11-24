@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { isValidRequestOrigin } from "@/lib/request-origin";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { getCurrentAdmin } from "@/lib/admin-auth";
@@ -37,7 +38,7 @@ export async function DELETE(req: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  if (req.headers.get("origin") !== req.nextUrl.origin) {
+  if (!isValidRequestOrigin(req)) {
     return NextResponse.json({ error: "Invalid origin" }, { status: 403 });
   }
 

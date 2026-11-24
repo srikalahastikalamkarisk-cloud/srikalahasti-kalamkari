@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { isValidRequestOrigin } from "@/lib/request-origin";
 import { z } from "zod";
 import { getCurrentAdmin } from "@/lib/admin-auth";
 import { getRazorpayClient } from "@/lib/payments/razorpay";
@@ -19,11 +20,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  if (request.headers.get("origin") !== (
-    process.env.APP_BASE_URL
-      ? new URL(process.env.APP_BASE_URL).origin
-      : request.nextUrl.origin
-  )) {
+  if (!isValidRequestOrigin(request)) {
     return NextResponse.json({ error: "Invalid origin" }, { status: 403 });
   }
 

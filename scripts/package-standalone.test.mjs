@@ -16,7 +16,7 @@ test("standalone package includes runtime files and omits untracked development 
     await mkdir(path.join(standalone, ".next", "server"), { recursive: true });
     await mkdir(path.join(standalone, ".next", "static"), { recursive: true });
     await mkdir(path.join(standalone, "node_modules", "next"), { recursive: true });
-    await mkdir(path.join(standalone, "src", "generated", "prisma"), { recursive: true });
+    await mkdir(path.join(project, "src", "generated", "prisma"), { recursive: true });
     await mkdir(path.join(project, "scripts"), { recursive: true });
     await mkdir(path.join(project, "node_modules", "dotenv"), { recursive: true });
     await mkdir(path.join(standalone, "tests"), { recursive: true });
@@ -33,7 +33,7 @@ test("standalone package includes runtime files and omits untracked development 
       [path.join(standalone, ".next", "server", "route.js"), "route"],
       [path.join(standalone, ".next", "static", "app.js"), "chunk"],
       [path.join(standalone, "node_modules", "next", "package.json"), "{}"],
-      [path.join(standalone, "src", "generated", "prisma", "client.ts"), "client"],
+      [path.join(project, "src", "generated", "prisma", "client.ts"), "client"],
       [path.join(project, "scripts", "start-cpanel.js"), "startup"],
       [path.join(project, "scripts", "hostycare-preflight.mjs"), "preflight"],
       [path.join(project, "node_modules", "dotenv", "package.json"), "{}"],

@@ -76,7 +76,7 @@ async function verifyMigrations(mysql, config, db, releaseRoot) {
   const applied = new Map();
   for (const line of text.split(/\r?\n/).filter(Boolean)) {
     const [name, finished, rolledBack] = line.split("\t");
-    if (!name || applied.has(name) || finished !== "1" || rolledBack !== "1") fail("production schema has failed, pending, or duplicate migration records");
+    if (!name || applied.has(name) || finished !== "1" || rolledBack !== "0") fail("production schema has failed, pending, or duplicate migration records");
     applied.set(name, true);
   }
   const migrationsRoot = path.join(releaseRoot, "prisma", "migrations");

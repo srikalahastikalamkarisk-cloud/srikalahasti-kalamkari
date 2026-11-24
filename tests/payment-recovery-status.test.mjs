@@ -66,3 +66,27 @@ test("recovery response contains no customer PII", () => {
     ["orderNumber", "retryAllowed", "status", "success"]
   );
 });
+
+test("canceled unpaid orders never authorize payment retry", () => {
+  const result = recoveryStatusFromOrder({
+    orderNumber: "SKK-123-ABCDEF",
+    orderStatus: "CANCELLED",
+    paymentStatus: "UNPAID",
+    paymentAttempts: [{ status: "FAILED" }],
+  }, true);
+
+  assert.equal(result.status, "CANCELLED");
+  assert.equal(result.retryAllowed, false);
+});
+
+test("a canceled order with confirmed payment remains reported as paid", () => {
+  const result = recoveryStatusFromOrder({
+    orderNumber: "SKK-123-ABCDEF",
+    orderStatus: "CANCELLED",
+    paymentStatus: "PAID",
+    paymentAttempts: [{ status: "CAPTURED" }],
+  });
+
+  assert.equal(result.status, "PAID");
+  assert.equal(result.retryAllowed, false);
+});

@@ -1,4 +1,5 @@
 import { hash } from "bcryptjs";
+import { isValidRequestOrigin } from "@/lib/request-origin";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { randomUUID } from "node:crypto";
@@ -14,7 +15,7 @@ const generic = () => NextResponse.json({ success: true, message: "If registrati
 export async function POST(request: NextRequest) {
   const requestId = randomUUID();
   const address = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim().slice(0, 128) || "unknown";
-  if (request.headers.get("origin") !== request.nextUrl.origin) {
+  if (!isValidRequestOrigin(request)) {
     console.warn("customer_registration_rejected", { requestId, category: "origin" });
     return NextResponse.json({ error: "Invalid request." }, { status: 400, headers: { "X-Request-Id": requestId } });
   }

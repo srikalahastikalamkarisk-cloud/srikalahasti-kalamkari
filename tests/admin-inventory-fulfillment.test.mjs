@@ -66,7 +66,7 @@ test("fulfillment requires paid status and deducted inventory", () => {
 
 test("checkout rejects unavailable status and insufficient stock before payment", () => {
   assert.match(checkoutVerifier, /availabilityStatus !== "IN_STOCK"/);
-  assert.match(checkoutVerifier, /product\.stock < item\.quantity/);
+  assert.match(checkoutVerifier, /availableStock < totalRequested/);
 });
 
 test("webhook duplicate processing and inventory reconciliation remain idempotent", () => {

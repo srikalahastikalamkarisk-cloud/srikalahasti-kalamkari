@@ -1,6 +1,7 @@
 export type RecoveryOrder = {
   orderNumber?: string;
   paymentStatus: string;
+  orderStatus?: string;
   paymentAttempts: Array<{ status: string }>;
 } | null;
 
@@ -17,6 +18,15 @@ export function recoveryStatusFromOrder(order: RecoveryOrder, retryAllowed = fal
     return {
       success: true,
       status: "PAID",
+      retryAllowed: false,
+      ...(order.orderNumber ? { orderNumber: order.orderNumber } : {}),
+    };
+  }
+
+  if (order.orderStatus === "CANCELLED") {
+    return {
+      success: true,
+      status: "CANCELLED",
       retryAllowed: false,
       ...(order.orderNumber ? { orderNumber: order.orderNumber } : {}),
     };

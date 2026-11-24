@@ -3,6 +3,7 @@ import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { getCurrentAdmin } from "@/lib/admin-auth";
 import { validOrigin } from "@/lib/admin/origin";
+import { recordInventoryMovement } from "@/lib/admin/inventory";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -29,6 +30,13 @@ const variantSchema = z.object({
   isActive: z.boolean().default(true),
   sortOrder: z.number().int().min(0).default(0),
 }).strict().superRefine((data, ctx) => {
+  if (data.isActive && (data.price == null || data.price <= 0)) {
+    ctx.addIssue({
+      code: "custom",
+      path: ["price"],
+      message: "Every active variant needs a selling price greater than zero",
+    });
+  }
   if (
     data.price != null &&
     data.originalPrice != null &&
@@ -47,8 +55,11 @@ const inputSchema = z.object({
 }).strict();
 
 function canonicalAttributes(value: { attributes?: unknown; colorName?: string | null; size?: string | null; lengthMeters?: unknown }) {
-  const attributes = value.attributes && typeof value.attributes === "object" && !Array.isArray(value.attributes)
+  const suppliedAttributes = value.attributes && typeof value.attributes === "object" && !Array.isArray(value.attributes)
     ? value.attributes as Record<string, string>
+    : null;
+  const attributes = suppliedAttributes && Object.keys(suppliedAttributes).length > 0
+    ? suppliedAttributes
     : {
         ...(value.colorName ? { Color: value.colorName } : {}),
         ...(value.size ? { Size: value.size } : {}),
@@ -137,9 +148,7 @@ export async function PUT(
     return errorResponse("Duplicate variant SKUs are not allowed", 400);
   }
 
-  const combinations = variants.map(variant => JSON.stringify(
-    Object.entries(variant.attributes ?? {}).sort(([a], [b]) => a.localeCompare(b))
-  ));
+  const combinations = variants.map(variant => canonicalAttributes(variant));
   const configuredCombinations = combinations.filter(value => value !== "[]");
   if (new Set(configuredCombinations).size !== configuredCombinations.length) {
     return errorResponse("Duplicate attribute combinations are not allowed", 400);
@@ -147,9 +156,13 @@ export async function PUT(
 
   try {
     const result = await prisma.$transaction(async tx => {
+      const lockedProducts = await tx.$queryRaw<Array<{ id: string }>>`
+        SELECT id FROM Product WHERE id = ${id} FOR UPDATE
+      `;
+      if (lockedProducts.length !== 1) throw new Error("PRODUCT_NOT_FOUND");
       const product = await tx.product.findUnique({
         where: { id },
-        select: { id: true, pricingMode: true, availabilityStatus: true, stock: true },
+        select: { id: true, name: true, sku: true, pricingMode: true, availabilityStatus: true, stock: true },
       });
 
       if (!product) {
@@ -218,11 +231,25 @@ export async function PUT(
         where: { id },
         data: {
           stock,
-          ...(product.availabilityStatus === "COMING_SOON"
-            ? {}
-            : { availabilityStatus: stock > 0 ? "IN_STOCK" : "OUT_OF_STOCK" }),
+          ...(product.availabilityStatus === "IN_STOCK" && stock === 0
+            ? { availabilityStatus: "OUT_OF_STOCK" }
+            : {}),
         },
       });
+      const stockChange = stock - product.stock;
+      if (stockChange !== 0) {
+        await recordInventoryMovement(tx, {
+          productId: product.id,
+          productName: product.name,
+          productSku: product.sku,
+          movementType: "ADJUSTMENT",
+          quantityChange: stockChange,
+          quantityBefore: product.stock,
+          quantityAfter: stock,
+          note: "Variant inventory updated",
+          performedBy: admin.email,
+        });
+      }
 
       return tx.productVariant.findMany({
         where: { productId: id },

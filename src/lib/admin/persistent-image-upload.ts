@@ -1,4 +1,5 @@
 import { randomUUID } from "node:crypto";
+import { isValidRequestOrigin } from "@/lib/request-origin";
 import { writeFile } from "node:fs/promises";
 import path from "node:path";
 import { NextRequest, NextResponse } from "next/server";
@@ -27,7 +28,7 @@ export function createPersistentImageUploadHandler(options: {
   const createId = options.createId ?? randomUUID;
   return async function POST(req: NextRequest) {
     if (!await options.getCurrentAdmin()) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    if (req.headers.get("origin") !== req.nextUrl.origin) return NextResponse.json({ error: "Invalid origin" }, { status: 403 });
+    if (!isValidRequestOrigin(req)) return NextResponse.json({ error: "Invalid origin" }, { status: 403 });
 
     const contentLength = Number(req.headers.get("content-length"));
     if (!Number.isFinite(contentLength) || contentLength <= 0 || contentLength > MAX_SIZE + 1024 * 1024) {

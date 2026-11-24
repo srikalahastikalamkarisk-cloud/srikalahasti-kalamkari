@@ -23,6 +23,25 @@ CURRENT="$APP_ROOT/current"
 PREVIOUS="$APP_ROOT/previous"
 RELEASE="$RELEASES/$SHA"
 
+verified_release_dir() {
+  local target="$1"
+  [[ "$target" == "$APP_ROOT"/* && -d "$target" ]] || return 1
+  local relative="${target#"$APP_ROOT"/}"
+  case "$relative" in
+    shared|shared/*|incoming|incoming/*|current|previous|releases) return 1 ;;
+  esac
+  [[ -f "$target/server.js" && -f "$target/start-cpanel.js" && -d "$target/.next/server" && -d "$target/node_modules" && -f "$target/prisma/schema.prisma" ]] || return 1
+  if [[ -f "$target/RELEASE_SHA" ]]; then
+    local recorded_sha
+    recorded_sha=$(cat "$target/RELEASE_SHA")
+    [[ "$recorded_sha" =~ ^[a-f0-9]{40}$ ]] || return 1
+    if [[ "$relative" == releases/* ]]; then
+      [[ "${relative#releases/}" == "$recorded_sha" ]] || return 1
+    fi
+  fi
+  return 0
+}
+
 case "$MODE" in
   prepare)
     mkdir -p "$RELEASES" "$INCOMING"
@@ -32,11 +51,11 @@ case "$MODE" in
     (cd "$INCOMING" && sha256sum -c "$(basename "$CHECKSUM")" >/dev/null) || fail "uploaded release checksum did not verify"
     [[ ! -e "$RELEASE" ]] || fail "release already exists; refusing to overwrite it"
 
-    while IFS= read -r entry; do
+    tar -tzf "$ARCHIVE" | while IFS= read -r entry; do
       case "$entry" in
-        /*|../*|*/../*|*/..|..|./../*) fail "release archive contains an unsafe path" ;;
+        /*|../*|*/../*|*/..|..|./../*) exit 1 ;;
       esac
-    done < <(tar -tzf "$ARCHIVE")
+    done || fail "release archive is unreadable or contains an unsafe path"
 
     STAGING=$(mktemp -d "$RELEASES/.staging-$SHA.XXXXXX")
     trap 'if [[ -n "${STAGING:-}" && -d "$STAGING" ]]; then rm -rf -- "$STAGING"; fi' EXIT
@@ -57,9 +76,9 @@ case "$MODE" in
     [[ -L "$CURRENT" ]] || fail "current must already point to a known-good rollback release"
     [[ -d "$RELEASE" ]] || fail "staged release is missing"
     CURRENT_TARGET=$(realpath "$CURRENT")
-    [[ "$CURRENT_TARGET" == "$RELEASES"/* && -d "$CURRENT_TARGET" ]] || fail "current does not point to a release directory"
+    verified_release_dir "$CURRENT_TARGET" || fail "current does not point to a verified application release under the confirmed application root"
     NODE_MAJOR=$(node -p 'process.versions.node.split(".")[0]' 2>/dev/null || true)
-    [[ "$NODE_MAJOR" == "22" ]] || fail "the SSH shell does not select the configured Node.js 22 runtime"
+    [[ "$NODE_MAJOR" == "22" ]] || fail "the cPanel shell does not select the configured Node.js 22 runtime"
     ENV_FILE="$SHARED/production.env"
     ENV_MODE=$(stat -c '%a' "$ENV_FILE" 2>/dev/null || true)
     [[ -f "$ENV_FILE" && "$ENV_MODE" == "600" ]] || fail "server-side production.env must exist with mode 0600"
@@ -72,10 +91,11 @@ case "$MODE" in
 
     TEMP_PREVIOUS="$APP_ROOT/.previous-$SHA-$$"
     TEMP_CURRENT="$APP_ROOT/.current-$SHA-$$"
-    ln -s "releases/$(basename "$CURRENT_TARGET")" "$TEMP_PREVIOUS"
+    ln -s "$CURRENT_TARGET" "$TEMP_PREVIOUS"
     mv -Tf "$TEMP_PREVIOUS" "$PREVIOUS"
-    ln -s "releases/$SHA" "$TEMP_CURRENT"
+    ln -s "$RELEASE" "$TEMP_CURRENT"
     mv -Tf "$TEMP_CURRENT" "$CURRENT"
+    mkdir -p "$CURRENT/tmp"
     touch "$CURRENT/tmp/restart.txt"
     printf '%s\n' "Release activated: $SHA"
     ;;
@@ -83,10 +103,11 @@ case "$MODE" in
   rollback)
     [[ -L "$PREVIOUS" ]] || fail "no previous release is available for rollback"
     PREVIOUS_TARGET=$(realpath "$PREVIOUS")
-    [[ "$PREVIOUS_TARGET" == "$RELEASES"/* && -d "$PREVIOUS_TARGET" ]] || fail "previous release target is invalid"
+    verified_release_dir "$PREVIOUS_TARGET" || fail "previous target is not a verified application release under the confirmed application root"
     TEMP_CURRENT="$APP_ROOT/.current-rollback-$SHA-$$"
-    ln -s "releases/$(basename "$PREVIOUS_TARGET")" "$TEMP_CURRENT"
+    ln -s "$PREVIOUS_TARGET" "$TEMP_CURRENT"
     mv -Tf "$TEMP_CURRENT" "$CURRENT"
+    mkdir -p "$CURRENT/tmp"
     touch "$CURRENT/tmp/restart.txt"
     printf '%s\n' "Previous release restored."
     ;;

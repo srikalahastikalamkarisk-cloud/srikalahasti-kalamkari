@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { isValidRequestOrigin } from "@/lib/request-origin";
 import { randomUUID } from "node:crypto";
 import { prisma } from "@/lib/prisma";
 import { createCustomerToken, CUSTOMER_VERIFICATION_TTL_MS } from "@/lib/customer-auth-core";
@@ -9,7 +10,7 @@ const generic = (requestId: string) => NextResponse.json({ success: true, messag
 export async function POST(request: NextRequest) {
   const requestId = randomUUID();
   try {
-    if (request.headers.get("origin") !== request.nextUrl.origin) return NextResponse.json({ error: "Invalid request.", requestId }, { status: 400, headers: { "X-Request-Id": requestId } });
+    if (!isValidRequestOrigin(request)) return NextResponse.json({ error: "Invalid request.", requestId }, { status: 400, headers: { "X-Request-Id": requestId } });
     const body = await request.json(); const email = typeof body?.email === "string" ? body.email.trim().toLowerCase() : "";
     const address = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim().slice(0, 128) || "unknown";
     const limit = await checkCustomerRateLimit("verify", `${email}:${address}`, 5, 3600000);

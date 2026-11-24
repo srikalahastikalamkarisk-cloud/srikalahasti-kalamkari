@@ -4,25 +4,53 @@ This runbook prepares a secure release; it does not authorize production activat
 
 ## Verified repository state
 
-- Branch: `feature/50-palettes-v2`.
-- Deployment implementation commit: `71b5836e18b50d0fc9a358de605f5a1b0d523c46`; its build and standalone artifact passed in run `45245599384`.
-- Current release-candidate commit, including native Node.js 24 GitHub Action pins: `6b527c5b634e5e6eab6fa97fa13b30c60fa7418f`. Its build, TypeScript, packaging checks, and standalone artifact upload passed in run `45246503636`; the artifact is `hostycare-standalone-6b527c5b634e5e6eab6fa97fa13b30c60fa7418f` (35,545,574 bytes).
+- This release candidate is committed on the isolated `fix/production-complete-validation` branch. The exact commit SHA, local HostyCare archive path, and SHA-256 are in the release-preparation handoff; do not use earlier GitHub artifacts from other commits.
+- The release archive contains Linux x64 production dependencies and the source SHA in `RELEASE_SHA`.
+- Earlier GitHub artifacts listed in repository history belong to different commits and must not be used for this release candidate.
 - CI builds on Ubuntu with Node.js 22 and Next.js standalone output. The build-only dummy `DATABASE_URL` is scoped to the build step and is never copied into the release as runtime configuration.
 - The local workspace contains hundreds of untracked items, mostly old snapshots/backups. The deployment commit staged only reviewed release files; the untracked items are not included in the CI checkout or release artifact. Do not run broad Git clean/add commands.
-- The current MySQL Prisma chain has 34 directories and a known ordering defect: `20261117082146_add_razorpay_payment_fields` alters `Order` before `20261117133000_add_orders` creates it. The fresh-install baseline is the safe path for a new empty production schema. Do not run the historical chain from empty and do not run `migrate reset`.
+- The current MySQL Prisma chain has 34 directories and a known ordering defect: `20261117082146_add_razorpay_payment_fields` alters `Order` before `20261117133000_add_orders` creates it. The fresh-install baseline is for isolated or genuinely new empty schemas only. Do not run it or the historical chain against the existing live production database, and do not run `migrate reset`.
 - Prisma validation passes and a schema diff between `prisma/fresh-install/baseline.prisma` and `prisma/schema.prisma` reports no difference.
 
 ## HostyCare capability boundary
 
 HostyCare's public hosting page advertises cPanel, Node.js, SSH/Git, MySQL/MariaDB and SSL. That does not confirm this account's Node application type, incoming SSH reachability, filesystem permissions, process manager, or persistent storage. The cPanel Node.js setup tool can use Passenger and a `tmp/restart.txt` marker, but confirm the actual account before relying on it. See [HostyCare hosting](https://www.hostycare.com/hosting/), [cPanel Node.js deployment docs](https://docs.cpanel.net/knowledge-base/web-services/how-to-install-a-node.js-application/), and [cPanel restart instructions](https://support.cpanel.net/hc/en-us/articles/1500002443862-How-to-restart-an-application-that-s-using-cPanel-s-Application-Manager).
 
-In this workspace, SSH hostname lookup failed for the supplied server name. The deployment implementation was pushed to GitHub and its production build/artifact passed; no HostyCare server mutation has been attempted. HostyCare automation remains blocked until the owner confirms SSH reachability, the host fingerprint, cPanel runtime/restart support, production database, persistent media location, and rollback release.
+No HostyCare server mutation has been attempted. This workspace has no authorized connection to the live production database or media volume, so compatibility claims for those live resources require the guarded cPanel preflight against the existing database and confirmed persistent media path before activation. HostyCare must confirm SSH reachability, host fingerprint, cPanel runtime/restart support, production database version and credentials, persistent media location, and a known-good rollback release.
 
 ## Release contents and deployment flow
 
 `production-build.yml` builds on Ubuntu 24.04 / Node 22, runs TypeScript and packager checks, then creates a seven-day GitHub artifact. The packager allowlists only the standalone server, Next server/static output, tracked public assets, generated Prisma client, current schema, 34 migrations, fresh-install baseline, and cPanel runtime helpers. It does not copy `.env`, `.git`, untracked `public/uploads`, backups, logs, tests, or the rest of the checkout. The archive is checksummed and contains its source SHA.
 
 `hostycare-deploy.yml` can only run by manual dispatch on `feature/50-palettes-v2`. It verifies the source run and immutable SHA, checks the archive checksum/path contents, requires the `hostycare-production` Environment approval, and stays disabled unless `HOSTYCARE_DEPLOY_ENABLED=true` is configured. It uses SSH with a pinned host key; it never runs `ssh-keyscan` and does not put app/database/payment/email secrets in GitHub. The remote script stages a new release, verifies Node 22, checks migration history, writes a private MySQL dump, then atomically swaps `current` and requests a Passenger restart. It refuses to activate without an existing known-good `current` release and a server-side `DEPLOYMENT_READY` marker. A failed health or route check requests a rollback.
+
+### Manual cPanel deployment
+
+A deployment can be staged without SSH or GitHub Actions by using cPanel File Manager and Terminal. This still uses the same checksum, archive validation, database-history gate, private backup, atomic release switch, and Passenger restart flow. It does not bypass the deployment readiness marker or production activation approval.
+
+1. Use the exact release archive and `.sha256` file in the release-preparation handoff for the reviewed commit. Transfer them from the authorized release-preparation workstation; do not rebuild or edit the archive. For future releases, only use the artifact matching that exact reviewed commit.
+2. In cPanel File Manager, upload both files to `/home/srikalah/srikalahasti-app/incoming/`. Upload the reviewed `scripts/hostycare-release.sh` to `/home/srikalah/srikalahasti-app/shared/hostycare-release.sh`.
+3. In cPanel Terminal, verify the uploaded checksum and stage the archive using the Node.js 22 shell:
+
+   ```sh
+   cd /home/srikalah/srikalahasti-app/incoming
+   sha256sum -c "srikalahasti-release-<SHA>.tar.gz.sha256"
+   bash /home/srikalah/srikalahasti-app/shared/hostycare-release.sh prepare <SHA> /home/srikalah/srikalahasti-app
+   ```
+
+4. After the owner has approved activation and confirmed the readiness marker, production environment, database migration history, persistent media directories, and rollback target, activate the staged release:
+
+   ```sh
+   bash /home/srikalah/srikalahasti-app/shared/hostycare-release.sh activate <SHA> /home/srikalah/srikalahasti-app
+   ```
+
+5. Confirm `/api/health`, the homepage, category/product pages, Admin sign-in, and image uploads in the live site. Roll back using the verified `previous` target if the release fails:
+
+   ```sh
+   bash /home/srikalah/srikalahasti-app/shared/hostycare-release.sh rollback <SHA> /home/srikalahasti/srikalahasti-app
+   ```
+
+The rollback command changes only the release symlink and Passenger restart marker; it does not roll back database changes. This deployment flow refuses migration-history mismatches and does not apply migrations automatically.
 
 The cPanel application must be configured with:
 
@@ -48,18 +76,13 @@ test -w "$MEDIA_ROOT" && test -w "$MEDIA_ROOT/products" && test -w "$MEDIA_ROOT/
 
 Put the same absolute path in `MEDIA_STORAGE_DIR` in `shared/production.env`. Configure independent media backups. Do not copy local `public/uploads` unless a separate review proves any of its files are referenced by production records.
 
-## Fresh production database initialization
+## Existing production database compatibility
 
-No production database is currently configured. Do not point the app at the build placeholder. In cPanel MySQL Databases, create a new schema and a dedicated application user with privileges on that schema only. Set `DEPLOY_DATABASE_NAME` to the exact cPanel-prefixed schema name and ensure it matches the database component of `DATABASE_URL`.
+The live HostyCare site already has production data. Preserve its existing schema and records. Never create a replacement schema, apply `prisma/fresh-install/baseline.sql`, run `migrate reset`, or import data from another store as part of this release.
 
-Before initialization, use cPanel's database interface to verify the selected schema has zero tables and views. If it is not empty, stop and take a separate backup/review; do not apply the baseline. For the confirmed empty schema only:
+This workspace does not contain an authorized production database connection, so it cannot certify the live database's schema or migration history. The release script's `activate` command runs `hostycare-preflight.mjs` against the configured live schema before switching `current`. That compatibility check requires successful `_prisma_migrations` records to match the release migration set exactly, then writes a private SQL backup under `shared/db-backups`. It refuses activation on missing, failed, rolled-back, duplicate, pending, or unexpected migration records. It does not apply migrations.
 
-1. Apply `prisma/fresh-install/baseline.sql` once. It creates the current schema and does not include customer/product/order data.
-2. Run `prisma migrate resolve --applied <migration-directory-name>` once for each of the 34 directories under `prisma/migrations`.
-3. Run `prisma migrate status` and verify the current schema against `prisma/schema.prisma`.
-4. Never run `migrate deploy` against this fresh schema before the baseline/resolution sequence; the historical order is broken. For later releases, the workflow refuses activation if the release's migration set and database history differ. Apply any new forward migration only after isolated validation, backup, and explicit owner approval.
-
-The supplied `baseline.sql` is the safe initialization file. Preserve it and the historical migrations unchanged. An empty baseline contains no products, categories, admin user, or customer/order data. Import only the approved Kalamkari catalog, and create the first admin through a separately reviewed account-creation procedure. Do not copy customer/order/payment data from a different site or database.
+Before activation, take a separate owner-controlled backup, confirm the exact existing schema and migration history, and run the guarded preflight from cPanel. If the current production schema does not have the expected Prisma history or exact matching schema, stop; do not resolve migration records or modify the schema to make the gate pass. Have the database history/schema reviewed and a forward-only compatibility plan prepared against a restored copy first. The historical migration order includes a known defect and must never be replayed into production. The checked-in `prisma/fresh-install/baseline.sql` is for isolated/new-schema tests only and is not a live-site recovery path.
 
 ## Server-side environment file
 
@@ -82,6 +105,6 @@ Obtain the server host key through HostyCare support or the authenticated cPanel
 1. Re-authenticate GitHub CLI, review only the deployment changes, commit them, push the feature branch, and verify the new build artifact workflow run.
 2. Have HostyCare confirm the actual cPanel Node app feature (Passenger vs Web Apps), Node 22 interpreter path, startup file support, incoming SSH hostname/IP and fingerprint, `current` symlink support, memory/request limits, MySQL/MariaDB version/client tools, SSL routing, and persistent disk policy.
 3. Create and verify a known-good rollback release and configure the cPanel root to the `current` symlink without deleting the existing app directory or Git clone.
-4. Create the production DB and run the guarded fresh-baseline procedure; prepare catalog and first admin through approved routes.
-5. Configure server-side secrets, email delivery, media directories, HTTPS, and the server-side readiness marker.
+4. Confirm the existing production database and run the guarded compatibility/backup preflight; do not initialize or replace it.
+5. Configure or verify server-side secrets, email delivery, persistent media directories, HTTPS, and the server-side readiness marker while preserving existing values and media.
 6. Run the protected manual deployment workflow only after the owner approves production activation. Verify homepage, product/category pages, admin/customer login, cart/checkout, upload, email, SSL, responsive layouts, themes, and payment/webhook readiness manually. Do not make a real payment as a deployment test.

@@ -31,6 +31,9 @@ const importedVariant = z.object({
   stock: z.number().int().min(0).max(10000000).default(0),
   isActive: z.boolean().default(true),
 }).strict().superRefine((variant, ctx) => {
+  if (variant.isActive && (variant.price == null || variant.price <= 0)) {
+    ctx.addIssue({ code: "custom", path: ["price"], message: "Every active variant needs a selling price greater than zero" });
+  }
   if (variant.price != null && variant.originalPrice != null && variant.originalPrice <= variant.price) {
     ctx.addIssue({ code: "custom", path: ["originalPrice"], message: "Original price must exceed selling price" });
   }

@@ -567,6 +567,12 @@ export default function AddProductForm({
       };
 
       const activeProductId = productId || createdProductId;
+      const shouldSaveVariants = variantsEnabled || variants.length > 0 || form.pricingMode === "LENGTH_OPTIONS";
+      // Keep a product out of public listings while its parent fields and purchasable
+      // variant rows are being saved by their separate APIs. If variant validation
+      // fails, it stays inactive instead of exposing a partially updated catalog item.
+      const pendingActivation = shouldSaveVariants && payload.isActive;
+      const firstSavePayload = pendingActivation ? { ...payload, isActive: false } : payload;
       const response = await fetch(
         activeProductId
           ? `/api/admin/products/${encodeURIComponent(activeProductId)}`
@@ -575,7 +581,7 @@ export default function AddProductForm({
         method: activeProductId ? "PATCH" : "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "same-origin",
-        body: JSON.stringify(payload),
+        body: JSON.stringify(firstSavePayload),
       });
 
       const data = await response.json();
@@ -595,7 +601,7 @@ export default function AddProductForm({
       const savedProductId = activeProductId || data.product?.id;
       if (!savedProductId) throw new Error("Product saved, but its ID was not returned. Reopen it to finish variant setup.");
       if (!activeProductId) setCreatedProductId(savedProductId);
-      if (variantsEnabled || variants.length > 0 || form.pricingMode === "LENGTH_OPTIONS") {
+      if (shouldSaveVariants) {
         const variantResponse = await fetch(`/api/admin/products/${encodeURIComponent(savedProductId)}/variants`, {
           method: "PUT",
           credentials: "same-origin",
@@ -623,7 +629,9 @@ export default function AddProductForm({
           }) }),
         });
         const variantData = await variantResponse.json();
-        if (!variantResponse.ok) throw new Error(`Product details saved, but variant save failed: ${variantData.error || "Please correct variant details and save again."}`);
+        if (!variantResponse.ok) throw new Error(pendingActivation
+          ? `Variant save failed and this product remains inactive. ${variantData.error || "Correct the variant details and save again to finish the product."}`
+          : `Product details saved, but variant save failed: ${variantData.error || "Please correct variant details and save again."}`);
         const savedRows: VariantRow[] = (variantData.variants || []).map((row: Record<string, unknown>) => ({
           id: String(row.id),
           attributes: row.attributes && typeof row.attributes === "object" && !Array.isArray(row.attributes) ? row.attributes as Record<string,string> : Object.fromEntries([
@@ -637,6 +645,19 @@ export default function AddProductForm({
         setVariants(savedRows);
         setVariantsDirty(false);
         setVariantNotice("Product and variants saved.");
+      }
+
+      if (pendingActivation) {
+        const activationResponse = await fetch(`/api/admin/products/${encodeURIComponent(savedProductId)}`, {
+          method: "PATCH",
+          credentials: "same-origin",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+        const activationData = await activationResponse.json();
+        if (!activationResponse.ok) {
+          throw new Error(`Product and variants were saved, but the product remains inactive because activation failed: ${activationData.error || "Try Save Changes again."}`);
+        }
       }
 
       router.push(activeProductId ? "/admin/products" : `/admin/products/${encodeURIComponent(savedProductId)}/edit`);

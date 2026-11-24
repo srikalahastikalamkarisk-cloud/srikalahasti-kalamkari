@@ -1,4 +1,5 @@
 import { hash } from "bcryptjs";
+import { isValidRequestOrigin } from "@/lib/request-origin";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
@@ -9,7 +10,7 @@ export const runtime = "nodejs";
 const schema = z.object({ token: z.string().max(64), password: z.string().max(128) });
 export async function POST(request: NextRequest) {
   try {
-    if (request.headers.get("origin") !== request.nextUrl.origin) return NextResponse.json({ error: "Invalid request." }, { status: 400 });
+    if (!isValidRequestOrigin(request)) return NextResponse.json({ error: "Invalid request." }, { status: 400 });
     const parsed = schema.safeParse(await request.json()); if (!parsed.success || !validCustomerToken(parsed.data.token)) return NextResponse.json({ error: "Invalid reset link." , code: "invalid" }, { status: 400 }); if (!strongCustomerPassword(parsed.data.password)) return NextResponse.json({ error: "Your password does not meet the security requirements.", code: "invalid_password" }, { status: 400 });
     if (!await customerRateAllowed("reset-redeem", request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown", 12, 15 * 60000)) return NextResponse.json({ error: "Please wait before trying again." }, { status: 429 });
     const tokenHash = hashCustomerToken(parsed.data.token); const now = new Date(); const passwordHash = await hash(parsed.data.password, 12);

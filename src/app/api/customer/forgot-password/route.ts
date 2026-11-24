@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { isValidRequestOrigin } from "@/lib/request-origin";
 import { prisma } from "@/lib/prisma";
 import { createCustomerToken, CUSTOMER_RESET_TTL_MS } from "@/lib/customer-auth-core";
 import { sendCustomerResetEmail } from "@/lib/customer-email";
@@ -7,7 +8,7 @@ export const runtime = "nodejs";
 const generic = () => NextResponse.json({ success: true, message: "If an account matches that address, reset instructions will be sent." }, { headers: { "Cache-Control": "no-store" } });
 export async function POST(request: NextRequest) {
   try {
-    if (request.headers.get("origin") !== request.nextUrl.origin) return NextResponse.json({ error: "Invalid request." }, { status: 400 });
+    if (!isValidRequestOrigin(request)) return NextResponse.json({ error: "Invalid request." }, { status: 400 });
     const body = await request.json(); const email = typeof body?.email === "string" ? body.email.trim().toLowerCase() : ""; const address = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
     const [ipAllowed, emailAllowed] = await Promise.all([customerRateAllowed("reset-request-ip", address, 20, 3600000), customerRateAllowed("reset-request-email", email || "invalid", 5, 3600000)]);
     if (!ipAllowed || !emailAllowed) return NextResponse.json({ error: "Please wait before trying again." }, { status: 429 });
