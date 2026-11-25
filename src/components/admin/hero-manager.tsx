@@ -1,5 +1,7 @@
 "use client";
 
+import { prepareImageUpload, isSupportedImageFile } from "@/lib/admin/browser-image-optimizer";
+
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ArrowDown, ArrowUp, Film, Image as ImageIcon, Link2, Plus, Replace, Trash2, Video } from "lucide-react";
 import { heroMediaUrl } from "@/lib/hero-media-url";
@@ -168,22 +170,18 @@ export default function HeroManager() {
 
     if (!file) return;
 
-    if (!["image/jpeg", "image/png", "image/webp"].includes(file.type)) {
+    if (!isSupportedImageFile(file)) {
       setError("Only JPG, PNG and WebP images are allowed.");
       return;
     }
 
-    if (file.size > 5 * 1024 * 1024) {
-      setError("Maximum image size is 5 MB.");
-      return;
-    }
 
     setUploading(true);
     setError("");
 
     try {
       const data = new FormData();
-      data.append("file", file);
+      data.append("file", await prepareImageUpload(file, "hero"));
 
       const res = await fetch("/api/admin/media", {
         method: "POST",
@@ -222,8 +220,8 @@ export default function HeroManager() {
 
     if (!file) return;
 
-    if (!["video/mp4", "video/webm"].includes(file.type)) {
-      setError("Only MP4 and WebM videos are allowed.");
+    if (!/\.(mp4|mov|avi|mkv|webm|m4v|mpeg|mpg|3gp|wmv)$/i.test(file.name)) {
+      setError("Choose a supported video file.");
       return;
     }
 
@@ -238,6 +236,7 @@ export default function HeroManager() {
     try {
       const data = new FormData();
       data.append("file", file);
+      data.set("target", target);
 
       const res = await fetch("/api/admin/hero/upload-video", {
         method: "POST",
@@ -700,7 +699,7 @@ export default function HeroManager() {
                       <button type="button" onClick={() => void openMedia(target)}>Media Library</button>
                       {form[target] && <button type="button" className="is-remove" onClick={() => removeMedia(target)}><Trash2 size={15} />Remove</button>}
                     </div>
-                    <input ref={node => { imageInputs.current[target] = node; }} className="hero-manager__hidden-input" type="file" accept="image/jpeg,image/png,image/webp" disabled={uploading} onChange={event => void uploadImage(event, target)} aria-label={`Replace ${label}`} />
+                    <input ref={node => { imageInputs.current[target] = node; }} className="hero-manager__hidden-input" type="file" accept="image/jpeg,image/png,image/webp,image/bmp,image/x-ms-bmp,image/tiff,image/avif,.bmp,.tif,.tiff,.avif" disabled={uploading} onChange={event => void uploadImage(event, target)} aria-label={`Replace ${label}`} />
                   </article>
                 ))}
               </div>
@@ -722,7 +721,7 @@ export default function HeroManager() {
                       <button type="button" onClick={() => videoInputs.current[target]?.click()}><Replace size={15} />Replace</button>
                       {form[target] && <button type="button" className="is-remove" onClick={() => removeMedia(target)}><Trash2 size={15} />Remove</button>}
                     </div>
-                    <input ref={node => { videoInputs.current[target] = node; }} className="hero-manager__hidden-input" type="file" accept="video/mp4,video/webm" disabled={videoUploading} onChange={event => void uploadVideo(event, target)} aria-label={`Replace ${label}`} />
+                    <input ref={node => { videoInputs.current[target] = node; }} className="hero-manager__hidden-input" type="file" accept="video/*,.mp4,.mov,.avi,.mkv,.webm,.m4v,.mpeg,.mpg,.3gp,.wmv" disabled={videoUploading} onChange={event => void uploadVideo(event, target)} aria-label={`Replace ${label}`} />
                   </article>
                 ))}
               </div>
@@ -771,7 +770,7 @@ export default function HeroManager() {
                     <button type="button" onClick={() => void openMedia("posterImage")}>Media Library</button>
                     {form.posterImage && <button type="button" className="is-remove" onClick={() => removeMedia("posterImage")}><Trash2 size={15} />Remove</button>}
                   </div>
-                  <input ref={node => { imageInputs.current.posterImage = node; }} className="hero-manager__hidden-input" type="file" accept="image/jpeg,image/png,image/webp" disabled={uploading} onChange={event => void uploadImage(event, "posterImage")} aria-label="Replace poster image" />
+                  <input ref={node => { imageInputs.current.posterImage = node; }} className="hero-manager__hidden-input" type="file" accept="image/jpeg,image/png,image/webp,image/bmp,image/x-ms-bmp,image/tiff,image/avif,.bmp,.tif,.tiff,.avif" disabled={uploading} onChange={event => void uploadImage(event, "posterImage")} aria-label="Replace poster image" />
                 </article>
               </div>
             )}

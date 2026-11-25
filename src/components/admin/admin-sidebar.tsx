@@ -1,14 +1,14 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
+import Link, { useLinkStatus } from "next/link";
 import { usePathname } from "next/navigation";
 import {
   LayoutDashboard, Package, Layers3, Warehouse,
   ShoppingBag, Users, Images, Clapperboard,
   Star, TicketPercent, Settings, Palette, LogOut,
   PanelLeftClose, PanelLeftOpen, Menu, X,
-  ExternalLink, ShieldCheck, BookOpen
+  ExternalLink, ShieldCheck, BookOpen, Plus
 } from "lucide-react";
 import "./admin-dashboard.css";
 
@@ -53,6 +53,50 @@ const sections = [
   },
 ];
 
+function AdminNavigationStatus() {
+  const { pending } = useLinkStatus();
+
+  if (!pending) return null;
+
+  return (
+    <span
+      className="skad-navigation-spinner"
+      role="status"
+      aria-label="Opening page"
+    />
+  );
+}
+
+const priorityRoutes = new Set([
+  "/admin",
+  "/admin/products",
+  "/admin/categories",
+  "/admin/orders",
+]);
+
+const mobileDockItems = [
+  {
+    name: "Home",
+    href: "/admin",
+    icon: LayoutDashboard,
+  },
+  {
+    name: "Products",
+    href: "/admin/products",
+    icon: Package,
+  },
+  {
+    name: "Add",
+    href: "/admin/products/new",
+    icon: Plus,
+  },
+  {
+    name: "Orders",
+    href: "/admin/orders",
+    icon: ShoppingBag,
+  },
+];
+
 export default function AdminSidebar() {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -81,6 +125,7 @@ export default function AdminSidebar() {
         type="button"
         onClick={() => setMobileOpen(true)}
         aria-label="Open admin menu"
+        aria-expanded={mobileOpen}
       >
         <Menu size={21} />
       </button>
@@ -101,7 +146,7 @@ export default function AdminSidebar() {
         <div className="skad-brand">
           <span className="skad-brand-mark">
             <img
-              src="/srikalahasti-logo.png"
+              src="/intro/heritage-logo-optimized.webp"
               alt="Srikalahasti Kalamkari"
               className="skad-brand-logo"
             />
@@ -158,6 +203,8 @@ export default function AdminSidebar() {
                   <Link
                     key={item.href}
                     href={item.href}
+                    prefetch={priorityRoutes.has(item.href) ? null : false}
+                    aria-current={active ? "page" : undefined}
                     className={`skad-nav-link ${active ? "is-active" : ""}`}
                     onClick={() => setMobileOpen(false)}
                     title={item.name}
@@ -165,6 +212,7 @@ export default function AdminSidebar() {
                     <Icon size={18}/>
                     <span className="skad-nav-name">{item.name}</span>
                     {active && <span className="skad-active-dot"/>}
+                    <AdminNavigationStatus />
                   </Link>
                 );
               })}
@@ -190,6 +238,74 @@ export default function AdminSidebar() {
           </button>
         </div>
       </aside>
+
+      <nav
+        className="skad-mobile-dock"
+        aria-label="Quick admin navigation"
+      >
+        {mobileDockItems.map(item => {
+          const Icon = item.icon;
+          const isAdd = item.name === "Add";
+
+          const active =
+            item.href === "/admin"
+              ? pathname === "/admin"
+              : item.href === "/admin/products"
+                ? (
+                    pathname === item.href ||
+                    (
+                      pathname.startsWith(item.href + "/") &&
+                      pathname !== "/admin/products/new"
+                    )
+                  )
+                : (
+                    pathname === item.href ||
+                    pathname.startsWith(item.href + "/")
+                  );
+
+          return (
+            <Link
+              key={item.href}
+              href={item.href}
+              prefetch={priorityRoutes.has(item.href) ? null : false}
+              aria-current={active ? "page" : undefined}
+              aria-label={isAdd ? "Add new product" : item.name}
+              className={[
+                "skad-dock-item",
+                active ? "is-active" : "",
+                isAdd ? "is-add" : "",
+              ].join(" ")}
+              onClick={() => setMobileOpen(false)}
+            >
+              <span className="skad-dock-icon">
+                <Icon
+                  size={isAdd ? 27 : 21}
+                  strokeWidth={isAdd ? 2.4 : 1.8}
+                />
+              </span>
+
+              <span className="skad-dock-label">
+                {item.name}
+              </span>
+
+              <AdminNavigationStatus />
+            </Link>
+          );
+        })}
+
+        <button
+          type="button"
+          className={`skad-dock-item ${mobileOpen ? "is-active" : ""}`}
+          aria-label="Open complete admin menu"
+          aria-expanded={mobileOpen}
+          onClick={() => setMobileOpen(value => !value)}
+        >
+          <span className="skad-dock-icon">
+            <Menu size={22} strokeWidth={1.8} />
+          </span>
+          <span className="skad-dock-label">Menu</span>
+        </button>
+      </nav>
     </>
   );
 }

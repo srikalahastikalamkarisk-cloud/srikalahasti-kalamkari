@@ -15,6 +15,7 @@ import {
   isValidAboutCategorySelection,
   isSafeAboutImageUrl,
 } from "@/lib/about-kalamkari-content";
+import { assertManagedMediaAvailable, queueReleasedMedia } from "@/lib/admin/global-media-references";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -125,7 +126,10 @@ export async function PUT(req: NextRequest) {
       return NextResponse.json({ error: "One or more selected categories are inactive or unavailable. Refresh and choose again." }, { status: 400 });
     }
 
-    const saved = await prisma.aboutKalamkariContent.upsert({
+    const saved = await prisma.$transaction(async tx => {
+    const old = await tx.aboutKalamkariContent.findUnique({ where: { id: "primary" } });
+    await assertManagedMediaAvailable(tx, imageUrl);
+    const updated = await tx.aboutKalamkariContent.upsert({
       where: { id: "primary" },
       create: {
         id: "primary",
@@ -138,6 +142,9 @@ export async function PUT(req: NextRequest) {
         imageUrl,
         categoryIds: data.categoryIds as Prisma.InputJsonValue,
       },
+    });
+    await queueReleasedMedia(tx, old, updated);
+    return updated;
     });
 
     revalidatePath("/");

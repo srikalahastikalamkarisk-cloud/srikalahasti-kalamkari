@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { getCurrentAdmin } from "@/lib/admin-auth";
 import { validOrigin } from "@/lib/admin/origin";
 import { categoryInput, validImage } from "@/lib/admin/category-input";
+import { assertManagedMediaAvailable } from "@/lib/admin/global-media-references";
 
 export const runtime = "nodejs";
 
@@ -77,14 +78,17 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const category = await prisma.category.create({
-      data: {
-        name: data.name,
-        slug: data.slug,
-        image: data.image ?? null,
-        isActive: data.isActive,
-        parentId,
-      },
+    const category = await prisma.$transaction(async tx => {
+      await assertManagedMediaAvailable(tx, data.image);
+      return tx.category.create({
+        data: {
+          name: data.name,
+          slug: data.slug,
+          image: data.image ?? null,
+          isActive: data.isActive,
+          parentId,
+        },
+      });
     });
 
     return NextResponse.json({ category }, { status: 201 });

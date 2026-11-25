@@ -1483,3 +1483,87 @@ html[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"])
 .sk-store-theme .sk-reference-ticker-set b {
   color: var(--sk-theme-color-accentOnDark) !important;
 }
+
+
+/* STEP 810D — Theme-aware review hover contrast */
+
+html[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"])
+.sk-store-theme .clp-section .clp-review:is(:hover, :focus-visible) {
+  background: var(--sk-theme-hover) !important;
+  background-image: var(--sk-theme-hover) !important;
+  color: var(--sk-theme-onDark, #ffffff) !important;
+  -webkit-text-fill-color: var(--sk-theme-onDark, #ffffff) !important;
+}
+
+html[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"])
+.sk-store-theme .clp-section .clp-review:is(:hover, :focus-visible)
+:is(.clp-review-text, .clp-author-info, .clp-author-info strong, .clp-author-info small) {
+  color: var(--sk-theme-onDark, #ffffff) !important;
+  -webkit-text-fill-color: var(--sk-theme-onDark, #ffffff) !important;
+  opacity: 1 !important;
+}
+
+html[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"])
+.sk-store-theme .clp-section .clp-review:is(:hover, :focus-visible)
+:is(.clp-quote, .clp-stars, .clp-read-more) {
+  color: var(--sk-theme-color-accentOnDark, #f5d58e) !important;
+  -webkit-text-fill-color: var(--sk-theme-color-accentOnDark, #f5d58e) !important;
+}
+
+html[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"])
+.sk-store-theme .clp-section .clp-review:is(:hover, :focus-visible) .clp-avatar {
+  background: #f8f1e3 !important;
+  color: #24352c !important;
+  -webkit-text-fill-color: #24352c !important;
+}
+
+html[data-storefront-theme]:not([data-storefront-theme="royal-navy-gold-01"])
+.sk-store-theme .clp-section .clp-review:is(:hover, :focus-visible) .clp-review-author {
+  border-top-color: rgba(255,255,255,.35) !important;
+}
+
+/* STEP 813C — Universal WhatsApp contrast */
+
+html[data-storefront-theme][data-storefront-theme] .sk-store-theme .skshop .skshop-ref-card a.skshop-whatsapp-enquiry,
+html[data-storefront-theme][data-storefront-theme] .sk-store-theme .skpd .skpd-contact a.skpd-whatsapp,
+html[data-storefront-theme][data-storefront-theme] .sk-store-theme .sk-connect-side .sk-connect-actions a.sk-connect-wa {
+  background: #087a42 !important;
+  background-image: none !important;
+  border-color: #087a42 !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  opacity: 1 !important;
+  text-decoration: none;
+}
+
+html[data-storefront-theme][data-storefront-theme] .sk-store-theme .skshop .skshop-ref-card a.skshop-whatsapp-enquiry *,
+html[data-storefront-theme][data-storefront-theme] .sk-store-theme .skpd .skpd-contact a.skpd-whatsapp *,
+html[data-storefront-theme][data-storefront-theme] .sk-store-theme .sk-connect-side .sk-connect-actions a.sk-connect-wa * {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  opacity: 1 !important;
+}
+
+html[data-storefront-theme][data-storefront-theme] .sk-store-theme .skshop .skshop-ref-card a.skshop-whatsapp-enquiry svg,
+html[data-storefront-theme][data-storefront-theme] .sk-store-theme .skpd .skpd-contact a.skpd-whatsapp svg,
+html[data-storefront-theme][data-storefront-theme] .sk-store-theme .sk-connect-side .sk-connect-actions a.sk-connect-wa svg {
+  color: #ffffff !important;
+  flex-shrink: 0;
+}
+
+html[data-storefront-theme][data-storefront-theme] .sk-store-theme .skshop .skshop-ref-card a.skshop-whatsapp-enquiry:is(:hover,:active),
+html[data-storefront-theme][data-storefront-theme] .sk-store-theme .skpd .skpd-contact a.skpd-whatsapp:is(:hover,:active),
+html[data-storefront-theme][data-storefront-theme] .sk-store-theme .sk-connect-side .sk-connect-actions a.sk-connect-wa:is(:hover,:active) {
+  background: #066437 !important;
+  background-image: none !important;
+  border-color: #066437 !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+html[data-storefront-theme][data-storefront-theme] .sk-store-theme .skshop .skshop-ref-card a.skshop-whatsapp-enquiry:focus-visible,
+html[data-storefront-theme][data-storefront-theme] .sk-store-theme .skpd .skpd-contact a.skpd-whatsapp:focus-visible,
+html[data-storefront-theme][data-storefront-theme] .sk-store-theme .sk-connect-side .sk-connect-actions a.sk-connect-wa:focus-visible {
+  outline: 2px solid #087a42 !important;
+  outline-offset: 3px;
+}

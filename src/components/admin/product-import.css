@@ -230,7 +230,7 @@
 .skad-import-results-heading { align-items: flex-start; }
 .skad-import-result-state { padding: 7px 10px; border: 1px solid #dce9df; border-radius: 20px; background: #f5faf6; }
 .skad-import-result-state.is-warning { border-color: #efdfc6; background: #fffaf2; color: #95713f; }
-.skad-import-result-cards { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin: 17px 0; }
+.skad-import-result-cards { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin: 17px 0; }
 .skad-import-result-card { display: flex; align-items: center; gap: 11px; padding: 13px; border: 1px solid #e4e9ee; border-radius: 9px; background: #fbfcfd; }
 .skad-import-result-card > span { display: grid; width: 35px; height: 35px; place-items: center; border-radius: 9px; background: #edf5ef; color: #62816b; }
 .skad-import-result-card.is-neutral > span { background: #f0f3f6; color: #748398; }
@@ -292,7 +292,7 @@
   .skad-import-confirm-bar { align-items: stretch; flex-direction: column; gap: 12px; padding: 14px; }
   .skad-import-results { padding: 15px; }
   .skad-import-results-heading { align-items: flex-start; flex-direction: column; gap: 10px; }
-  .skad-import-result-cards { gap: 7px; }
+  .skad-import-result-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 7px; }
   .skad-import-result-card { flex-direction: column; align-items: flex-start; gap: 7px; padding: 10px; }
   .skad-import-result-card strong { font-size: 20px; }
   .skad-import-outcomes > div { gap: 7px; }

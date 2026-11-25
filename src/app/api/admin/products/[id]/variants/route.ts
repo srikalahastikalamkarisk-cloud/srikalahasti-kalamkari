@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { getCurrentAdmin } from "@/lib/admin-auth";
 import { validOrigin } from "@/lib/admin/origin";
 import { recordInventoryMovement } from "@/lib/admin/inventory";
+import { assertManagedMediaAvailable, queueReleasedMedia } from "@/lib/admin/global-media-references";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -177,6 +178,7 @@ export async function PUT(
       }
 
       const previousVariants = await tx.productVariant.findMany({ where: { productId: id } });
+      await assertManagedMediaAvailable(tx, variants.map(variant => variant.imageUrl));
       if (requestedIds.some(variantId => !previousVariants.some(variant => variant.id === variantId))) {
         throw new Error("VARIANT_PRODUCT_MISMATCH");
       }
@@ -251,10 +253,9 @@ export async function PUT(
         });
       }
 
-      return tx.productVariant.findMany({
-        where: { productId: id },
-        orderBy: { sortOrder: "asc" },
-      });
+      const currentVariants = await tx.productVariant.findMany({ where: { productId: id } });
+      await queueReleasedMedia(tx, previousVariants, currentVariants);
+      return currentVariants.sort((a, b) => a.sortOrder - b.sortOrder);
     });
 
     return NextResponse.json({

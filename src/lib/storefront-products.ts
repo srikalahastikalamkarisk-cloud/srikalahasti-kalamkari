@@ -1,4 +1,5 @@
 import "server-only";
+import { cache } from "react";
 import { prisma } from "@/lib/prisma";
 import { storefrontImageList } from "@/lib/storefront-product-policy";
 import { SHIPPING_AMOUNT_PAISE } from "@/lib/checkout/shipping-policy";
@@ -70,7 +71,7 @@ function normalizeAvailabilityStatus(value: string | null): StorefrontProduct["a
   return "OUT_OF_STOCK";
 }
 
-export async function getStorefrontProducts(): Promise<StorefrontProduct[]> {
+export const getStorefrontProducts = cache(async (): Promise<StorefrontProduct[]> => {
   const [rows, categories] = await Promise.all([prisma.product.findMany({
     where: { isActive: true, category: { isActive: true } },
     include: {
@@ -138,10 +139,9 @@ export async function getStorefrontProducts(): Promise<StorefrontProduct[]> {
       })),
     };
   });
-}
+});
 
-export async function getStorefrontProduct(id: string) {
+export const getStorefrontProduct = cache(async (id: string) => {
   const products = await getStorefrontProducts();
   return products.find(product => product.id === id || product.slug === id) ?? null;
-}
-
+});

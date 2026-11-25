@@ -47,7 +47,12 @@ export default async function ShopByCategory() {
           </p>
         </div>
 
-        <div className="sk-category-grid">
+        <div
+          className="sk-category-grid sk-category-carousel"
+          role="region"
+          aria-label="Shop by category — scroll horizontally"
+          tabIndex={0}
+        >
           {categories.map((category) => (
             <Link
               key={category.id}
@@ -64,12 +69,14 @@ export default async function ShopByCategory() {
                         alt={category.name}
                         fill
                         unoptimized
-                        sizes="(max-width: 640px) 30vw, (max-width: 1024px) 22vw, 160px"
+                        sizes="(max-width: 767px) 30vw, 185px"
                         className="sk-category-image"
                       />
                     ) : (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img
+                        loading="lazy"
+                        decoding="async"
                         src={category.image}
                         alt={category.name}
                         className="sk-category-image"

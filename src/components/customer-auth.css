@@ -544,3 +544,337 @@
 @media (prefers-reduced-motion: reduce) {
   .skauth-result-icon.is-loading svg { animation: none; }
 }
+
+/* STEP 820C — Premium customer dashboard */
+
+html[data-storefront-theme][data-storefront-theme]
+.sk-store-theme .skauth-page.skca-page {
+  display: block;
+  min-height: 65vh;
+  padding: clamp(24px,4vw,56px) 18px;
+  background: color-mix(
+    in srgb,
+    var(--sk-theme-color-primary,#10243e) 5%,
+    #faf9f5
+  ) !important;
+}
+
+.skca-page .skca-container {
+  width: min(1160px,100%);
+  margin: 0 auto;
+}
+
+.skca-page .skca-welcome,
+.skca-page .skca-sidebar,
+.skca-page .skca-panel,
+.skca-page .skca-order {
+  background: var(--sk-theme-color-surface,#fff);
+  border: 1px solid var(--sk-theme-color-border,#e4dfd6);
+  border-radius: 16px;
+  box-shadow: 0 4px 18px rgba(0,0,0,.035);
+}
+
+.skca-page .skca-welcome {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding: 24px;
+  margin-bottom: 24px;
+}
+
+.skca-page .skca-avatar {
+  width: 64px;
+  height: 64px;
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--sk-theme-primaryButton,#10243e);
+  color: var(--sk-theme-buttonText,#fff);
+}
+
+.skca-page .skca-welcome-copy {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.skca-page .skca-welcome-copy > span {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .15em;
+  color: var(--sk-theme-color-accentForeground,#a47b3e);
+}
+
+.skca-page h1 {
+  font: 400 clamp(28px,4vw,38px) Georgia,serif;
+  margin: 5px 0;
+}
+
+.skca-page p {
+  font-size: 13px;
+  line-height: 1.65;
+  margin: 5px 0;
+}
+
+.skca-page .skca-logout,
+.skca-page .skca-add {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.skca-page .skca-layout {
+  display: grid;
+  grid-template-columns: 245px minmax(0,1fr);
+  align-items: start;
+  gap: 24px;
+}
+
+.skca-page .skca-sidebar {
+  display: grid;
+  gap: 7px;
+  padding: 12px;
+}
+
+.skca-page .skca-sidebar > :is(button,a) {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 51px;
+  padding: 12px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--sk-theme-color-body,#10243e);
+  font: inherit;
+  font-size: 13px;
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.skca-page .skca-sidebar > :is(button,a) > span {
+  flex: 1;
+}
+
+html[data-storefront-theme] .sk-store-theme
+.skca-page .skca-sidebar > button.is-active {
+  background: var(--sk-theme-primaryButton,#10243e) !important;
+  color: var(--sk-theme-buttonText,#fff) !important;
+  -webkit-text-fill-color: var(--sk-theme-buttonText,#fff) !important;
+}
+
+.skca-page .skca-sidebar > :is(button,a):not(.is-active):hover {
+  background: var(--sk-theme-surfaceSoft,#f3f0e9);
+}
+
+.skca-page .skca-content {
+  min-width: 0;
+  display: grid;
+  gap: 16px;
+}
+
+.skca-page .skca-section-heading {
+  padding: 3px 0 5px;
+}
+
+.skca-page .skca-section-heading h2 {
+  margin: 0 0 5px;
+  font: 400 30px Georgia,serif;
+}
+
+.skca-page .skca-order,
+.skca-page .skca-panel {
+  padding: 20px;
+  min-width: 0;
+}
+
+.skca-page .skca-order-head,
+.skca-page .skca-order-bottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.skca-page .skca-order-head {
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--sk-theme-color-divider,#e4dfd6);
+}
+
+.skca-page .skca-order-head strong {
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+
+.skca-page .skca-status {
+  padding: 7px 12px;
+  border-radius: 30px;
+  background: var(--sk-theme-surfaceSoft,#f1ede3);
+  color: var(--sk-theme-color-body,#10243e);
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.skca-page .skca-order-product {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding: 16px 0;
+}
+
+.skca-page .skca-photo {
+  width: 100px;
+  aspect-ratio: 4/5;
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  border-radius: 10px;
+  background: var(--sk-theme-surfaceSoft,#f1ede3);
+  color: var(--sk-theme-color-muted,#69758a);
+}
+
+.skca-page .skca-photo img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.skca-page .skca-product-info {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.skca-page .skca-product-info h3 {
+  margin: 0 0 8px;
+  font: 500 19px Georgia,serif;
+}
+
+.skca-page .skca-product-info strong,
+.skca-page .skca-order-bottom strong {
+  color: var(--sk-theme-color-heading,#10243e);
+  font-size: 15px;
+}
+
+.skca-page .skca-order-bottom {
+  padding-top: 14px;
+  border-top: 1px solid var(--sk-theme-color-divider,#e4dfd6);
+}
+
+html[data-storefront-theme] .sk-store-theme
+.skca-page a.skca-order-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 10px 17px;
+  border-radius: 9px;
+  background: var(--sk-theme-primaryButton,#10243e);
+  color: var(--sk-theme-buttonText,#fff) !important;
+  -webkit-text-fill-color: var(--sk-theme-buttonText,#fff) !important;
+  text-decoration: none;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.skca-page .skca-empty {
+  text-align: center;
+  padding: 48px 20px;
+}
+
+.skca-page .skauth-order-shell {
+  margin: 0 auto;
+  box-shadow: 0 4px 18px rgba(0,0,0,.05);
+}
+
+.skca-page button:disabled {
+  opacity: .6;
+  cursor: wait;
+}
+
+@media (max-width: 767px) {
+  .skca-page .skca-layout {
+    grid-template-columns: minmax(0,1fr);
+    gap: 20px;
+  }
+
+  .skca-page .skca-welcome {
+    padding: 16px;
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+
+  .skca-page .skca-avatar {
+    width: 44px;
+    height: 44px;
+  }
+
+  .skca-page .skca-welcome-copy > span {
+    display: none;
+  }
+
+  .skca-page .skca-welcome h1 {
+    font-size: 25px;
+  }
+
+  .skca-page .skca-logout {
+    padding-inline: 10px;
+    font-size: 11px;
+  }
+
+  .skca-page .skca-sidebar {
+    grid-template-columns: repeat(5,minmax(0,1fr));
+    padding: 7px;
+    gap: 4px;
+  }
+
+  .skca-page .skca-sidebar > :is(button,a) {
+    flex-direction: column;
+    justify-content: center;
+    gap: 7px;
+    padding: 10px 2px;
+    font-size: 10px;
+    text-align: center;
+    min-height: 66px;
+  }
+
+  .skca-page .skca-sidebar > :is(button,a) > span {
+    flex: none;
+  }
+
+  .skca-page .skca-nav-arrow {
+    display: none;
+  }
+
+  .skca-page .skca-order,
+  .skca-page .skca-panel {
+    padding: 15px;
+  }
+
+  .skca-page .skca-photo {
+    width: 82px;
+  }
+
+  .skca-page .skca-order-product {
+    gap: 12px;
+  }
+
+  .skca-page .skca-product-info h3 {
+    font-size: 17px;
+  }
+
+  .skca-page .skca-order-bottom > a {
+    width: 100%;
+  }
+
+  .skca-page .skauth-form input {
+    font-size: 16px;
+  }
+}

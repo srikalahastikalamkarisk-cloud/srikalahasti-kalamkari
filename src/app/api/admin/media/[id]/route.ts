@@ -1,13 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
-import { unlink } from "node:fs/promises";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { Prisma } from "@/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
 import { getCurrentAdmin } from "@/lib/admin-auth";
 import { validOrigin } from "@/lib/admin/origin";
-import { canGloballyDelete, detachImage } from "@/lib/admin/media-policy";
-import { confinedMediaPath } from "@/lib/admin/media-storage";
+import { detachImage } from "@/lib/admin/media-policy";
+import { assertManagedMediaAvailable, collectProtectedMedia, parseManagedMedia, queueReleasedMedia } from "@/lib/admin/global-media-references";
+import { lockMediaMutation } from "@/lib/admin/media-mutation-lock";
 
 type Context = { params: Promise<{ id: string }> };
 const bodySchema = z.discriminatedUnion("action", [
@@ -27,12 +27,7 @@ async function references(id: string) {
   });
   const registryProductIds = new Set(asset.references.filter(reference => reference.placement === "PRODUCT" && reference.productId).map(reference => reference.productId!));
   const untracked = affected.filter(product => !registryProductIds.has(product.id));
-  const unsupported = [
-    ...asset.references.filter(reference => reference.placement !== "PRODUCT").map(reference => reference.placement),
-    "Homepage sections (hardcoded, unindexed)",
-    "Stories (hardcoded, unindexed)",
-    "Banners and other static placements (unindexed)",
-  ];
+  const unsupported = asset.references.filter(reference => reference.placement !== "PRODUCT").map(reference => reference.placement);
   const [categories, settings] = await Promise.all([
     prisma.category.findMany({ where: { image: url }, select: { id: true, name: true } }),
     prisma.storeSettings.findMany({ where: { OR: [{ logoUrl: url }, { faviconUrl: url }] }, select: { id: true, storeName: true, logoUrl: true, faviconUrl: true } }),
@@ -64,7 +59,9 @@ async function references(id: string) {
       if (member && typeof member === "object" && (member as Record<string, unknown>).photo === url) aboutLocations.push({ type: "About Page image", name: `Team portrait ${index + 1}`, id: "primary" });
     });
   }
-  return { asset, url, affected, untracked, unsupported, otherLocations: [...otherLocations, ...aboutLocations], canDelete: canGloballyDelete({ untrackedProductReferences: untracked.length, unsupportedPlacements: unsupported.length }) };
+  const protectedUrls = await prisma.$transaction(tx => collectProtectedMedia(tx));
+  const protectedByOtherPlacement = [...protectedUrls].some(value => value !== url && parseManagedMedia(value)?.storageKey === asset.storageKey);
+  return { asset, url, affected, untracked, unsupported, otherLocations: [...otherLocations, ...aboutLocations], canDelete: affected.length === 0 && untracked.length === 0 && unsupported.length === 0 && otherLocations.length === 0 && aboutLocations.length === 0 && !asset.folderId && !protectedByOtherPlacement };
 }
 
 export async function POST(req: NextRequest, context: Context) {
@@ -79,13 +76,19 @@ export async function POST(req: NextRequest, context: Context) {
     return NextResponse.json({ products: info.affected, otherLocations: info.otherLocations, unsupportedPlacements: info.unsupported, untrackedProductReferences: info.untracked, canDelete: info.canDelete });
   }
   if (parsed.data.action === "move") {
-    if (parsed.data.folderId && !await prisma.mediaFolder.findUnique({ where: { id: parsed.data.folderId }, select: { id: true } })) return NextResponse.json({ error: "Folder not found" }, { status: 404 });
-    await prisma.mediaAsset.update({ where: { id }, data: { folderId: parsed.data.folderId } });
+    const folderId = parsed.data.folderId;
+    if (folderId && !await prisma.mediaFolder.findUnique({ where: { id: folderId }, select: { id: true } })) return NextResponse.json({ error: "Folder not found" }, { status: 404 });
+    await prisma.$transaction(async tx => {
+      const asset = await tx.mediaAsset.findUniqueOrThrow({ where: { id }, select: { storageKey: true } });
+      await assertManagedMediaAvailable(tx, `/api/media/products/${asset.storageKey}`);
+      await tx.mediaAsset.update({ where: { id }, data: { folderId } });
+    });
     return NextResponse.json({ success: true });
   }
   const { productId } = parsed.data;
   try {
     await prisma.$transaction(async tx => {
+      await lockMediaMutation(tx);
       const rows = await tx.$queryRaw<Array<{ id: string }>>`SELECT id FROM Product WHERE id = ${productId} FOR UPDATE`;
       if (!rows.length) throw new Error("Product not found");
       const [asset, product] = await Promise.all([
@@ -98,6 +101,7 @@ export async function POST(req: NextRequest, context: Context) {
       await tx.mediaReference.deleteMany({ where: { mediaId: id, productId, placement: "PRODUCT" } });
       const references = await tx.mediaReference.findMany({ where: { productId, placement: "PRODUCT" }, orderBy: { sortOrder: "asc" } });
       for (const [sortOrder, reference] of references.entries()) await tx.mediaReference.update({ where: { id: reference.id }, data: { sortOrder } });
+      await queueReleasedMedia(tx, product.images, next);
     });
     revalidatePath("/", "layout");
     return NextResponse.json({ success: true });
@@ -113,12 +117,10 @@ export async function DELETE(req: NextRequest, context: Context) {
   const info = await references(id);
   if (!info) return NextResponse.json({ error: "Media not found" }, { status: 404 });
   if (!info.canDelete) return NextResponse.json({ error: "Global deletion blocked: references cannot be safely traced", unsupportedPlacements: info.unsupported, untrackedProductReferences: info.untracked }, { status: 409 });
-  let filePath: string;
-  try { filePath = (await confinedMediaPath(info.asset.storageKey)).target; }
-  catch (error) { return NextResponse.json({ error: error instanceof Error ? error.message : "Safe persistent storage path is unavailable" }, { status: 503 }); }
   let jobId: string;
   try {
     jobId = await prisma.$transaction(async tx => {
+      await lockMediaMutation(tx);
       await tx.$queryRaw<Array<{ id: string }>>`SELECT id FROM MediaAsset WHERE id = ${id} FOR UPDATE`;
       // Serialize against product edits that might attach this exact URL during global deletion.
       await tx.$queryRaw<Array<{ id: string }>>`SELECT id FROM Product FOR UPDATE`;
@@ -128,44 +130,21 @@ export async function DELETE(req: NextRequest, context: Context) {
       const currentAffected = currentProducts.filter(product => Array.isArray(product.images) && product.images.includes(info.url));
       const tracked = new Set(currentRefs.filter(reference => reference.productId).map(reference => reference.productId));
       if (currentAffected.some(product => !tracked.has(product.id))) throw new Error("Untracked product image appeared during deletion");
-      for (const product of currentAffected) {
-        const next = detachImage(product.images, info.url);
-        await tx.product.update({ where: { id: product.id }, data: { images: next.length ? next as Prisma.InputJsonValue : Prisma.JsonNull } });
-      }
-      if (info.otherLocations.some(location => location.type === "Category image")) await tx.category.updateMany({ where: { image: info.url }, data: { image: null } });
-      if (info.otherLocations.some(location => location.type === "Store logo")) await tx.storeSettings.updateMany({ where: { logoUrl: info.url }, data: { logoUrl: null } });
-      if (info.otherLocations.some(location => location.type === "Store favicon")) await tx.storeSettings.updateMany({ where: { faviconUrl: info.url }, data: { faviconUrl: null } });
-      let about;
-      try { about = await tx.aboutPageContent.findUnique({ where: { id: "primary" } }); }
-      catch (error) {
-        const knownMissing = error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2021" && error.message.includes("AboutPageContent");
-        if (!knownMissing) throw error;
-      }
-      if (about?.content && typeof about.content === "object" && !Array.isArray(about.content)) {
-        const next = structuredClone(about.content) as Record<string, unknown>;
-        const roots = next.roots as Record<string, unknown> | undefined;
-        if (roots?.image === info.url) roots.image = "/images/products/ivory-peacock.webp";
-        const process = next.process as Record<string, unknown> | undefined;
-        if (Array.isArray(process?.steps)) process.steps = process.steps.map(step => step && typeof step === "object" && (step as Record<string, unknown>).image === info.url ? { ...(step as Record<string, unknown>), image: "" } : step);
-        const team = next.team as Record<string, unknown> | undefined;
-        if (Array.isArray(team?.members)) team.members = team.members.map(member => member && typeof member === "object" && (member as Record<string, unknown>).photo === info.url ? { ...(member as Record<string, unknown>), photo: "" } : member);
-        await tx.aboutPageContent.update({ where: { id: "primary" }, data: { content: next as Prisma.InputJsonValue } });
-      }
-      await tx.mediaReference.deleteMany({ where: { mediaId: id } });
+      const allReferences = await collectProtectedMedia(tx);
+      if (allReferences.has(info.url) || info.asset.folderId) throw new Error("Media is still protected by a reference or Media Library folder");
       await tx.mediaAsset.update({ where: { id }, data: { deletionPending: true } });
-      return (await tx.mediaDeletionJob.create({ data: { mediaId: id, storageKey: info.asset.storageKey } })).id;
+      const media = parseManagedMedia(info.url);
+      if (!media) throw new Error("Invalid managed media URL");
+      const prior = await tx.mediaCleanupJob.findUnique({ where: { storageKey: media.storageKey } });
+      if (prior?.status === "PROCESSING") throw new Error("Media cleanup is already in progress");
+      return (await tx.mediaCleanupJob.upsert({
+        where: { storageKey: media.storageKey },
+        create: { storageKey: media.storageKey, area: media.area },
+        update: { area: media.area, status: "PENDING", attempts: 0, nextAttemptAt: new Date(), leaseUntil: null, lockedBy: null, lastError: null, completedAt: null },
+      })).id;
     });
   } catch { return NextResponse.json({ error: "Database reference cleanup failed; physical image retained" }, { status: 500 }); }
   for (const product of info.affected) revalidatePath(`/product/${product.slug}`);
   revalidatePath("/", "layout");
-  try {
-    await unlink(filePath).catch(error => {
-      if (!(error instanceof Error) || !("code" in error) || error.code !== "ENOENT") throw error;
-    });
-    await prisma.mediaAsset.delete({ where: { id } });
-    return NextResponse.json({ success: true });
-  } catch (error) {
-    await prisma.mediaDeletionJob.update({ where: { id: jobId }, data: { status: "FAILED", attempts: { increment: 1 }, lastError: error instanceof Error ? error.message : "File deletion failed" } });
-    return NextResponse.json({ error: "References were removed, but physical deletion failed and is queued for retry" }, { status: 503 });
-  }
+  return NextResponse.json({ success: true, queued: true, jobId, message: "Unreferenced media queued for safe background cleanup" }, { status: 202 });
 }

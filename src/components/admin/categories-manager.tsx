@@ -1,5 +1,7 @@
 "use client";
 
+import { prepareImageUpload, isSupportedImageFile } from "@/lib/admin/browser-image-optimizer";
+
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   Layers3, Plus, Search, Pencil, Trash2, X, Check,
@@ -641,10 +643,9 @@ export default function CategoriesManager() {
   async function uploadFile(file: File | undefined) {
     if (!file) return;
 
-    const allowed = ["image/jpeg", "image/png", "image/webp"];
 
-    if (!allowed.includes(file.type) || file.size > 5 * 1024 * 1024 || file.size === 0) {
-      setFormError("Choose a JPG, PNG or WebP image smaller than 5 MB.");
+    if (!isSupportedImageFile(file) || file.size === 0) {
+      setFormError("Choose a valid JPG, PNG, WebP, BMP, TIFF or AVIF image.");
       return;
     }
 
@@ -653,7 +654,7 @@ export default function CategoriesManager() {
 
     try {
       const body = new FormData();
-      body.append("file", file);
+      body.append("file", await prepareImageUpload(file, "category"));
 
       const response = await fetch("/api/admin/categories/upload", {
         method: "POST",
@@ -1129,13 +1130,13 @@ export default function CategoriesManager() {
                       <input
                         ref={fileInput}
                         type="file"
-                        accept="image/jpeg,image/png,image/webp"
+                        accept="image/jpeg,image/png,image/webp,image/bmp,image/x-ms-bmp,image/tiff,image/avif,.bmp,.tif,.tiff,.avif"
                         hidden
                         onChange={e => void uploadFile(e.target.files?.[0])}
                       />
                       <ImagePlus size={29}/>
                       <strong>{uploading ? "Uploading image..." : "Upload category image"}</strong>
-                      <small>JPG, PNG or WebP · Maximum 5 MB</small>
+                      <small>JPG, PNG, WebP, BMP, TIFF or AVIF · Automatic image optimization</small>
                       <button
                         type="button"
                         className="skcm-secondary-btn"

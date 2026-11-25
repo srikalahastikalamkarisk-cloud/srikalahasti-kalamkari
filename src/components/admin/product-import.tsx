@@ -13,13 +13,14 @@ import "./product-import.css";
 
 type PreviewImage = { number: string; filename: string; mime: string; preview: string; external?: boolean };
 type PreviewProduct = {
-  row: number; name: string; sku: string | null; category: string; pricingMode: string;
-  price: number; stock: number; photoNumbers: string[]; imageCount: number;
+  row: number; name: string; sku: string | null; category: string; pricingMode: string; imageStatus: string;
+  price: number; stock: number; photoNumbers: string[]; imageCount: number; action: "Create" | "Update"; warnings: string[];
   validationStatus: "Ready"; images: PreviewImage[]; urlCount: number;
 };
 type ImportError = { row: number; error: string };
 type Result = {
-  created?: number; skipped?: number; failed?: number;
+  created?: number; updated?: number; skipped?: number; failed?: number;
+  totalRows?: number; newProducts?: number; updates?: number; newCategories?: number; newSubcategories?: number;
   outcomes?: Array<{ row: number; slug: string; status: string }>;
   errors?: ImportError[]; error?: string; preview?: PreviewProduct[];
 };
@@ -155,7 +156,7 @@ export default function ProductImport() {
 
     <div className="skad-import-section-heading">
       <div><span className="skad-import-kicker">STEP 01</span><h2>Upload your files</h2><p>Start with the product spreadsheet. A numbered image ZIP is optional.</p></div>
-      <span className="skad-import-create-only"><ShieldCheck size={15} /> Add new products only</span>
+      <span className="skad-import-create-only"><ShieldCheck size={15} /> Review before applying changes</span>
     </div>
 
     <div className="skad-import-upload-grid">
@@ -191,7 +192,7 @@ export default function ProductImport() {
     </div>}
 
     <div className="skad-import-actions">
-      <div className="skad-import-small-note"><ShieldCheck size={15} /> Existing products are never overwritten.{!autoDownloadImages && " External URL images will remain remote links."}</div>
+      <div className="skad-import-small-note"><ShieldCheck size={15} /> Blank cells preserve existing values. New rows can be created as inactive drafts when price is missing.{!autoDownloadImages && " External URL images will remain remote links."}</div>
       <button className="skad-import-primary" type="button" disabled={!file || busy || Boolean(fileErrors.csv || fileErrors.zip)} onClick={() => send("preview")}>
         {busy ? <><LoaderCircle size={17} className="skad-import-spin" /> Working…</> : <>{result?.errors?.length ? "Retry validation & preview" : "Match images & preview"} <ArrowRight size={17} /></>}
       </button>
@@ -207,40 +208,48 @@ export default function ProductImport() {
 
     {result?.preview && <>
       <div className="skad-import-section-heading skad-import-preview-heading">
-        <div><span className="skad-import-kicker">STEP 02 — 03</span><h2>Review image matches &amp; products</h2><p>Confirm the exact photos, product details, prices and stock before creating anything.</p></div>
-        <span className="skad-import-ready"><CheckCircle2 size={15} /> {result.preview.length} rows ready</span>
+        <div><span className="skad-import-kicker">STEP 02 — 03</span><h2>Review image matches &amp; products</h2><p>Review creates, updates, category additions and warnings before confirming.</p></div>
+        <span className="skad-import-ready"><CheckCircle2 size={15} /> {result.totalRows ?? result.preview.length} CSV rows</span>
+      </div>
+
+      <div className="skad-import-result-cards">
+        <ResultCard title="New products" value={result.newProducts ?? 0} icon={<PackageCheck size={19} />} tone="success" />
+        <ResultCard title="Product updates" value={result.updates ?? 0} icon={<RefreshCw size={19} />} tone="neutral" />
+        <ResultCard title="New categories" value={result.newCategories ?? 0} icon={<CheckCircle2 size={19} />} tone="neutral" />
+        <ResultCard title="New subcategories" value={result.newSubcategories ?? 0} icon={<CheckCircle2 size={19} />} tone="neutral" />
       </div>
 
       <div className="skad-import-matches">
         {result.preview.map(product => <article className="skad-import-match" key={product.row}>
           <div className="skad-import-match-head">
             <div><span className="skad-import-row-label">CSV ROW {product.row}</span><h3>{product.name}</h3><p>SKU: {product.sku || "Not provided"}</p></div>
-            <span className="skad-import-ready"><CheckCircle2 size={14} /> Images checked</span>
+            <span className="skad-import-ready"><CheckCircle2 size={14} /> {product.action}</span>
           </div>
           <div className="skad-import-photo-numbers"><ImageIcon size={15} /><strong>Photo numbers</strong><span>{product.photoNumbers.length ? product.photoNumbers.join(" · ") : "No numbered photos"}</span></div>
+          {!!product.warnings.length && <div className="skad-import-small-note"><CircleAlert size={15} /> {product.warnings.join(" ")}</div>}
           <div className="skad-import-thumbnails">
             {product.images.map((image, index) => <figure key={`${image.number}-${index}`}>
               <div className="skad-import-thumb-frame">{image.preview ? <Image src={image.preview} alt={`${product.name} image ${index + 1}`} width={112} height={92} unoptimized /> : <span className="skad-import-external-thumb"><ImageIcon size={19} />REMOTE URL</span>}{index === 0 && <span className="skad-import-primary-badge">PRIMARY</span>}</div>
               <figcaption>{image.number.startsWith("URL") ? "Image URL" : `Photo ${image.number}`}</figcaption>
             </figure>)}
-            {!product.images.length && <div className="skad-import-no-images">No images attached</div>}
+            {!product.images.length && <div className="skad-import-no-images">{product.imageStatus}</div>}
           </div>
         </article>)}
       </div>
 
       <div className="skad-import-table-wrap">
         <table className="skad-import-table">
-          <thead><tr><th>Product</th><th>Name / SKU</th><th>Category</th><th>Pricing mode</th><th>Price</th><th>Stock</th><th>Images</th><th>Validation</th></tr></thead>
+          <thead><tr><th>Action</th><th>Name / SKU</th><th>Category</th><th>Pricing mode</th><th>Price</th><th>Stock</th><th>Images</th><th>Validation</th></tr></thead>
           <tbody>{result.preview.map(product => <tr key={product.row}>
-            <td><div className="skad-import-table-thumb">{product.images[0]?.preview ? <Image src={product.images[0].preview} alt="" width={52} height={46} unoptimized /> : <ImageIcon size={18} />}</div></td>
+            <td>{product.action}</td>
             <td><strong>{product.name}</strong><small>{product.sku || "No SKU"}</small></td>
-            <td>{product.category}</td><td>{product.pricingMode.replaceAll("_", " ")}</td><td>₹{product.price.toLocaleString("en-IN")}</td><td>{product.stock}</td><td>{product.imageCount} / 20</td>
+            <td>{product.category}</td><td>{product.pricingMode.replaceAll("_", " ")}</td><td>₹{product.price.toLocaleString("en-IN")}</td><td>{product.stock}</td><td>{product.imageStatus} · {product.imageCount} / 20</td>
             <td><span className="skad-import-ready"><CheckCircle2 size={14} /> {product.validationStatus}</span></td>
           </tr>)}</tbody>
         </table>
       </div>
       <div className="skad-import-confirm-bar">
-        <div><strong>Ready to import {result.preview.length} product{result.preview.length === 1 ? "" : "s"}?</strong><span>Existing slugs or SKUs will be skipped without changes.</span></div>
+        <div><strong>Ready to apply changes to {result.preview.length} row{result.preview.length === 1 ? "" : "s"}?</strong><span>Products absent from this CSV remain unchanged.</span></div>
         <button className="skad-import-primary" type="button" disabled={busy || !file} onClick={() => send("confirm")}>
           {busy ? <><LoaderCircle size={17} className="skad-import-spin" /> Importing…</> : <><PackageCheck size={17} /> Confirm &amp; Import</>}
         </button>
@@ -251,10 +260,11 @@ export default function ProductImport() {
       <div className="skad-import-results-heading"><div><span className="skad-import-kicker">STEP 04</span><h2 id="import-results-title">Import results</h2><p>{countFailed ? "The batch finished with rows that need attention." : "Your product import is complete."}</p></div><span className={countFailed ? "skad-import-result-state is-warning" : "skad-import-result-state"}>{countFailed ? <CircleAlert size={16} /> : <CheckCircle2 size={16} />}{countFailed ? "Completed with issues" : "Completed"}</span></div>
       <div className="skad-import-result-cards">
         <ResultCard title="Created" value={countCreated} icon={<CheckCircle2 size={19} />} tone="success" />
+        <ResultCard title="Updated" value={result.updated ?? 0} icon={<RefreshCw size={19} />} tone="neutral" />
         <ResultCard title="Skipped" value={countSkipped} icon={<RefreshCw size={19} />} tone="neutral" />
         <ResultCard title="Failed" value={countFailed} icon={<CircleAlert size={19} />} tone="warning" />
       </div>
-      {!!result.outcomes?.length && <div className="skad-import-outcomes"><h3>Created products</h3>{result.outcomes.map(item => <div key={`${item.row}-${item.slug}`}><span>Row {item.row}</span><strong>{item.slug}</strong><span className="skad-import-created-label"><CheckCircle2 size={14} /> Created</span></div>)}</div>}
+      {!!result.outcomes?.length && <div className="skad-import-outcomes"><h3>Processed products</h3>{result.outcomes.map(item => <div key={`${item.row}-${item.slug}`}><span>Row {item.row}</span><strong>{item.slug}</strong><span className="skad-import-created-label"><CheckCircle2 size={14} /> {item.status === "updated" ? "Updated" : "Created"}</span></div>)}</div>}
       {!!result.errors?.length && <button type="button" className="skad-import-secondary" onClick={() => downloadErrorReport(result.errors!)}>Download CSV Error Report <ArrowDownToLine size={15} /></button>}
       {!countFailed && <p className="skad-import-success-note"><CheckCircle2 size={16} /> Products were added to your catalog. Review them in Products before publishing.</p>}
       <button type="button" className="skad-import-start-over" onClick={() => { setFile(null); setZip(null); setResult(null); setFileErrors({}); if (csvInput.current) csvInput.current.value = ""; if (zipInput.current) zipInput.current.value = ""; }}>Start another import <ArrowRight size={15} /></button>

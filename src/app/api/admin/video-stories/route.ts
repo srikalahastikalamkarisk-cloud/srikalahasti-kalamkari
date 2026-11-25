@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { getCurrentAdmin } from "@/lib/admin-auth";
 import { validOrigin } from "@/lib/admin/origin";
 import { readBoundedBody } from "@/lib/payments/request-guard-stream";
+import { assertManagedMediaAvailable } from "@/lib/admin/global-media-references";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -135,11 +136,9 @@ export async function POST(req: NextRequest) {
       select: { sortOrder: true },
     });
 
-    const story = await prisma.videoStory.create({
-      data: {
-        ...data,
-        sortOrder: (last?.sortOrder ?? -1) + 1,
-      },
+    const story = await prisma.$transaction(async tx => {
+      await assertManagedMediaAvailable(tx, data);
+      return tx.videoStory.create({ data: { ...data, sortOrder: (last?.sortOrder ?? -1) + 1 } });
     });
 
     return NextResponse.json(

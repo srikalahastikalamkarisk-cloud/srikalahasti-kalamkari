@@ -12,7 +12,7 @@ export const categoryInput = z.object({
 export function validImage(image: string | null | undefined) {
   if (!image) return true;
 
-  if (/^\/uploads\/categories\/[a-zA-Z0-9_-]+\.(jpg|jpeg|png|webp)$/.test(image)) {
+  if (/^\/(?:uploads|api\/media)\/categories\/[a-zA-Z0-9_-]+\.(jpg|jpeg|png|webp)$/.test(image)) {
     return true;
   }
 

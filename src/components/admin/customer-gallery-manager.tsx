@@ -1,5 +1,9 @@
 "use client";
 
+import { prepareImageUpload } from "@/lib/admin/browser-image-optimizer";
+
+import "./customer-content-actions.css";
+
 import { useCallback, useEffect, useState } from "react";
 import Image from "next/image";
 import { Check, ImagePlus, Save, Trash2, X } from "lucide-react";
@@ -140,7 +144,7 @@ export default function CustomerGalleryManager() {
 
     try {
       const body = new FormData();
-      body.set("file", file);
+      body.set("file", await prepareImageUpload(file, "gallery"));
 
       const response = await fetch("/api/admin/media", {
         method: "POST",
@@ -274,7 +278,7 @@ export default function CustomerGalleryManager() {
               <input
                 hidden
                 type="file"
-                accept="image/jpeg,image/png,image/webp"
+                accept="image/jpeg,image/png,image/webp,image/bmp,image/x-ms-bmp,image/tiff,image/avif,.bmp,.tif,.tiff,.avif"
                 disabled={busy}
                 onChange={event => {
                   const file = event.target.files?.[0];
@@ -454,15 +458,21 @@ export default function CustomerGalleryManager() {
                 Order: {photo.sortOrder} · {photo.isApproved ? "Approved" : "Unapproved"}
               </p>
 
-              <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                <button type="button" disabled={busy} onClick={() => edit(photo)}>
-                  Edit
+              <div className="sk-content-actions">
+                <button type="button" disabled={busy} className="sk-content-btn is-edit" onClick={() => edit(photo)}>
+                  <svg width="15" height="15" viewBox="0 0 24 24"
+                  fill="none" stroke="currentColor" strokeWidth="1.8"
+                  strokeLinecap="round" strokeLinejoin="round"
+                  aria-hidden="true">
+                  <path d="m15 5 4 4M4 20l4-1 12-12-4-4L4 15z"/>
+                </svg>
+                Edit
                 </button>
-                <button type="button" disabled={busy} onClick={() => void toggleApproval(photo)}>
+                <button type="button" disabled={busy} className={`sk-content-btn ${photo.isApproved ? "is-warning" : "is-success"}`} onClick={() => void toggleApproval(photo)}>
                   <Check size={14} />
                   {photo.isApproved ? "Unapprove" : "Approve"}
                 </button>
-                <button type="button" disabled={busy} onClick={() => void remove(photo)}>
+                <button type="button" disabled={busy} className="sk-content-btn is-delete" onClick={() => void remove(photo)}>
                   <Trash2 size={14} /> Delete
                 </button>
               </div>

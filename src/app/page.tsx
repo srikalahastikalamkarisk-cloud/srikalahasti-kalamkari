@@ -17,7 +17,6 @@ import { getHomepageHeroSlides } from "@/lib/hero-slides";
 import { getHomepageVideoStories } from "@/lib/video-stories";
 import ShopByCategory from "@/components/shop-by-category";
 import { getStorefrontProducts } from "@/lib/storefront-products";
-import HomeSeoIntro from "@/components/home-seo-intro";
 import { HomeOrganizationJsonLd } from "@/components/seo-jsonld";
 
 export const dynamic = "force-dynamic";
@@ -35,8 +34,8 @@ export const metadata: Metadata = {
 };
 
 export default async function Home() {
-  const aboutKalamkari = await getHomepageAboutKalamkari();
-  const [products, heroSlides, videoStories, storeSettings, customerLove] = await Promise.all([
+  const [aboutKalamkari, products, heroSlides, videoStories, storeSettings, customerLove] = await Promise.all([
+    getHomepageAboutKalamkari(),
     getStorefrontProducts(),
     getHomepageHeroSlides(),
     getHomepageVideoStories(),
@@ -54,8 +53,7 @@ export default async function Home() {
       <main id="main-content">
         <HeroSlider slides={heroSlides} />
         <ShopByCategory />
-        <HomeSeoIntro />
-        <BestCollection variant="discover" products={products} />
+          <BestCollection variant="discover" products={products} />
         <BestCollection variant="best" products={products.filter(p => p.isFeatured)} />
         {false && <CollectionsAndFabrics />}
         <FeaturedProducts products={featuredProducts} />
@@ -63,8 +61,8 @@ export default async function Home() {
       <AboutKalamkari {...aboutKalamkari} />
         <StoriesInMotion stories={videoStories} />
         <CustomerLove photos={customerLove.photos} reviews={customerLove.reviews} />
-        
-        
+
+
       </main>
       <PremiumFooter />
       <HomeOrganizationJsonLd storeName={storeSettings?.storeName || "Srikalahasti Kalamkari"} logoUrl={storeSettings?.logoUrl || "/intro/heritage-logo.png"} email={storeSettings?.contactEmail} phone={storeSettings?.contactPhone} />

@@ -6,6 +6,7 @@ import { validOrigin } from "@/lib/admin/origin";
 import { recordInventoryMovement } from "@/lib/admin/inventory";
 import { synchronizeAvailability } from "@/lib/admin/inventory-policy";
 import { productInput } from "@/lib/admin/product-input";
+import { assertManagedMediaAvailable } from "@/lib/admin/global-media-references";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -134,6 +135,7 @@ export async function POST(req: NextRequest) {
     );
 
     const product = await prisma.$transaction(async tx => {
+      await assertManagedMediaAvailable(tx, [data.images, data.specifications]);
       const created = await tx.product.create({
       data: {
         name: data.name,

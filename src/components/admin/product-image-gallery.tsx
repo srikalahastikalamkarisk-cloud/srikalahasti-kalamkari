@@ -1,5 +1,7 @@
 "use client";
 
+import { prepareImageUpload, isSupportedImageFile } from "@/lib/admin/browser-image-optimizer";
+
 import { useRef, useState } from "react";
 import {
   ImagePlus, Star, Trash2, ArrowLeft, ArrowRight,
@@ -34,13 +36,13 @@ export default function ProductImageGallery({
     }
 
     for (const file of selected) {
-      if (!["image/jpeg", "image/png", "image/webp"].includes(file.type)) {
+      if (!isSupportedImageFile(file)) {
         setError("Only JPG, PNG and WebP images are allowed.");
         return;
       }
 
-      if (file.size === 0 || file.size > 5 * 1024 * 1024) {
-        setError("Each image must be 5 MB or smaller.");
+      if (file.size === 0) {
+        setError("The selected image is empty.");
         return;
       }
     }
@@ -53,7 +55,7 @@ export default function ProductImageGallery({
     try {
       for (const file of selected) {
         const body = new FormData();
-        body.append("file", file);
+        body.append("file", await prepareImageUpload(file, "product"));
 
         const response = await fetch("/api/admin/products/upload", {
           method: "POST",
@@ -125,7 +127,7 @@ export default function ProductImageGallery({
       <input
         ref={inputRef}
         type="file"
-        accept="image/jpeg,image/png,image/webp"
+        accept="image/jpeg,image/png,image/webp,image/bmp,image/x-ms-bmp,image/tiff,image/avif,.bmp,.tif,.tiff,.avif"
         multiple
         hidden
         disabled={uploading}
@@ -142,7 +144,7 @@ export default function ProductImageGallery({
           ? <LoaderCircle size={24} className="skpm-spin" />
           : <ImagePlus size={24} />}
         <strong>{uploading ? "Uploading images..." : "Upload Product Images"}</strong>
-        <span>JPG, PNG or WebP · Maximum 5 MB each</span>
+        <span>JPG, PNG, WebP, BMP, TIFF or AVIF · Automatic image optimization</span>
       </button>
 
       {error && <p className="skpm-error" role="alert">{error}</p>}

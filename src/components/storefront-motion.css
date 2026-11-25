@@ -1,0 +1,93 @@
+/* STEP 816C — Premium lightweight storefront motion */
+
+@keyframes skMotionReveal {
+  from {
+    opacity: .78;
+    translate: 0 12px;
+  }
+
+  to {
+    opacity: 1;
+    translate: 0 0;
+  }
+}
+
+.sk-motion-reveal {
+  animation: skMotionReveal
+    .48s cubic-bezier(.22,.61,.36,1);
+}
+
+@media(max-width:767px) {
+  .sk-motion-reveal {
+    animation-duration: .36s;
+  }
+}
+
+@media(prefers-reduced-motion:reduce) {
+  .sk-motion-reveal {
+    animation: none !important;
+  }
+}
+
+/* STEP 816E — Mobile rendering budget */
+
+@media(max-width:767px) {
+  .sk-store-theme .sk-cinematic-hero *,
+  .sk-store-theme .sim4-section * {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+
+  .sk-store-theme .sim4-card,
+  .sk-store-theme .sim4-card.is-active {
+    filter: none !important;
+    transform: none !important;
+  }
+
+  .sk-motion-reveal {
+    animation-duration: .42s;
+    animation-timing-function: cubic-bezier(.22,1,.36,1);
+  }
+}
+
+/* STEP 816G — Adaptive page motion */
+
+@keyframes skPremiumPageReveal {
+  from {
+    opacity: .86;
+    translate: 0 9px;
+  }
+  to {
+    opacity: 1;
+    translate: 0 0;
+  }
+}
+
+.sk-store-theme .sk-motion-reveal {
+  animation: skPremiumPageReveal
+    .48s cubic-bezier(.22,1,.36,1);
+}
+
+@media(max-width:767px) {
+  @keyframes skPremiumMobileReveal {
+    from {
+      opacity: .92;
+      translate: 0 5px;
+    }
+    to {
+      opacity: 1;
+      translate: 0 0;
+    }
+  }
+
+  .sk-store-theme .sk-motion-reveal {
+    animation: skPremiumMobileReveal
+      .32s cubic-bezier(.22,1,.36,1);
+  }
+}
+
+@media(prefers-reduced-motion:reduce) {
+  .sk-store-theme .sk-motion-reveal {
+    animation: none !important;
+  }
+}

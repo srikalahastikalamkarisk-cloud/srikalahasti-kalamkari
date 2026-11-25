@@ -1,5 +1,7 @@
 "use client";
 
+import "./customer-content-actions.css";
+
 import { useCallback, useEffect, useState } from "react";
 import { Check, Save, Star, Trash2, X } from "lucide-react";
 
@@ -389,21 +391,27 @@ export default function CustomerReviewsManager() {
               {review.isVerified ? "Verified" : "Not Verified"}
             </p>
 
-            <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-              <button type="button" style={actionStyle} disabled={busy} onClick={() => edit(review)}>
+            <div className="sk-content-actions">
+              <button type="button" disabled={busy} className="sk-content-btn is-edit" onClick={() => edit(review)}>
+                <svg width="15" height="15" viewBox="0 0 24 24"
+                  fill="none" stroke="currentColor" strokeWidth="1.8"
+                  strokeLinecap="round" strokeLinejoin="round"
+                  aria-hidden="true">
+                  <path d="m15 5 4 4M4 20l4-1 12-12-4-4L4 15z"/>
+                </svg>
                 Edit
               </button>
 
-              <button type="button" style={actionStyle} disabled={busy} onClick={() => void updateStatus(review, "isApproved")}>
+              <button type="button" disabled={busy} className={`sk-content-btn ${review.isApproved ? "is-warning" : "is-success"}`} onClick={() => void updateStatus(review, "isApproved")}>
                 <Check size={15} />
                 {review.isApproved ? "Unapprove" : "Approve"}
               </button>
 
-              <button type="button" style={actionStyle} disabled={busy} onClick={() => void updateStatus(review, "isVerified")}>
+              <button type="button" disabled={busy} className={`sk-content-btn ${review.isVerified ? "is-warning" : "is-success"}`} onClick={() => void updateStatus(review, "isVerified")}>
                 {review.isVerified ? "Unverify" : "Verify"}
               </button>
 
-              <button type="button" style={actionStyle} disabled={busy} onClick={() => void remove(review)}>
+              <button type="button" disabled={busy} className="sk-content-btn is-delete" onClick={() => void remove(review)}>
                 <Trash2 size={15} /> Delete
               </button>
             </div>

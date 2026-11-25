@@ -1,5 +1,7 @@
 "use client";
 
+import { prepareImageUpload, isSupportedImageFile } from "@/lib/admin/browser-image-optimizer";
+
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import WebsiteStatusControl from "@/components/admin/website-status-control";
@@ -189,12 +191,8 @@ export default function StoreSettingsPage() {
   }
 
   async function uploadLogo(file: File) {
-    if (!["image/png", "image/jpeg", "image/webp"].includes(file.type)) {
+    if (!isSupportedImageFile(file)) {
       setError("Choose a PNG, JPG or WebP logo.");
-      return;
-    }
-    if (file.size > 5 * 1024 * 1024) {
-      setError("Logo must be 5 MB or smaller.");
       return;
     }
 
@@ -204,7 +202,8 @@ export default function StoreSettingsPage() {
 
     try {
       const body = new FormData();
-      body.set("file", file);
+      body.set("file", await prepareImageUpload(file, "logo"));
+      body.set("purpose", "logo");
 
       const response = await fetch("/api/admin/media", {
         method: "POST",
@@ -431,7 +430,7 @@ export default function StoreSettingsPage() {
                             <input
                               id="sk-logo-file"
                               type="file"
-                              accept="image/png,image/jpeg,image/webp"
+                              accept="image/jpeg,image/png,image/webp,image/bmp,image/x-ms-bmp,image/tiff,image/avif,.bmp,.tif,.tiff,.avif"
                               disabled={uploadingLogo || saving}
                               onChange={event => {
                                 const file = event.target.files?.[0];

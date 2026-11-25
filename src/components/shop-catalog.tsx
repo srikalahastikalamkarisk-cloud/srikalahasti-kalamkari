@@ -171,11 +171,71 @@ export default function ShopCatalog({
           subcategories: subcategories.map(c => c.name),
         }
       : undefined;
+  const showCollections =
+    active.slug !== "all" &&
+    !invalidCategory &&
+    !subcategoryParam &&
+    !params.get("q") &&
+    menuChildren.length > 0;
+
   return <div className="skshop">
     <div className="skshop-intro"><div className="skshop-container"><div className="skshop-breadcrumb"><Link href="/">Home</Link><ChevronRight size={13}/><span>{active.slug === "all" ? "The Collection" : active.label}</span></div><div className="skshop-intro-row"><div><span className="skshop-eyebrow">✦ THE SRIKALAHASTI EDIT ✦</span><h1>{active.slug === "all" ? <>Discover <em>Timeless Artistry.</em></> : <>Shop <em>{active.label}</em></>}</h1><p>Hand-painted heritage. Thoughtfully made pieces to cherish for generations.</p></div><div className="skshop-intro-mark" aria-hidden="true">✳ <span>MADE BY HAND<br/>MADE TO BE TREASURED</span></div></div></div></div>
-    <div className="skshop-container"><div className="skshop-category-zone"><div className="skshop-tabs" aria-label="Shop categories">{tabs.map(t=><button key={t.slug} className={active.slug===t.slug?"active":""} onClick={()=>selectCategory(t.slug)} type="button" aria-pressed={active.slug===t.slug}><span aria-hidden="true">✦</span>{t.label}</button>)}</div><p className="skshop-catalog-note">Explore our handcrafted collection. Product availability is subject to confirmation.</p></div>
+    <div className="skshop-container"><div className="skshop-category-zone"><div className="skshop-tabs" aria-label="Shop categories">{tabs.map(t=><button key={t.slug} className={active.slug===t.slug?"active":""} onClick={()=>selectCategory(t.slug)} type="button" aria-pressed={active.slug===t.slug}><span aria-hidden="true">✦</span>{t.label}</button>)}</div></div>
       <div className="skshop-layout"><aside id="shop-filters-drawer" role={filtersOpen?"dialog":undefined} aria-modal={filtersOpen?true:undefined} aria-label="Product filters" className={`skshop-sidebar ${filtersOpen?"is-open":""}`}><div className="skshop-sidebar-head"><div><span className="skshop-eyebrow">A CURATED SELECTION</span><h2>Refine your<br/><em>search</em></h2></div><button ref={filterCloseRef} type="button" className="skshop-close" onClick={()=>setFiltersOpen(false)} aria-label="Close filters"><X size={19}/></button></div><div className="skshop-filter-group"><h3>Collection</h3>{tabs.map(t=><button type="button" key={t.slug} className={`skshop-filter-option ${active.slug===t.slug?"active":""}`} onClick={()=>selectCategory(t.slug)}><span className="skshop-radio"/>{t.label}</button>)}</div>{menu && <div className="skshop-filter-group"><h3>Subcategory</h3><Link className={`skshop-filter-option ${!subcategory?"active":""}`} href={`/${menu.slug}`}>All {menu.label}</Link>{menu.subcategories.map(name=><Link key={name} className={`skshop-filter-option ${subcategory===name?"active":""}`} href={`/${menu.slug}?subcategory=${encodeURIComponent(menuChildren.find(c => c.name === name)?.slug ?? name)}`}>{name}</Link>)}</div>}<div className="skshop-filter-group"><h3>Price range</h3>{priceBands.map((b,i)=><label key={b.label} className="skshop-filter-option"><input type="radio" name="price" checked={band===i} onChange={()=>{setBand(i);setPage(1)}}/>{b.label}</label>)}<small>Price filters exclude items without a listed price.</small></div><div className="skshop-filter-group"><h3>Pricing</h3><label className="skshop-filter-option"><input type="radio" name="pricing" checked={availability==="all"} onChange={()=>{setAvailability("all");setPage(1)}}/>All pieces</label><label className="skshop-filter-option"><input type="radio" name="pricing" checked={availability==="priced"} onChange={()=>{setAvailability("priced");setPage(1)}}/>With listed price</label></div><button type="button" className="skshop-clear" onClick={()=>{setBand(0);setAvailability("all");setSearch("");selectCategory("all")}}>Clear all filters ↗</button></aside>
-      <section className="skshop-results" aria-label="Products"><div className="skshop-toolbar"><div className="skshop-search"><Search size={17}/><input value={search} onChange={e=>{setSearch(e.target.value);setPage(1)}} placeholder="Search handcrafted pieces" aria-label="Search products"/></div><div className="skshop-toolbar-right"><span className="skshop-count">{items.length} pieces to explore</span><div className="skshop-view"><button type="button" aria-label="Grid view" aria-pressed={view==="grid"} className={view==="grid"?"active":""} onClick={()=>setView("grid")}><LayoutGrid size={17}/></button><button type="button" aria-label="List view" aria-pressed={view==="list"} className={view==="list"?"active":""} onClick={()=>setView("list")}><List size={17}/></button></div><select value={sort} onChange={e=>{setSort(e.target.value);setPage(1)}} aria-label="Sort products"><option value="featured">Featured first</option><option value="name">Name A–Z</option><option value="price-asc">Price: Low to high</option><option value="price-desc">Price: High to low</option></select><button ref={filterTriggerRef} aria-expanded={filtersOpen} aria-controls="shop-filters-drawer" className="skshop-mobile-filter" type="button" onClick={()=>setFiltersOpen(true)}><SlidersHorizontal size={16}/> Filters</button></div></div>
+{showCollections ? (
+        <section className="skshop-collection-browser"
+          aria-label={`${active.label} collections`}>
+
+
+          <div className="skshop-collection-grid">
+            {menuChildren.map(child => (
+              <Link
+                key={child.id}
+                href={`/${encodeURIComponent(active.slug)}?subcategory=${encodeURIComponent(child.slug)}`}
+                className="skshop-collection-card"
+              >
+                <div className="skshop-collection-image">
+                  {child.image && !failedImages.includes(`category-${child.id}`) ? (
+                    <img
+                      src={child.image}
+                      alt={child.name}
+                      loading="lazy"
+                      onError={() => setFailedImages(current =>
+                        [...current, `category-${child.id}`]
+                      )}
+                    />
+                  ) : (
+                    <div className="skshop-collection-placeholder">
+                      <ShoppingBag size={36} strokeWidth={1.1}/>
+                      <span>SRIKALAHASTI KALAMKARI</span>
+                    </div>
+                  )}
+                </div>
+                <div className="skshop-collection-info">
+                  <h3>{child.name}</h3>
+                  <span className="skshop-collection-cta">
+                    Explore Collection
+                    <ChevronRight size={16}/>
+                  </span>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </section>
+      ) : (
+
+      <section className="skshop-results" aria-label="Products"><div className="skshop-toolbar"><div className="skshop-search"><Search size={17}/><input value={search} onChange={e=>{setSearch(e.target.value);setPage(1)}} placeholder="Search products..." aria-label="Search products"/>
+        {search && (
+          <button
+            type="button"
+            className="skshop-search-clear"
+            aria-label="Clear search"
+            onClick={() => {setSearch("");setPage(1)}}
+          >
+            <X size={16}/>
+          </button>
+        )}
+        </div><div className="skshop-toolbar-right"><span className="skshop-count">{items.length} pieces to explore</span><div className="skshop-view"><button type="button" aria-label="Grid view" aria-pressed={view==="grid"} className={view==="grid"?"active":""} onClick={()=>setView("grid")}><LayoutGrid size={17}/></button><button type="button" aria-label="List view" aria-pressed={view==="list"} className={view==="list"?"active":""} onClick={()=>setView("list")}><List size={17}/></button></div><select value={sort} onChange={e=>{setSort(e.target.value);setPage(1)}} aria-label="Sort products"><option value="featured">Featured first</option><option value="name">Name A–Z</option><option value="price-asc">Price: Low to high</option><option value="price-desc">Price: High to low</option></select><button ref={filterTriggerRef} aria-expanded={filtersOpen} aria-controls="shop-filters-drawer" className="skshop-mobile-filter" type="button" onClick={()=>setFiltersOpen(true)}><SlidersHorizontal size={16}/> Filters</button></div></div>
       {menu && subcategory && <div className="skshop-selected-collection"><Link href={`/${menu.slug}`} scroll={false}>← All {menu.label} collections</Link><h2>{subcategory}</h2></div>}
       {items.length ? <><div className={`skshop-grid ${view==="list"?"is-list":""}`}>{visible.map(p=><article className="skshop-product skshop-ref-card" key={p.id}>
   <div className="skshop-photo">
@@ -229,7 +289,7 @@ export default function ShopCatalog({
       <button type="button" disabled={!hasPurchasableInventory(p)} onClick={()=>{if(p.variants.length>0||p.pricingMode!=="FIXED"){router.push(`/product/${p.id}`);return;}buyNow(p.id);router.push("/checkout?buyNow=1");}} className="skshop-ref-buy"><Zap size={16}/> {productAvailabilityLabel(p) !== "In Stock" ? productAvailabilityLabel(p) : p.variants.length>0||p.pricingMode!=="FIXED" ? "Choose Length" : "Buy Now"}</button>
     </div>
 </article>)}</div><div className="skshop-pagination"><span>Showing {(Math.min(page,pages)-1)*perPage+1}–{Math.min(page,pages)*perPage>items.length?items.length:Math.min(page,pages)*perPage} of {items.length} pieces</span><div><button type="button" disabled={page<=1} onClick={()=>setPage(v=>Math.max(1,v-1))}>Previous</button>{Array.from({length:pages},(_,i)=><button type="button" key={i} className={Math.min(page,pages)===i+1?"active":""} onClick={()=>setPage(i+1)}>{i+1}</button>)}<button type="button" disabled={page>=pages} onClick={()=>setPage(v=>Math.min(pages,v+1))}>Next</button></div></div></>:<div className="skshop-empty" role="status" aria-live="polite"><Sparkles size={27}/><h3>No matching pieces yet</h3><p>Try another collection or clear the filters. More handcrafted pieces will be added as the catalog grows.</p><button type="button" onClick={()=>{setBand(0);setAvailability("all");setSearch("");selectCategory("all")}}>View all pieces</button></div>}
-      </section></div></div>
+      </section>)}</div></div>
       {cartMessage && <div className="skshop-cart-toast" role="status">{cartMessage} <Link href="/cart">View Cart</Link><button type="button" onClick={()=>setCartMessage("")} aria-label="Dismiss">×</button></div>}
       {quickView!==null && (()=>{const p=products.find(x=>x.id===quickView);return p?<div className="skshop-quick-overlay" onClick={()=>setQuickView(null)} role="presentation"><div className="skshop-quick-dialog" role="dialog" aria-modal="true" aria-label={`Quick view ${p.name}`} onClick={e=>e.stopPropagation()}><button type="button" className="skshop-quick-close" onClick={()=>setQuickView(null)} aria-label="Close zoom"><X/></button><img src={p.image} alt={p.name}/><div><h2>{p.name}</h2><p>{p.price > 0 ? currency(p.price) : "Price on request"}</p><p className="skshop-quick-availability">Availability: <strong>{productAvailabilityLabel(p)}</strong></p><button type="button" disabled={!hasPurchasableInventory(p)} onClick={()=>{setQuickView(null);if(p.variants.length>0||p.pricingMode!=="FIXED"){router.push(`/product/${p.id}`);return;}addToCart(p.id);setCartMessage(`${p.name} added to cart`);}}>{productAvailabilityLabel(p) !== "In Stock" ? productAvailabilityLabel(p) : p.variants.length>0||p.pricingMode!=="FIXED"?"Choose Length":"Add to Cart"}</button></div></div></div>:null;})()}
       {filtersOpen&&<button className="skshop-backdrop" type="button" onClick={()=>setFiltersOpen(false)} aria-label="Close filters"/>}

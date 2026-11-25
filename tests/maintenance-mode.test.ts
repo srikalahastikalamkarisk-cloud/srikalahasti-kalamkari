@@ -42,7 +42,7 @@ test("maintenance response has premium content, selected palette styling and ret
   assert.equal(response.headers.get("cache-control"), "no-store, no-cache, must-revalidate");
   assert.match(html, /We're Making Something Beautiful/);
   assert.match(html, /scheduled maintenance to bring you a better shopping experience/);
-  assert.match(html, /Website Developed by VenuTrinity/);
+  assert.match(html, /Designed & Developed by Venu Trinity/);
   assert.match(html, /href="https:\/\/venutrinity\.in\//);
   assert.match(html, /href="tel:\+919849743774"/);
   assert.match(html, /prefers-reduced-motion:reduce/);

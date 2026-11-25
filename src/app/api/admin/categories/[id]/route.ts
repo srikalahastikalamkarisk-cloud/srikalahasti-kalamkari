@@ -5,6 +5,7 @@ import { getCurrentAdmin } from "@/lib/admin-auth";
 import { validOrigin } from "@/lib/admin/origin";
 import { categoryInput, validImage } from "@/lib/admin/category-input";
 import { CatalogDeletionError, deleteCategoryTree } from "@/lib/admin/catalog-deletion";
+import { assertManagedMediaAvailable, queueReleasedMedia } from "@/lib/admin/global-media-references";
 
 export const runtime = "nodejs";
 
@@ -70,15 +71,21 @@ export async function PATCH(req: NextRequest, context: Context) {
   }
 
   try {
-    const category = await prisma.category.update({
-      where: { id },
-      data: {
-        name: data.name,
-        slug: data.slug,
-        image: data.image ?? null,
-        isActive: data.isActive,
-        parentId,
-      },
+    const category = await prisma.$transaction(async tx => {
+      const previous = await tx.category.findUniqueOrThrow({ where: { id }, select: { image: true } });
+      await assertManagedMediaAvailable(tx, data.image);
+      const updated = await tx.category.update({
+        where: { id },
+        data: {
+          name: data.name,
+          slug: data.slug,
+          image: data.image ?? null,
+          isActive: data.isActive,
+          parentId,
+        },
+      });
+      await queueReleasedMedia(tx, previous, updated);
+      return updated;
     });
 
     return NextResponse.json({ category });

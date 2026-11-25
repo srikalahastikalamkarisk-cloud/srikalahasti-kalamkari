@@ -146,6 +146,24 @@ model MediaDeletionJob {
   @@index([status, createdAt])
 }
 
+model MediaCleanupJob {
+  id            String   @id @default(cuid()) @db.VarChar(191)
+  storageKey    String   @unique @db.VarChar(255)
+  area          String   @db.VarChar(32)
+  status        String   @default("PENDING") @db.VarChar(24)
+  attempts      Int      @default(0)
+  nextAttemptAt DateTime @default(now())
+  leaseUntil    DateTime?
+  lockedBy      String?  @db.VarChar(64)
+  lastError     String?  @db.Text
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  completedAt   DateTime?
+
+  @@index([status, nextAttemptAt, createdAt])
+  @@index([status, leaseUntil])
+}
+
 model ProductVariant {
   id        String  @id @default(cuid())
   productId String
@@ -458,6 +476,7 @@ model CouponReservation {
 
 
 model StoreSettings {
+  mediaEpoch        Int      @default(0)
   themeId           String   @default("royal-navy-gold-01") @db.VarChar(100)
   maintenanceMode   Boolean  @default(false)
   id                String   @id @default("primary")

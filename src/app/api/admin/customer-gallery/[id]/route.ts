@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { getCurrentAdmin } from "@/lib/admin-auth";
 import { validOrigin } from "@/lib/admin/origin";
 import { readBoundedBody } from "@/lib/payments/request-guard-stream";
+import { assertManagedMediaAvailable, queueReleasedMedia } from "@/lib/admin/global-media-references";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -76,9 +77,13 @@ export async function PATCH(req: NextRequest, context: Context) {
       );
     }
 
-    const photo = await prisma.customerGallery.update({
-      where: { id },
-      data: parsed.data,
+    const photo = await prisma.$transaction(async tx => {
+      await assertManagedMediaAvailable(tx, "imageUrl" in parsed.data ? parsed.data.imageUrl : undefined);
+      const old = await tx.customerGallery.findUnique({ where: { id } });
+      if (!old) throw new Error("GALLERY_NOT_FOUND");
+      const updated = await tx.customerGallery.update({ where: { id }, data: parsed.data });
+      await queueReleasedMedia(tx, old, updated);
+      return updated;
     });
 
     revalidatePath("/");
@@ -145,24 +150,25 @@ export async function DELETE(req: NextRequest, context: Context) {
   const { id } = await context.params;
 
   try {
-    const existing = await prisma.customerGallery.findUnique({
-      where: { id },
+    const existed = await prisma.$transaction(async tx => {
+      const existing = await tx.customerGallery.findUnique({ where: { id } });
+      if (!existing) return false;
+      await tx.customerGallery.delete({ where: { id } });
+      await queueReleasedMedia(tx, existing, null);
+      return true;
     });
-
-    if (!existing) {
+    if (!existed) {
       return NextResponse.json(
         { error: "Gallery photo not found" },
         { status: 404 }
       );
     }
 
-    await prisma.customerGallery.delete({ where: { id } });
-
     revalidatePath("/");
 
     return NextResponse.json({
       success: true,
-      message: "Removed from customer gallery. Media file retained.",
+      message: "Removed from customer gallery. Unreferenced media was queued for safe cleanup.",
     });
   } catch {
     return NextResponse.json(

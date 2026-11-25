@@ -154,3 +154,68 @@
 .sim4-section .sim4-frame > .sim4-sound {
   z-index: 4;
 }
+
+
+/* STEP 812B — Premium responsive video sound control */
+
+html .sk-store-theme button.sk-story-sound-control,
+html button.sk-story-sound-control {
+  position: absolute !important;
+  top: 12px !important;
+  left: 12px !important;
+  right: auto !important;
+  bottom: auto !important;
+  width: 44px !important;
+  height: 44px !important;
+  min-width: 44px !important;
+  min-height: 44px !important;
+  max-width: 44px !important;
+  max-height: 44px !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  box-sizing: border-box;
+  border-radius: 50% !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  flex-shrink: 0;
+  aspect-ratio: 1;
+  line-height: 1 !important;
+  background: var(--sk-theme-hover, #10243e) !important;
+  color: var(--sk-theme-onDark, #ffffff) !important;
+  border: 1px solid var(
+    --sk-theme-color-accentOnDark, #c6a36a
+  ) !important;
+  box-shadow: 0 3px 12px rgba(0,0,0,.18);
+  cursor: pointer;
+  touch-action: manipulation;
+  z-index: 8;
+  transform: none !important;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html button.sk-story-sound-control svg {
+  display: block !important;
+  width: 20px !important;
+  height: 20px !important;
+  min-width: 20px !important;
+  min-height: 20px !important;
+  flex-shrink: 0;
+  color: var(--sk-theme-onDark, #ffffff) !important;
+  stroke: currentColor !important;
+  fill: none !important;
+  pointer-events: none;
+}
+
+html button.sk-story-sound-control:focus-visible {
+  outline: 2px solid var(--sk-theme-color-accentOnDark, #c6a36a);
+  outline-offset: 3px;
+}
+
+@media(max-width:768px) {
+  html .sk-store-theme button.sk-story-sound-control,
+  html button.sk-story-sound-control {
+    top: 10px !important;
+    left: 10px !important;
+  }
+}

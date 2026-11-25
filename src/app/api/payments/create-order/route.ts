@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { paymentRequestGuard } from "@/lib/payments/request-guard";
 
 import { prisma } from "@/lib/prisma";
+import { assertManagedMediaAvailable } from "@/lib/admin/global-media-references";
 import { checkoutRequestSchema } from "@/lib/checkout/order-validation";
 import {
   calculateCoupon,
@@ -154,7 +155,9 @@ export async function POST(request: NextRequest) {
 
     } else {
       try {
-        order = await prisma.order.create({
+        order = await prisma.$transaction(async tx => {
+          await assertManagedMediaAvailable(tx, verified.items.map(item => item.productImage));
+          return tx.order.create({
           data: {
             orderNumber: orderNumber(),
             checkoutKey: body.checkoutKey,
@@ -200,6 +203,7 @@ export async function POST(request: NextRequest) {
               take: 1,
             },
           },
+          });
         });
       } catch (error) {
         // A concurrent request may have claimed this checkout key.

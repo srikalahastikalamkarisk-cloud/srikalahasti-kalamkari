@@ -2009,3 +2009,55 @@
     border-radius: 10px;
   }
 }
+
+
+/* STEP 802D PRODUCT IMAGE HOVER ZOOM */
+
+.skpd .skpd-photo {
+  aspect-ratio: 4 / 5;
+  padding: 0;
+  border: 0;
+  overflow: hidden;
+}
+
+.skpd .skpd-image-open {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  overflow: hidden;
+}
+
+.skpd .skpd-image-open > img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  transform: scale(1);
+  transform-origin:
+    var(--skpd-zoom-x, 50%)
+    var(--skpd-zoom-y, 50%);
+  transition: transform 220ms ease;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .skpd .skpd-image-open[data-hover-zoom="true"]:hover > img {
+    transform: scale(2);
+  }
+}
+
+.skpd .skpd-zoom-hint {
+  z-index: 2;
+}
+
+.skpd .skpd-heart {
+  z-index: 3;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skpd .skpd-image-open > img {
+    transition: none;
+  }
+}

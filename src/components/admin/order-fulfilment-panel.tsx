@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useTransition, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { Truck } from "lucide-react";
 
@@ -37,9 +37,11 @@ function formatDate(value: string | null) {
 export default function OrderFulfilmentPanel(props: Props) {
   const router = useRouter();
 
-  const [status, setStatus] = useState<Status | "">(
-    nextStatus[props.orderStatus] ?? ""
-  );
+  const status = nextStatus[props.orderStatus] ?? "";
+  const [refreshing, startTransition] = useTransition();
+  const requestLock = useRef(false);
+  const [submittedFrom, setSubmittedFrom] = useState<string | null>(null);
+  const awaitingUpdate = submittedFrom === props.orderStatus;
 
   const [courierName, setCourierName] = useState(
     props.courierName ?? ""
@@ -70,14 +72,17 @@ export default function OrderFulfilmentPanel(props: Props) {
     Boolean(next) &&
     status === next &&
     !saving &&
+    !refreshing &&
+    !awaitingUpdate &&
     !cancelling &&
     (status !== "SHIPPED" ||
       (courierName.trim().length > 0 &&
         trackingNumber.trim().length > 0));
 
   async function save() {
-    if (!canSubmit) return;
+    if (!canSubmit || requestLock.current) return;
 
+    requestLock.current = true;
     setSaving(true);
     setMessage("");
     setError("");
@@ -111,8 +116,11 @@ export default function OrderFulfilmentPanel(props: Props) {
         );
       }
 
+      setSubmittedFrom(props.orderStatus);
       setMessage("Order status updated successfully.");
-      router.refresh();
+      startTransition(() => {
+        router.refresh();
+      });
     } catch (err) {
       setError(
         err instanceof Error
@@ -120,6 +128,7 @@ export default function OrderFulfilmentPanel(props: Props) {
           : "Unable to update order"
       );
     } finally {
+      requestLock.current = false;
       setSaving(false);
     }
   }
@@ -186,10 +195,7 @@ export default function OrderFulfilmentPanel(props: Props) {
               <span>Next Order Status</span>
               <select
                 value={status}
-                onChange={event =>
-                  setStatus(event.target.value as Status)
-                }
-                disabled={!ready || saving}
+                disabled
               >
                 <option value={next}>{next}</option>
               </select>
@@ -245,8 +251,22 @@ export default function OrderFulfilmentPanel(props: Props) {
               disabled={!canSubmit}
               onClick={save}
             >
-              {saving ? "Saving..." : `Mark as ${next}`}
+              {saving
+                ? "Saving..."
+                : refreshing || awaitingUpdate
+                  ? "Updating order..."
+                  : `Mark as ${next}`}
             </button>
+
+            {awaitingUpdate && !refreshing && !saving && (
+              <button
+                type="button"
+                className="skorder-fulfilment-save"
+                onClick={() => startTransition(() => router.refresh())}
+              >
+                Refresh order details
+              </button>
+            )}
           </>
         ) : (
           <p className="skorder-fulfilment-complete">

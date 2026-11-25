@@ -188,6 +188,35 @@ export default function HeroSlider({ slides: providedSlides }: { slides: HeroSli
   const slides = providedSlides.filter(slide => slide.enabled);
   const [activeState, setActiveState] = useState(0);
   const [paused, setPaused] = useState(false);
+  const heroRef = useRef<HTMLElement>(null);
+  const [heroVisible, setHeroVisible] = useState(true);
+
+  useEffect(() => {
+    const node = heroRef.current;
+    if (!node || !("IntersectionObserver" in window)) return;
+
+    let inView = true;
+
+    const update = () => {
+      setHeroVisible(
+        inView && document.visibilityState === "visible"
+      );
+    };
+
+    const observer = new IntersectionObserver(([entry]) => {
+      inView = entry.isIntersecting;
+      update();
+    }, { threshold: 0.01 });
+
+    observer.observe(node);
+    document.addEventListener("visibilitychange", update);
+    update();
+
+    return () => {
+      observer.disconnect();
+      document.removeEventListener("visibilitychange", update);
+    };
+  }, []);
   const [mutedPreference, setMutedPreference] = useState<{ slideId: string; muted: boolean } | null>(null);
   const [progress, setProgress] = useState<{ slideId: string; value: number } | null>(null);
   const touchStartX = useRef<number | null>(null);
@@ -210,20 +239,24 @@ export default function HeroSlider({ slides: providedSlides }: { slides: HeroSli
   }, [active, delay]);
 
   useEffect(() => {
-    if (!currentSlide || paused || slides.length < 2 || reducedMotion) return;
+    if (!currentSlide || paused || !heroVisible || slides.length < 2 || reducedMotion) return;
     const started = performance.now();
     const startingProgress = progressValue.current;
     let frame = 0;
+    let lastPaint = 0;
     const tick = (now: number) => {
       const next = Math.min(1, startingProgress + (now - started) / delay);
       progressValue.current = next;
-      setProgress({ slideId: currentSlide.id, value: next });
+      if (now - lastPaint >= 50 || next >= 1) {
+        lastPaint = now;
+        setProgress({ slideId: currentSlide.id, value: next });
+      }
       if (next >= 1) advance();
       else frame = window.requestAnimationFrame(tick);
     };
     frame = window.requestAnimationFrame(tick);
     return () => window.cancelAnimationFrame(frame);
-  }, [active, advance, currentSlide, delay, paused, reducedMotion, slides.length]);
+  }, [active, advance, currentSlide, delay, paused, heroVisible, reducedMotion, slides.length]);
 
   const onVideoEnded = useCallback(() => {
     if (progressValue.current >= 1) return;
@@ -239,6 +272,7 @@ export default function HeroSlider({ slides: providedSlides }: { slides: HeroSli
 
   return (
     <section
+      ref={heroRef}
       className="sk-cinematic-hero"
       aria-label="Featured Kalamkari collections"
       aria-roledescription="carousel"
@@ -265,7 +299,7 @@ export default function HeroSlider({ slides: providedSlides }: { slides: HeroSli
           aria-hidden={index !== active}
           inert={index !== active}
         >
-          <HeroMedia key={`${slide.id}-${slide.mediaType}-${slide.desktopImage}-${slide.mobileImage}-${slide.desktopVideo}-${slide.mobileVideo}-${slide.desktopSourceUrl}-${slide.mobileSourceUrl}`} slide={slide} active={index === active} muted={muted} onEnded={onVideoEnded} onToggleMuted={() => setMutedPreference({ slideId: slide.id, muted: !muted })} />
+          <HeroMedia key={`${slide.id}-${slide.mediaType}-${slide.desktopImage}-${slide.mobileImage}-${slide.desktopVideo}-${slide.mobileVideo}-${slide.desktopSourceUrl}-${slide.mobileSourceUrl}`} slide={slide} active={index === active && heroVisible} muted={muted} onEnded={onVideoEnded} onToggleMuted={() => setMutedPreference({ slideId: slide.id, muted: !muted })} />
           <div className="sk-cinematic-overlay" />
           <div className="sk-cinematic-content">
             {slide.eyebrow && <div className="sk-cinematic-eyebrow"><span className="sk-cinematic-rule" />{slide.eyebrow}</div>}

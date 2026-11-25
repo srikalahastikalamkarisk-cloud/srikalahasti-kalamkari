@@ -1,5 +1,7 @@
 "use client";
 
+import { prepareImageUpload, isSupportedImageFile } from "@/lib/admin/browser-image-optimizer";
+
 import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import { ArrowDown, ArrowUp, Check, LibraryBig, RotateCcw, Save, Trash2, Upload, X } from "lucide-react";
@@ -107,12 +109,8 @@ export default function AboutKalamkariEditor() {
 
   async function uploadImage(file?: File) {
     if (!file || !form) return;
-    if (!["image/jpeg", "image/png", "image/webp"].includes(file.type)) {
-      setError("Choose a JPG, PNG or WebP image.");
-      return;
-    }
-    if (file.size > 5 * 1024 * 1024) {
-      setError("Images must be 5 MB or smaller.");
+    if (!isSupportedImageFile(file)) {
+      setError("Choose a JPG, PNG, WebP, BMP, TIFF or AVIF image.");
       return;
     }
     setUploading(true);
@@ -120,7 +118,7 @@ export default function AboutKalamkariEditor() {
     setNotice("");
     try {
       const body = new FormData();
-      body.set("file", file);
+      body.set("file", await prepareImageUpload(file, "gallery"));
       const response = await fetch("/api/admin/media", { method: "POST", body });
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || "Image upload failed.");
@@ -206,7 +204,7 @@ export default function AboutKalamkariEditor() {
           <div className="about-editor__image-controls">
             <label className="about-editor__upload">
               <Upload size={17} />{uploading ? "Uploading…" : "Upload image"}
-              <input type="file" accept="image/jpeg,image/png,image/webp" disabled={uploading} onChange={event => { void uploadImage(event.target.files?.[0]); event.currentTarget.value = ""; }} />
+              <input type="file" accept="image/jpeg,image/png,image/webp,image/bmp,image/x-ms-bmp,image/tiff,image/avif,.bmp,.tif,.tiff,.avif" disabled={uploading} onChange={event => { void uploadImage(event.target.files?.[0]); event.currentTarget.value = ""; }} />
             </label>
             <button type="button" className="about-editor__secondary" onClick={() => void openLibrary()}><LibraryBig size={17} />Choose from Media Library</button>
             <button type="button" className="about-editor__text-button" onClick={() => update("imageUrl", null)}><RotateCcw size={15} />Restore original image</button>

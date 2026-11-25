@@ -5,6 +5,7 @@ import { getCurrentAdmin } from "@/lib/admin-auth";
 import { validOrigin } from "@/lib/admin/origin";
 import { readBoundedBody } from "@/lib/payments/request-guard-stream";
 import { validateSlideMedia } from "@/lib/hero-media";
+import { assertManagedMediaAvailable } from "@/lib/admin/global-media-references";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -128,11 +129,9 @@ export async function POST(req: NextRequest) {
       select: { sortOrder: true },
     });
 
-    const slide = await prisma.heroSlide.create({
-      data: {
-        ...data,
-        sortOrder: (last?.sortOrder ?? -1) + 1,
-      },
+    const slide = await prisma.$transaction(async tx => {
+      await assertManagedMediaAvailable(tx, data);
+      return tx.heroSlide.create({ data: { ...data, sortOrder: (last?.sortOrder ?? -1) + 1 } });
     });
 
     return NextResponse.json(

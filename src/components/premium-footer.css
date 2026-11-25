@@ -214,3 +214,96 @@
     font-size: 11px;
   }
 }
+
+
+/* STEP 809B — Dynamic collections and refined footer icons */
+
+.skf .skf-wa-icon {
+  display: block;
+  width: 21px;
+  height: 21px;
+  flex: 0 0 21px;
+}
+
+.skf .skf-btn-primary {
+  gap: 10px;
+}
+
+.skf .skf-whatsapp {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.skf .skf-whatsapp .skf-wa-icon {
+  color: #25d366;
+  width: 19px;
+  height: 19px;
+  flex-basis: 19px;
+}
+
+.skf .skf-store-list a {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.skf .skf-map-icon {
+  width: 15px;
+  height: 15px;
+  flex: none;
+}
+
+.skf .skf-links {
+  min-width: 0;
+}
+
+.skf .skf-links a {
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}
+
+.skf .skf-developer-credit {
+  gap: 10px;
+  padding: 20px 8px;
+}
+
+.skf .skf-developer-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--gold);
+}
+
+.skf .skf-code-icon {
+  width: 17px;
+  height: 17px;
+  flex: none;
+}
+
+.skf .skf-developer-brand {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid rgba(255,255,255,.2);
+  background: rgba(255,255,255,.06);
+  padding: 5px 12px;
+  border-radius: 30px;
+  transition: background .2s ease;
+}
+
+.skf .skf-developer-brand:hover {
+  background: rgba(255,255,255,.12);
+  text-decoration: none;
+}
+
+@media (max-width: 680px) {
+  .skf .skf-developer-credit {
+    gap: 7px;
+    padding: 16px 4px;
+  }
+
+  .skf .skf-developer-brand {
+    padding: 4px 10px;
+    font-size: 12px;
+  }
+}

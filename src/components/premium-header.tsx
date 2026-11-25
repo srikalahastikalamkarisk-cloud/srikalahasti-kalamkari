@@ -9,7 +9,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   Search, UserRound, Heart, ShoppingBag,
-  Menu, X, ChevronDown, ChevronRight, House, Grid2X2
+  Menu, X, ChevronDown, ChevronRight, House, Grid2X2, ShoppingCart
 } from "lucide-react";
 import "./premium-header.css";
 import { useShopState } from "@/lib/shop-state";
@@ -313,12 +313,70 @@ export default function PremiumHeader({
           </nav>
         )}
       </header>
-      <nav className="sk-bottom-dock" aria-label="Mobile quick navigation">
-        <Link href="/" className={`sk-dock-link ${pathname === "/" ? "is-active" : ""}`} aria-current={pathname === "/" ? "page" : undefined} onClick={() => setMobileOpen(false)}><House size={20}/><span>Home</span></Link>
-        <Link href="/shop" className="sk-dock-link" onClick={() => setMobileOpen(false)}><Search size={20}/><span>Search</span></Link>
-        <Link href="/shop" className={`sk-dock-link sk-dock-collections ${pathname === "/shop" || categories.some(c => pathname.startsWith(`/${c.slug}`)) ? "is-active" : ""}`} aria-current={pathname === "/shop" ? "page" : undefined} onClick={() => setMobileOpen(false)}><Grid2X2 size={20}/><span>Collections</span></Link>
-        <Link href="/cart" className={`sk-dock-link ${pathname.startsWith("/cart") ? "is-active" : ""}`} aria-current={pathname === "/cart" ? "page" : undefined} onClick={() => setMobileOpen(false)}><span className="sk-dock-icon-wrap"><ShoppingBag size={20}/>{cartCount > 0 && <span className="sk-dock-count">{cartCount > 99 ? "99+" : cartCount}</span>}</span><span>Cart</span></Link>
-        <Link href={isAuthenticated ? "/account" : "/login"} prefetch={false} className={`sk-dock-link ${["/login", "/register", "/forgot-password", "/account"].some(p => pathname.startsWith(p)) ? "is-active" : ""}`} aria-current={pathname === "/account" ? "page" : undefined} onClick={() => setMobileOpen(false)}><UserRound size={20}/><span>Profile</span></Link>
+      <nav className="sk-bottom-dock sk-luxury-dock"
+        aria-label="Mobile quick navigation">
+
+        <Link href="/"
+          className={`sk-dock-link ${pathname === "/" && !mobileOpen ? "is-active" : ""}`}
+          aria-current={pathname === "/" ? "page" : undefined}
+          onClick={() => setMobileOpen(false)}>
+          <span className="sk-dock-icon-wrap">
+            <House size={25} strokeWidth={1.65}/>
+          </span>
+          <span className="sk-dock-label">Home</span>
+        </Link>
+
+        <Link href="/shop"
+          className={`sk-dock-link ${pathname === "/shop" && !mobileOpen ? "is-active" : ""}`}
+          aria-current={pathname === "/shop" ? "page" : undefined}
+          onClick={() => setMobileOpen(false)}>
+          <span className="sk-dock-icon-wrap">
+            <ShoppingBag size={25} strokeWidth={1.65}/>
+          </span>
+          <span className="sk-dock-label">Shop</span>
+        </Link>
+
+        <button type="button"
+          className={`sk-dock-link sk-dock-collections ${mobileOpen || categories.some(c => pathname === `/${c.slug}`) ? "is-active" : ""}`}
+          aria-expanded={mobileOpen && mobileShopOpen}
+          onClick={() => {
+            const opening = !(mobileOpen && mobileShopOpen);
+            setMobileOpen(opening);
+            setMobileShopOpen(opening);
+            setMobileCategory(null);
+          }}>
+          <span className="sk-dock-icon-wrap">
+            <Grid2X2 size={25} strokeWidth={1.65}/>
+          </span>
+          <span className="sk-dock-label">Collections</span>
+        </button>
+
+        <Link href="/cart"
+          className={`sk-dock-link ${pathname.startsWith("/cart") && !mobileOpen ? "is-active" : ""}`}
+          aria-current={pathname === "/cart" ? "page" : undefined}
+          onClick={() => setMobileOpen(false)}>
+          <span className="sk-dock-icon-wrap">
+            <ShoppingCart size={25} strokeWidth={1.65}/>
+            {cartCount > 0 && (
+              <span className="sk-dock-count">
+                {cartCount > 99 ? "99+" : cartCount}
+              </span>
+            )}
+          </span>
+          <span className="sk-dock-label">Cart</span>
+        </Link>
+
+        <Link href={isAuthenticated ? "/account" : "/login"}
+          prefetch={false}
+          className={`sk-dock-link ${["/login", "/register", "/forgot-password", "/account"].some(p => pathname.startsWith(p)) && !mobileOpen ? "is-active" : ""}`}
+          aria-current={pathname === "/account" ? "page" : undefined}
+          onClick={() => setMobileOpen(false)}>
+          <span className="sk-dock-icon-wrap">
+            <UserRound size={25} strokeWidth={1.65}/>
+          </span>
+          <span className="sk-dock-label">Profile</span>
+        </Link>
+
       </nav>
     </>
   );

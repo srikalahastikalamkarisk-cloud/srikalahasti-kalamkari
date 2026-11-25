@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Suspense } from "react";
+import { Suspense, cache } from "react";
 import { notFound } from "next/navigation";
 import PremiumHeader from "@/components/storefront-header";
 import PremiumFooter from "@/components/premium-footer";
@@ -17,7 +17,7 @@ type Props = {
 
 const siteUrl = "https://srikalahastikalamkari.in";
 
-async function getCategory(slug: string) {
+const getCategory = cache(async (slug: string) => {
   const category = await prisma.category.findFirst({
     where: { slug, isActive: true },
     select: { id: true, parentId: true, name: true, slug: true },
@@ -50,7 +50,7 @@ async function getCategory(slug: string) {
     .sort((a, b) => a.name.localeCompare(b.name))
     .map(({ id, name, slug: childSlug, image }) => ({ id, name, slug: childSlug, image }));
   return { ...category, children: descendants };
-}
+});
 
 export async function generateMetadata({
   params,

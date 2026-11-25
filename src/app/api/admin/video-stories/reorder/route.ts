@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { getCurrentAdmin } from "@/lib/admin-auth";
 import { validOrigin } from "@/lib/admin/origin";
 import { readBoundedBody } from "@/lib/payments/request-guard-stream";
+import { lockMediaMutation } from "@/lib/admin/media-mutation-lock";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -59,6 +60,7 @@ export async function POST(req: NextRequest) {
 
   try {
     await prisma.$transaction(async tx => {
+      await lockMediaMutation(tx);
       const existing = await tx.videoStory.findMany({
         select: { id: true },
       });

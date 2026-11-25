@@ -1,3 +1,5 @@
+import { detectExtendedImage } from "./extended-image-format";
+import { optimizeImage } from "./image-optimizer";
 import { randomUUID } from "node:crypto";
 import { isValidRequestOrigin } from "@/lib/request-origin";
 import { writeFile } from "node:fs/promises";
@@ -40,14 +42,33 @@ export function createPersistentImageUploadHandler(options: {
     if (file.size === 0 || file.size > MAX_SIZE) return NextResponse.json({ error: "Image must be between 1 byte and 5 MB" }, { status: 413 });
 
     const bytes = new Uint8Array(await file.arrayBuffer());
-    const format = detectFormat(bytes);
-    if (!format || file.type !== format.mime) return NextResponse.json({ error: "Only valid JPG, PNG and WebP images are allowed" }, { status: 400 });
+    const format = detectFormat(bytes) ?? detectExtendedImage(bytes);
+    if (!format || file.type !== format.mime) return NextResponse.json({ error: "Only valid JPG, PNG, WebP, TIFF and AVIF images are allowed" }, { status: 400 });
 
     try {
       const root = await options.getStorageRoot();
-      const filename = `${createId()}.${format.ext}`;
-      await writeFile(path.join(root, options.area, filename), bytes, { flag: "wx", mode: 0o640 });
-      return NextResponse.json({ success: true, image: `/api/media/${options.area}/${filename}`, filename, size: file.size, format: format.ext }, { status: 201 });
+      const optimized = await optimizeImage(
+        bytes,
+        options.area === "products" ? "product" : "category"
+      );
+
+      const filename = `${createId()}.${optimized.extension}`;
+
+      await writeFile(
+        path.join(root, options.area, filename),
+        optimized.bytes,
+        { flag: "wx", mode: 0o640 }
+      );
+
+      return NextResponse.json({
+        success: true,
+        image: `/api/media/${options.area}/${filename}`,
+        filename,
+        size: optimized.optimizedSize,
+        originalSize: optimized.originalSize,
+        optimized: optimized.optimized,
+        format: optimized.extension
+      }, { status: 201 });
     } catch (error) {
       console.error(`${options.area} image upload failed`, error);
       return NextResponse.json({ error: "Unable to upload image" }, { status: 500 });

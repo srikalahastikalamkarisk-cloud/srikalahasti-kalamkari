@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { getCurrentAdmin } from "@/lib/admin-auth";
 import { readBoundedBody } from "@/lib/payments/request-guard-stream";
 import { revalidatePath } from "next/cache";
+import { assertManagedMediaAvailable, queueReleasedMedia } from "@/lib/admin/global-media-references";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -165,10 +166,12 @@ export async function PUT(request: NextRequest) {
   }
 
   try {
-    const settings = await prisma.storeSettings.upsert({
-      where: { id: "primary" },
-      create: { id: "primary", ...parsed.data },
-      update: parsed.data,
+    const settings = await prisma.$transaction(async tx => {
+      const old = await tx.storeSettings.findUnique({ where: { id: "primary" } });
+      await assertManagedMediaAvailable(tx, [parsed.data.logoUrl, parsed.data.faviconUrl]);
+      const updated = await tx.storeSettings.upsert({ where: { id: "primary" }, create: { id: "primary", ...parsed.data }, update: parsed.data });
+      await queueReleasedMedia(tx, old, updated);
+      return updated;
     });
 
     revalidatePath("/", "layout");

@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { getCurrentAdmin } from "@/lib/admin-auth";
 import { validOrigin } from "@/lib/admin/origin";
 import { readBoundedBody } from "@/lib/payments/request-guard-stream";
+import { assertManagedMediaAvailable, queueReleasedMedia } from "@/lib/admin/global-media-references";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -98,12 +99,9 @@ export async function PATCH(req: NextRequest, context: Context) {
   }
 
   try {
-    const existing = await prisma.videoStory.findUnique({ where: { id } });
-
-    if (!existing) {
-      return NextResponse.json({ error: "Story not found" }, { status: 404 });
-    }
-
+    const story = await prisma.$transaction(async tx => {
+    const existing = await tx.videoStory.findUnique({ where: { id } });
+    if (!existing) return null;
     const sourceType = data.sourceType ?? existing.sourceType;
     const videoUrl = data.videoUrl !== undefined ? data.videoUrl : existing.videoUrl;
     const videoFile = data.videoFile !== undefined ? data.videoFile : existing.videoFile;
@@ -112,19 +110,18 @@ export async function PATCH(req: NextRequest, context: Context) {
       (sourceType === "url" && !videoUrl) ||
       (sourceType === "upload" && !videoFile)
     ) {
-      return NextResponse.json(
-        { error: "A valid video source is required" },
-        { status: 400 }
-      );
+      throw new Error("STORY_SOURCE_REQUIRED");
     }
-
-    const story = await prisma.videoStory.update({
-      where: { id },
-      data,
+    await assertManagedMediaAvailable(tx, data);
+    const updated = await tx.videoStory.update({ where: { id }, data });
+    await queueReleasedMedia(tx, existing, updated);
+    return updated;
     });
+    if (!story) return NextResponse.json({ error: "Story not found" }, { status: 404 });
 
     return NextResponse.json({ success: true, story });
-  } catch {
+  } catch (error) {
+    if (error instanceof Error && error.message === "STORY_SOURCE_REQUIRED") return NextResponse.json({ error: "A valid video source is required" }, { status: 400 });
     return NextResponse.json(
       { error: "Unable to update video story" },
       { status: 500 }
@@ -148,13 +145,14 @@ export async function DELETE(req: NextRequest, context: Context) {
   }
 
   try {
-    const existing = await prisma.videoStory.findUnique({ where: { id } });
-
-    if (!existing) {
-      return NextResponse.json({ error: "Story not found" }, { status: 404 });
-    }
-
-    await prisma.videoStory.delete({ where: { id } });
+    const deleted = await prisma.$transaction(async tx => {
+      const existing = await tx.videoStory.findUnique({ where: { id } });
+      if (!existing) return false;
+      await tx.videoStory.delete({ where: { id } });
+      await queueReleasedMedia(tx, existing, null);
+      return true;
+    });
+    if (!deleted) return NextResponse.json({ error: "Story not found" }, { status: 404 });
 
     return NextResponse.json({ success: true });
   } catch {

@@ -4,13 +4,15 @@ import { prisma } from "@/lib/prisma";
 import { getCurrentAdmin } from "@/lib/admin-auth";
 import { validOrigin } from "@/lib/admin/origin";
 import { productInput } from "@/lib/admin/product-input";
-import { recordInventoryMovement } from "@/lib/admin/inventory";
+import { recordInventoryMovement, setProductInventory } from "@/lib/admin/inventory";
 import { synchronizeAvailability } from "@/lib/admin/inventory-policy";
 import { parseCsvRows } from "@/lib/admin/csv-import";
 import { downloadProductImage, fetchProductImage, isStoredProductImage, readStoredProductImage, saveProductImage, validatePhotoNumbers, validateProductImageCount } from "@/lib/admin/secure-image-import";
 import { extractPhotoZip, MAX_ZIP_BYTES } from "@/lib/admin/photo-zip";
 import { registerProductImages } from "@/lib/admin/register-media";
+import { assertManagedMediaAvailable, queueReleasedMedia } from "@/lib/admin/global-media-references";
 import { normalizeProductImportHeader } from "@/lib/admin/product-import-columns";
+import { importSlugBase as slugBase, normalizeImportLabel, nonEmptyImportColumns, resolveImportMatch, uniqueImportSlug } from "@/lib/admin/product-import-rules";
 import { z } from "zod";
 
 export const runtime = "nodejs";
@@ -51,6 +53,27 @@ function jsonCell<T>(value: string, label: string, fallback: T): T {
   catch { throw new Error(`${label} must contain valid JSON`); }
 }
 
+async function uniqueCategorySlug(tx: Prisma.TransactionClient, name: string) {
+  const existing = await tx.category.findMany({ where: { slug: { startsWith: slugBase(name) } }, select: { slug: true } });
+  return uniqueImportSlug(name, existing.map(item => item.slug));
+}
+
+async function ensureImportCategory(tx: Prisma.TransactionClient, categoryName: string, subcategoryName: string) {
+  const findCategory = async (name: string, parentId: string | null) => {
+    const candidates = await tx.category.findMany({ where: { parentId }, select: { id: true, name: true, slug: true, isActive: true } });
+    const found = candidates.filter(item => item.id === name || item.slug === name || normalizeImportLabel(item.name) === normalizeImportLabel(name));
+    if (found.length > 1) throw new Error(`Ambiguous category name: ${name}; use its ID or slug`);
+    if (found[0] && !found[0].isActive) throw new Error(`Category is inactive: ${name}; activate it before importing`);
+    return found[0] ?? null;
+  };
+  let parent = await findCategory(categoryName, null);
+  if (!parent) parent = await tx.category.create({ data: { name: categoryName.trim(), slug: await uniqueCategorySlug(tx, categoryName), isActive: true } });
+  if (!subcategoryName) return parent.id;
+  let child = await findCategory(subcategoryName, parent.id);
+  if (!child) child = await tx.category.create({ data: { name: subcategoryName.trim(), slug: await uniqueCategorySlug(tx, `${categoryName}-${subcategoryName}`), parentId: parent.id, isActive: true } });
+  return child.id;
+}
+
 export async function POST(req: NextRequest) {
   if (!await getCurrentAdmin()) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   if (!validOrigin(req)) return NextResponse.json({ error: "Invalid origin" }, { status: 403 });
@@ -78,30 +101,68 @@ export async function POST(req: NextRequest) {
   if (rows.length - 1 > MAX_ROWS) return NextResponse.json({ error: `Import is limited to ${MAX_ROWS} products per batch` }, { status: 413 });
 
   const headers = rows[0].map(normalizeProductImportHeader);
-  const required = ["name", "slug", "category", "price", "stock"];
-  const missing = required.filter(key => !headers.includes(key));
-  if (missing.length) return NextResponse.json({ error: `Missing columns: ${missing.join(", ")}` }, { status: 400 });
+  // Update files may contain only Product ID/SKU plus the fields being changed.
+  // Row-level validation below still enforces the fields needed for new products.
+  if (!headers.some(key => ["productId", "sku", "slug", "name", "category", "price"].includes(key))) {
+    return NextResponse.json({ error: "Include Product ID, SKU, Slug, or product details to import" }, { status: 400 });
+  }
   const indexes = new Map(headers.map((key, index) => [key, index]));
   const errors: Array<{ row: number; error: string }> = [];
-  const input: Array<{ row: number; data: ReturnType<typeof productInput.parse>; categoryName: string; imageUrls: string[]; photoNumbers: string[]; variants: z.infer<typeof importedVariant>[] }> = [];
+  const input: Array<{ row: number; data: ReturnType<typeof productInput.parse>; categoryName: string; categoryPath: { category: string; subcategory: string }; imageUrls: string[]; photoNumbers: string[]; variants: z.infer<typeof importedVariant>[]; existingId: string | null; supplied: Set<string>; storefront: z.infer<typeof storefrontSettingsSchema>; existingImageCount: number }> = [];
+  const matchedRows = new Map<string, number>();
+  const categoriesCatalog = await prisma.category.findMany({ select: { id: true, name: true, slug: true, parentId: true, isActive: true } });
 
   for (const [offset, cells] of rows.slice(1).entries()) {
     const get = (key: string) => cells[indexes.get(key) ?? -1]?.trim() ?? "";
-    const mainCategory = await prisma.category.findFirst({
-      where: { isActive: true, OR: [{ id: get("category") }, { slug: get("category") }, { name: get("category") }] },
-      select: { id: true, name: true },
-    });
-    if (!mainCategory) { errors.push({ row: offset + 2, error: `Active category not found: ${get("category")}` }); continue; }
-    let category = mainCategory;
-    let categoryName = mainCategory.name;
-    if (get("subcategory")) {
-      const subcategory = await prisma.category.findFirst({
-        where: { isActive: true, parentId: mainCategory.id, OR: [{ id: get("subcategory") }, { slug: get("subcategory") }, { name: get("subcategory") }] },
-        select: { id: true, name: true },
-      });
-      if (!subcategory) { errors.push({ row: offset + 2, error: `Active subcategory not found under ${mainCategory.name}: ${get("subcategory")}` }); continue; }
-      category = subcategory;
-      categoryName = `${mainCategory.name} / ${subcategory.name}`;
+    const identifierCandidates = await Promise.all([
+      get("productId") ? prisma.product.findUnique({ where: { id: get("productId") } }) : null,
+      get("sku") ? prisma.product.findUnique({ where: { sku: get("sku") } }) : null,
+      (get("slug") || get("name")) ? prisma.product.findUnique({ where: { slug: get("slug") || slugBase(get("name")) } }) : null,
+    ]);
+    const match = resolveImportMatch(identifierCandidates);
+    if (match.conflict) { errors.push({ row: offset + 2, error: "Product ID, SKU, and slug identify different products" }); continue; }
+    const existingProduct = match.product;
+    if (existingProduct && matchedRows.has(existingProduct.id)) { errors.push({ row: offset + 2, error: `Duplicate CSV row; product is already identified on row ${matchedRows.get(existingProduct.id)}` }); continue; }
+    if (existingProduct) matchedRows.set(existingProduct.id, offset + 2);
+    if (get("productId") && !existingProduct) { errors.push({ row: offset + 2, error: `Product ID was not found: ${get("productId")}` }); continue; }
+    if (get("productId") && existingProduct && existingProduct.id !== get("productId")) { errors.push({ row: offset + 2, error: "Product ID conflicts with the supplied SKU or slug" }); continue; }
+    if (!existingProduct && !get("name")) { errors.push({ row: offset + 2, error: "Name is required for a new product" }); continue; }
+    const supplied = nonEmptyImportColumns(headers, cells);
+    const old = (key: string) => existingProduct ? String((existingProduct as Record<string, unknown>)[key] ?? "") : "";
+    const effective = (key: string, oldKey = key) => get(key) || (existingProduct ? old(oldKey) : "");
+    let categoryToken = get("category");
+    let subcategoryToken = get("subcategory");
+    if (existingProduct && !categoryToken) {
+      const currentCategory = await prisma.category.findUnique({ where: { id: existingProduct.categoryId }, include: { parent: true } });
+      if (currentCategory) {
+        categoryToken = currentCategory.parent?.name ?? currentCategory.name;
+        subcategoryToken = currentCategory.parent ? currentCategory.name : "";
+      }
+    }
+    // Category matching is normalized so exported IDs/slugs and human names
+    // consistently reuse existing records. Missing categories are staged here;
+    // they are only created during confirmation, inside the product transaction.
+    const normalize = normalizeImportLabel;
+    const allCategories = categoryToken ? categoriesCatalog : [];
+    const requestedCategoryName = categoryToken;
+    if (!requestedCategoryName) { errors.push({ row: offset + 2, error: "Category is required for a new product" }); continue; }
+    const mainMatches = allCategories.filter(value => value.id === requestedCategoryName || value.slug === requestedCategoryName || normalize(value.name) === normalize(requestedCategoryName));
+    if (mainMatches.length > 1) { errors.push({ row: offset + 2, error: `Ambiguous category: ${requestedCategoryName}; use its ID or slug` }); continue; }
+    const mainCategory = mainMatches[0];
+    if (mainCategory?.parentId) { errors.push({ row: offset + 2, error: `Category must identify a top-level category: ${requestedCategoryName}` }); continue; }
+    if (mainCategory && !mainCategory.isActive && get("category")) { errors.push({ row: offset + 2, error: `Category is inactive: ${requestedCategoryName}; activate it before importing` }); continue; }
+    let category = mainCategory ?? { id: `pending-category:${normalize(requestedCategoryName)}`, name: requestedCategoryName, slug: "", parentId: null, isActive: true };
+    let categoryName = category.name;
+    if (subcategoryToken) {
+      const subcategoryName = subcategoryToken;
+      const subMatches = allCategories.filter(value => value.parentId === category.id && (value.id === subcategoryName || value.slug === subcategoryName || normalize(value.name) === normalize(subcategoryName)));
+      if (subMatches.length > 1) { errors.push({ row: offset + 2, error: `Ambiguous subcategory: ${subcategoryName}; use its ID or slug` }); continue; }
+      const subcategory = subMatches[0];
+      if (subcategory && !subcategory.isActive && get("subcategory")) { errors.push({ row: offset + 2, error: `Subcategory is inactive: ${subcategoryName}; activate it before importing` }); continue; }
+      const resolvedParent = category;
+      const resolvedSubcategory = subcategory ?? { id: `pending-subcategory:${normalize(subcategoryName)}`, name: subcategoryName, slug: "", parentId: resolvedParent.id, isActive: true };
+      category = resolvedSubcategory;
+      categoryName = `${resolvedParent.name} / ${resolvedSubcategory.name}`;
     }
     const imageUrlsCell = get("imageUrls");
     const rawImages = (imageUrlsCell
@@ -121,10 +182,10 @@ export async function POST(req: NextRequest) {
         const parsedUrl = new URL(imageUrl);
         if (parsedUrl.protocol !== "https:" || parsedUrl.username || parsedUrl.password) throw new Error("Image URLs must be public HTTPS URLs or valid stored product image paths");
       }
-      colors = jsonCell(get("colorsJson"), "Colors JSON", undefined);
-      sizes = jsonCell(get("sizesJson"), "Sizes JSON", undefined);
-      meterOptions = jsonCell(get("meterOptionsJson"), "Fixed length options JSON", undefined);
-      specifications = jsonCell(get("specificationsJson"), "Specifications JSON", undefined);
+      colors = jsonCell(get("colorsJson"), "Colors JSON", existingProduct?.colors ?? undefined);
+      sizes = jsonCell(get("sizesJson"), "Sizes JSON", existingProduct?.sizes ?? undefined);
+      meterOptions = jsonCell(get("meterOptionsJson"), "Fixed length options JSON", existingProduct?.meterOptions ?? undefined);
+      specifications = jsonCell(get("specificationsJson"), "Specifications JSON", existingProduct?.specifications ?? undefined);
       const parsedStorefront = storefrontSettingsSchema.safeParse(jsonCell<unknown>(get("storefrontSettingsJson"), "Storefront Settings JSON", {}));
       if (!parsedStorefront.success) throw new Error(`Storefront Settings JSON: ${parsedStorefront.error.issues.map(issue => issue.message).join("; ")}`);
       storefront = parsedStorefront.data;
@@ -146,36 +207,41 @@ export async function POST(req: NextRequest) {
       });
       if (new Set(variantCombinations).size !== variantCombinations.length) throw new Error("Variants JSON contains duplicate attribute combinations");
     } catch (error) { errors.push({ row: offset + 2, error: error instanceof Error ? error.message : "Invalid image fields" }); continue; }
+    const requestedName = effective("name");
     const parsed = productInput.safeParse({
-      name: get("name"), slug: get("slug"), categoryId: category.id,
-      price: Number(get("price")), originalPrice: get("compareAtPrice") ? Number(get("compareAtPrice")) : null,
-      stock: Number(get("stock")), sku: get("sku") || null,
-      description: get("description") || null, shortDescription: get("shortDescription") || null,
-      brand: get("brand") || null, fabricMaterial: get("fabricMaterial") || null,
-      length: get("length") || null, width: get("width") || null, washCare: get("washCare") || null,
-      availabilityStatus: get("availabilityStatus") || "IN_STOCK",
-      pricingMode: get("pricingMode") || "FIXED",
-      pricePerMeter: get("pricePerMeter") ? Number(get("pricePerMeter")) : null,
+      name: requestedName, slug: effective("slug") || slugBase(requestedName), categoryId: category.id,
+      // The schema requires a decimal price. The temporary positive value is
+      // only for shared validation; we persist zero and inactive for drafts.
+      price: Number(effective("price") || "1"), originalPrice: get("compareAtPrice") ? Number(get("compareAtPrice")) : existingProduct?.originalPrice == null ? null : Number(existingProduct.originalPrice),
+      stock: Number(effective("stock") || "0"), sku: effective("sku") || null,
+      description: effective("description") || null, shortDescription: effective("shortDescription") || null,
+      brand: effective("brand") || null, fabricMaterial: effective("fabricMaterial") || null,
+      length: effective("length") || null, width: effective("width") || null, washCare: effective("washCare") || null,
+      availabilityStatus: effective("availabilityStatus") || "IN_STOCK",
+      pricingMode: effective("pricingMode") || (existingProduct?.pricingMode ?? "FIXED"),
+      pricePerMeter: effective("pricePerMeter") ? Number(effective("pricePerMeter")) : (existingProduct?.pricePerMeter == null ? null : Number(existingProduct.pricePerMeter)),
       colors, sizes, meterOptions, specifications,
-      isActive: parseBool("active", true), isFeatured: parseBool("featured"), isNewArrival: parseBool("newArrival"),
-      showColors: parseBool("showColors", Boolean(storefront.showColors)), showSizes: parseBool("showSizes", Boolean(storefront.showSizes)), showMeters: parseBool("showMeters", Boolean(storefront.showMeters)),
+      isActive: existingProduct ? (get("active") ? parseBool("active") : existingProduct.isActive) : get("price") ? parseBool("active", true) : false, isFeatured: get("featured") ? parseBool("featured") : Boolean(existingProduct?.isFeatured), isNewArrival: get("newArrival") ? parseBool("newArrival") : Boolean(existingProduct?.isNewArrival),
+      showColors: parseBool("showColors", Boolean(storefront.showColors) || Boolean(colors)), showSizes: parseBool("showSizes", Boolean(storefront.showSizes) || Boolean(sizes)), showMeters: parseBool("showMeters", Boolean(storefront.showMeters) || Boolean(meterOptions)),
       showSpecifications: parseBool("showSpecifications", Boolean(storefront.showSpecifications)), showFabricMaterial: parseBool("showFabricMaterial", Boolean(storefront.showFabricMaterial)),
-      showLength: parseBool("showLength", Boolean(storefront.showLength)), showWidth: parseBool("showWidth", Boolean(storefront.showWidth)), showWashCare: parseBool("showWashCare", Boolean(storefront.showWashCare)),
+      showLength: parseBool("showLength", typeof storefront.showLength === "boolean" ? storefront.showLength : Boolean(get("length"))), showWidth: parseBool("showWidth", typeof storefront.showWidth === "boolean" ? storefront.showWidth : Boolean(get("width"))), showWashCare: parseBool("showWashCare", typeof storefront.showWashCare === "boolean" ? storefront.showWashCare : Boolean(get("washCare"))),
       allowCOD: parseBool("allowCOD", Boolean(storefront.allowCOD)), freeShipping: parseBool("freeShipping", Boolean(storefront.freeShipping)), allowEnquiry: parseBool("allowEnquiry", typeof storefront.allowEnquiry === "boolean" ? storefront.allowEnquiry : true),
       seoTitle: get("seoTitle") || null, seoDescription: get("seoDescription") || null,
     });
     if (!parsed.success) { errors.push({ row: offset + 2, error: parsed.error.issues.map(issue => `${issue.path.join(".")}: ${issue.message}`).join("; ") }); continue; }
-    if (parsed.data.pricingMode === "LENGTH_OPTIONS" && variants.some(variant => variant.lengthMeters == null)) {
+    if (!get("price") && !existingProduct) { parsed.data.price = 0; parsed.data.isActive = false; }
+    if (parsed.data.pricingMode === "LENGTH_OPTIONS" && (get("pricingMode") || get("variantsJson") || !existingProduct) && variants.some(variant => variant.lengthMeters == null)) {
       errors.push({ row: offset + 2, error: "Every LENGTH_OPTIONS variant requires lengthMeters in Variants JSON" }); continue;
     }
-    input.push({ row: offset + 2, data: parsed.data, categoryName, imageUrls: rawImages, photoNumbers, variants });
+    const repeated = input.find(item => item.data.slug === parsed.data.slug || (parsed.data.sku && item.data.sku?.toLocaleLowerCase() === parsed.data.sku.toLocaleLowerCase()));
+    if (repeated) { errors.push({ row: offset + 2, error: `Duplicate CSV product identifier; it already appears on row ${repeated.row}` }); continue; }
+    input.push({ row: offset + 2, data: parsed.data, categoryName, categoryPath: { category: requestedCategoryName, subcategory: subcategoryToken }, imageUrls: rawImages, photoNumbers, variants, existingId: existingProduct?.id ?? null, supplied, storefront, existingImageCount: Array.isArray(existingProduct?.images) ? existingProduct.images.length : 0 });
   }
   if (errors.length) return NextResponse.json({ error: "Import validation failed; no products were created", errors }, { status: 422 });
 
   let zipPhotos = new Map<string, ReturnType<typeof extractPhotoZip> extends Map<string, infer T> ? T : never>();
   const requestedPhotoNumbers = input.flatMap(item => item.photoNumbers);
-  if (new Set(requestedPhotoNumbers).size !== requestedPhotoNumbers.length) return NextResponse.json({ error: "ZIP photo numbers must not be assigned to multiple products", errors: input.filter(item => item.photoNumbers.length).map(item => ({ row: item.row, error: "Photo number is repeated across products; each ZIP image must map to one product" })) }, { status: 422 });
-  if (requestedPhotoNumbers.length && !zip) return NextResponse.json({ error: "CSV has Photo Numbers but no ZIP was uploaded", errors: input.filter(item => item.photoNumbers.length).map(item => ({ row: item.row, error: "Upload a ZIP containing the listed photo numbers" })) }, { status: 422 });
+  if (zip && new Set(requestedPhotoNumbers).size !== requestedPhotoNumbers.length) return NextResponse.json({ error: "ZIP photo numbers must not be assigned to multiple products", errors: input.filter(item => item.photoNumbers.length).map(item => ({ row: item.row, error: "Photo number is repeated across products; each ZIP image must map to one product" })) }, { status: 422 });
   if (zip && requestedPhotoNumbers.length) {
     try { zipPhotos = extractPhotoZip(new Uint8Array(await zip.arrayBuffer()), requestedPhotoNumbers); }
     catch (error) {
@@ -190,12 +256,13 @@ export async function POST(req: NextRequest) {
   }
   if (mode === "preview") {
     const photoPreview: Array<{
-      row: number; name: string; sku: string | null; category: string; pricingMode: string;
+      row: number; name: string; sku: string | null; category: string; pricingMode: string; action: "Create" | "Update"; imageStatus: string;
       price: number; stock: number; photoNumbers: string[]; imageCount: number;
+      warnings: string[];
       validationStatus: "Ready"; images: Array<{ number: string; filename: string; mime: string; preview: string; external?: boolean }>; urlCount: number;
     }> = [];
     for (const item of input) {
-      const images: Array<{ number: string; filename: string; mime: string; preview: string; external?: boolean }> = item.photoNumbers.map(number => {
+      const images: Array<{ number: string; filename: string; mime: string; preview: string; external?: boolean }> = item.photoNumbers.filter(number => zipPhotos.has(number)).map(number => {
         const image = zipPhotos.get(number)!;
         return { number, filename: image.filename, mime: image.mime, preview: `data:${image.mime};base64,${image.bytes.toString("base64")}` };
       });
@@ -214,18 +281,31 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: "Image preview failed; no products were created", errors: [{ row: item.row, error: error instanceof Error ? error.message : "Image URL download failed" }] }, { status: 422 });
       }
       photoPreview.push({
-        row: item.row, name: item.data.name, sku: item.data.sku ?? null,
+        row: item.row, name: item.data.name, sku: item.data.sku ?? null, action: item.existingId ? "Update" : "Create",
         category: item.categoryName, pricingMode: item.data.pricingMode,
-        price: item.data.price, stock: item.variants.length
+      price: item.data.price, stock: item.variants.length
           ? item.variants.filter(variant => variant.isActive).reduce((total, variant) => total + variant.stock, 0)
           : item.data.stock,
-        photoNumbers: item.photoNumbers, imageCount: images.length,
+        photoNumbers: item.photoNumbers, imageCount: images.length || item.existingImageCount,
+        imageStatus: images.length ? `${images.length} replacement image${images.length === 1 ? "" : "s"} mapped` : item.existingId && item.existingImageCount ? `${item.existingImageCount} existing image${item.existingImageCount === 1 ? "" : "s"} preserved` : "No images",
+        warnings: item.photoNumbers.length && !zip ? ["Photo numbers listed; no ZIP was supplied, so these images will be skipped."] : [],
         validationStatus: "Ready", images, urlCount: item.imageUrls.length,
       });
     }
     const previewBytes = photoPreview.reduce((sum, product) => sum + product.images.reduce((sub, image) => sub + image.preview.length, 0), 0);
     if (previewBytes > 8 * 1024 * 1024) return NextResponse.json({ error: "Preview images exceed 8 MB; reduce ZIP images before preview" }, { status: 413 });
-    return NextResponse.json({ success: true, preview: photoPreview });
+    const categoriesForPreview = await prisma.category.findMany({ select: { id: true, name: true, slug: true, parentId: true } });
+    const newCategoryKeys = new Set<string>();
+    const newSubcategoryKeys = new Set<string>();
+    for (const item of input) {
+      const parent = categoriesForPreview.find(value => !value.parentId && (value.slug === item.categoryPath.category || normalizeImportLabel(value.name) === normalizeImportLabel(item.categoryPath.category)));
+      if (!parent) newCategoryKeys.add(normalizeImportLabel(item.categoryPath.category));
+      if (item.categoryPath.subcategory) {
+        const child = parent && categoriesForPreview.find(value => value.parentId === parent.id && (value.slug === item.categoryPath.subcategory || normalizeImportLabel(value.name) === normalizeImportLabel(item.categoryPath.subcategory)));
+        if (!child) newSubcategoryKeys.add(`${normalizeImportLabel(item.categoryPath.category)}:${normalizeImportLabel(item.categoryPath.subcategory)}`);
+      }
+    }
+    return NextResponse.json({ success: true, totalRows: rows.length - 1, newProducts: input.filter(item => !item.existingId).length, updates: input.filter(item => item.existingId).length, newCategories: newCategoryKeys.size, newSubcategories: newSubcategoryKeys.size, preview: photoPreview });
   }
 
   // Download every image before writing any products. A download failure is reported by CSV row and the import can be retried.
@@ -233,7 +313,7 @@ export async function POST(req: NextRequest) {
   for (const item of input) {
     try {
       const paths: string[] = [];
-      for (const number of item.photoNumbers) {
+      for (const number of item.photoNumbers.filter(value => zipPhotos.has(value))) {
         const image = zipPhotos.get(number)!;
         const extension = image.filename.toLowerCase().endsWith(".jpeg") ? "jpg" : image.filename.split(".").pop()!.toLowerCase() as "jpg" | "png" | "webp";
         paths.push(await saveProductImage(image.bytes, extension));
@@ -250,16 +330,69 @@ export async function POST(req: NextRequest) {
   if (errors.length) return NextResponse.json({ error: "Image preparation failed; no products were created", errors }, { status: 422 });
 
   const outcomes: Array<{ row: number; slug: string; status: string }> = [];
+  let updated = 0;
   for (let start = 0; start < input.length; start += 25) {
     for (const item of input.slice(start, start + 25)) {
       const data = item.data;
       try {
-        const existing = await prisma.product.findFirst({ where: { OR: [{ slug: data.slug }, ...(data.sku ? [{ sku: data.sku }] : [])] }, select: { id: true } });
-        if (existing) { errors.push({ row: item.row, error: "Product slug or SKU already exists; create-only import skipped" }); continue; }
+        if (item.existingId) {
+          const categoryWasSupplied = item.supplied.has("category") || item.supplied.has("subcategory");
+          await prisma.$transaction(async tx => {
+            const before = await tx.product.findUniqueOrThrow({ where: { id: item.existingId! }, select: { images: true, specifications: true } });
+            const replacementImages = downloaded.get(item.row) ?? [];
+            await assertManagedMediaAvailable(tx, [replacementImages, data.specifications]);
+            const patch: Record<string, unknown> = {};
+            const fields: Array<[string, keyof typeof data]> = [
+              ["name", "name"], ["slug", "slug"], ["description", "description"], ["shortDescription", "shortDescription"],
+              ["price", "price"], ["compareAtPrice", "originalPrice"], ["pricingMode", "pricingMode"], ["pricePerMeter", "pricePerMeter"],
+              ["sku", "sku"], ["brand", "brand"], ["fabricMaterial", "fabricMaterial"], ["length", "length"], ["width", "width"], ["washCare", "washCare"],
+              ["active", "isActive"], ["featured", "isFeatured"], ["newArrival", "isNewArrival"],
+              ["colorsJson", "colors"], ["sizesJson", "sizes"], ["meterOptionsJson", "meterOptions"], ["specificationsJson", "specifications"],
+              ["showColors", "showColors"], ["showSizes", "showSizes"], ["showMeters", "showMeters"], ["showSpecifications", "showSpecifications"],
+              ["showFabricMaterial", "showFabricMaterial"], ["showLength", "showLength"], ["showWidth", "showWidth"], ["showWashCare", "showWashCare"],
+              ["allowCOD", "allowCOD"], ["freeShipping", "freeShipping"], ["allowEnquiry", "allowEnquiry"], ["seoTitle", "seoTitle"], ["seoDescription", "seoDescription"],
+            ];
+            for (const [column, field] of fields) if (item.supplied.has(column)) patch[field] = data[field];
+            if (item.supplied.has("storefrontSettingsJson")) {
+              for (const field of ["showColors", "showSizes", "showMeters", "showSpecifications", "showFabricMaterial", "showLength", "showWidth", "showWashCare", "allowCOD", "freeShipping", "allowEnquiry"] as const) {
+                if (typeof item.storefront[field] === "boolean") patch[field] = item.storefront[field];
+              }
+            }
+            if (item.supplied.has("length") && !item.supplied.has("showLength") && !item.supplied.has("storefrontSettingsJson")) patch.showLength = true;
+            if (item.supplied.has("width") && !item.supplied.has("showWidth") && !item.supplied.has("storefrontSettingsJson")) patch.showWidth = true;
+            if (categoryWasSupplied) patch.categoryId = await ensureImportCategory(tx, item.categoryPath.category, item.categoryPath.subcategory);
+            if (item.supplied.has("imageUrls") || item.supplied.has("mainImage") || item.supplied.has("additionalImages") || item.supplied.has("photoNumbers")) {
+              const images = downloaded.get(item.row) ?? [];
+              if (images.length) patch.images = images as Prisma.InputJsonValue;
+            }
+            await tx.product.update({ where: { id: item.existingId! }, data: patch as Prisma.ProductUpdateInput });
+            if (item.supplied.has("stock")) {
+              if (await tx.productVariant.count({ where: { productId: item.existingId! } })) throw new Error("This product has variants; update stock through the validated variant inventory workflow");
+              await setProductInventory(tx, { productId: item.existingId!, stock: data.stock, availabilityStatus: item.supplied.has("availabilityStatus") ? data.availabilityStatus : undefined, note: "Stock adjustment from CSV import", performedBy: (await getCurrentAdmin())?.email });
+            } else if (item.supplied.has("availabilityStatus")) {
+              await tx.$queryRaw<Array<{ id: string }>>`SELECT id FROM Product WHERE id = ${item.existingId!} FOR UPDATE`;
+              const current = await tx.product.findUniqueOrThrow({ where: { id: item.existingId! }, select: { stock: true } });
+              await setProductInventory(tx, { productId: item.existingId!, stock: current.stock, availabilityStatus: data.availabilityStatus, note: "Availability status from CSV import", performedBy: (await getCurrentAdmin())?.email });
+            }
+            if (item.supplied.has("imageUrls") || item.supplied.has("mainImage") || item.supplied.has("additionalImages") || item.supplied.has("photoNumbers")) {
+              const images = downloaded.get(item.row) ?? [];
+              if (images.length) await registerProductImages(tx, item.existingId!, images, item.photoNumbers.filter(value => zipPhotos.has(value)));
+            }
+            const after = await tx.product.findUniqueOrThrow({ where: { id: item.existingId! }, select: { images: true, specifications: true } });
+            await queueReleasedMedia(tx, before, after);
+          });
+          outcomes.push({ row: item.row, slug: data.slug, status: "updated" });
+          updated++;
+          continue;
+        }
         const initialAvailabilityStatus = synchronizeAvailability(data.stock, "IN_STOCK", data.availabilityStatus);
         await prisma.$transaction(async tx => {
+          await assertManagedMediaAvailable(tx, [downloaded.get(item.row), data.specifications, item.variants.map(variant => variant.imageUrl)]);
+          const categoryId = await ensureImportCategory(tx, item.categoryPath.category, item.categoryPath.subcategory);
+          const productSlugs = (await tx.product.findMany({ where: { slug: { startsWith: slugBase(data.slug) } }, select: { slug: true } })).map(value => value.slug);
+          const slug = uniqueImportSlug(data.slug, productSlugs);
           const created = await tx.product.create({ data: {
-            name: data.name, slug: data.slug, categoryId: data.categoryId,
+            name: data.name, slug, categoryId,
             price: data.price, originalPrice: data.originalPrice, stock: data.stock,
             availabilityStatus: initialAvailabilityStatus, sku: data.sku, description: data.description,
             shortDescription: data.shortDescription, brand: data.brand,
@@ -281,7 +414,7 @@ export async function POST(req: NextRequest) {
               : Prisma.JsonNull,
           } });
           const productImages = downloaded.get(item.row) ?? [];
-          await registerProductImages(tx, created.id, productImages, item.photoNumbers);
+          await registerProductImages(tx, created.id, productImages, item.photoNumbers.filter(value => zipPhotos.has(value)));
           if (item.variants.length) {
             await tx.productVariant.createMany({ data: item.variants.map((variant, sortOrder) => ({
               productId: created.id, sku: variant.sku || null, colorName: variant.colorName || null,
@@ -308,10 +441,11 @@ export async function POST(req: NextRequest) {
         outcomes.push({ row: item.row, slug: data.slug, status: "created" });
       } catch (error) {
         const code = typeof error === "object" && error && "code" in error ? error.code : undefined;
-        errors.push({ row: item.row, error: code === "P2002" ? "Product slug or SKU already exists" : "Product could not be created" });
+        const safeMessage = error instanceof Error && error.message.startsWith("This product has variants;") ? error.message : null;
+        errors.push({ row: item.row, error: code === "P2002" ? "Product slug or SKU already exists" : safeMessage ?? "Product could not be saved" });
       }
     }
   }
-  const skipped = errors.filter(item => item.error.includes("already exists") || item.error.includes("create-only import skipped")).length;
-  return NextResponse.json({ success: errors.length === 0, created: outcomes.length, skipped, failed: errors.length - skipped, outcomes, errors }, { status: errors.length ? 207 : 201 });
+  const created = outcomes.length - updated;
+  return NextResponse.json({ success: errors.length === 0, created, updated, skipped: 0, failed: errors.length, outcomes, errors }, { status: errors.length ? 207 : 201 });
 }

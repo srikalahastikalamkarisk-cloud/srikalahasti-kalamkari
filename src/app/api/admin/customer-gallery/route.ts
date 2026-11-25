@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { getCurrentAdmin } from "@/lib/admin-auth";
 import { validOrigin } from "@/lib/admin/origin";
 import { readBoundedBody } from "@/lib/payments/request-guard-stream";
+import { assertManagedMediaAvailable } from "@/lib/admin/global-media-references";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -96,12 +97,10 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const last = await prisma.customerGallery.findFirst({
-      orderBy: { sortOrder: "desc" },
-      select: { sortOrder: true },
-    });
-
-    const photo = await prisma.customerGallery.create({
+    const photo = await prisma.$transaction(async tx => {
+    await assertManagedMediaAvailable(tx, data.imageUrl);
+    const last = await tx.customerGallery.findFirst({ orderBy: { sortOrder: "desc" }, select: { sortOrder: true } });
+    const photo = await tx.customerGallery.create({
       data: {
         imageUrl: data.imageUrl,
         caption: data.caption ?? null,
@@ -109,6 +108,8 @@ export async function POST(req: NextRequest) {
         isApproved: data.isApproved,
         sortOrder: data.sortOrder ?? (last?.sortOrder ?? -1) + 1,
       },
+    });
+    return photo;
     });
 
     return NextResponse.json(

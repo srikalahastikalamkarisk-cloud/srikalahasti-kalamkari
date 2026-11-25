@@ -1,7 +1,16 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { prepareImageUpload } from "@/lib/admin/browser-image-optimizer";
+
+import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
+import {
+  Upload, Search, FolderPlus, FolderOpen,
+  Pencil, Trash2, Download, RefreshCw,
+  CheckCircle2, Info, ImageIcon, FolderInput,
+  Unlink
+} from "lucide-react";
+import "./media-library.css";
 
 type Folder = { id: string; name: string; parentId: string | null; _count?: { assets: number; children: number } };
 type Asset = { id: string; filename: string; storageKey: string; sizeBytes: number; photoNumber: string | null; folderId: string | null; folder: { id: string; name: string } | null; references: Array<{ id: string; placement: string; product: { id: string; name: string; slug: string } | null }> };
@@ -9,6 +18,9 @@ type DeletePreview = { products: Array<{ id: string; name: string }>; otherLocat
 
 export default function MediaLibrary() {
   const [assets, setAssets] = useState<Asset[]>([]);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [folders, setFolders] = useState<Folder[]>([]);
   const [folderId, setFolderId] = useState("");
   const [query, setQuery] = useState("");
@@ -17,19 +29,91 @@ export default function MediaLibrary() {
   const [busy, setBusy] = useState(false);
   const [storageMessage, setStorageMessage] = useState("Checking persistent storage…");
 
-  async function load() {
-    const [mediaResponse, foldersResponse] = await Promise.all([
-      fetch(`/api/admin/media?q=${encodeURIComponent(query)}${folderId ? `&folderId=${encodeURIComponent(folderId)}` : ""}`),
-      fetch("/api/admin/media/folders"),
-    ]);
-    if (!mediaResponse.ok || !foldersResponse.ok) { setNotice("Unable to load media. Please refresh."); return; }
-    const media = await mediaResponse.json(); const folderData = await foldersResponse.json();
-    setAssets(media.assets); setFolders(folderData.folders);
-  }
+
+  const requestRef = useRef<AbortController | null>(null);
+  const latestFilter = useRef({ query, folderId, page });
+
   useEffect(() => {
-    const timer = window.setTimeout(() => { void load(); }, 0);
-    return () => window.clearTimeout(timer);
-  }, [query, folderId]); // eslint-disable-line react-hooks/exhaustive-deps
+    latestFilter.current = { query, folderId, page };
+  }, [query, folderId, page]);
+
+  async function load() {
+    requestRef.current?.abort();
+
+    const controller = new AbortController();
+    requestRef.current = controller;
+    setLoading(true);
+
+    const filters = latestFilter.current;
+
+    try {
+      const [mediaResponse, foldersResponse] = await Promise.all([
+        fetch(
+          `/api/admin/media?page=${filters.page}&q=${encodeURIComponent(filters.query)}${filters.folderId ? `&folderId=${encodeURIComponent(filters.folderId)}` : ""}`,
+          {
+            signal: controller.signal,
+            cache: "no-store"
+          }
+        ),
+        fetch("/api/admin/media/folders", {
+          signal: controller.signal,
+          cache: "no-store"
+        }),
+      ]);
+
+      if (controller.signal.aborted) return;
+
+      if (!mediaResponse.ok || !foldersResponse.ok) {
+        setNotice("Unable to load media. Please refresh.");
+        return;
+      }
+
+      const [media, folderData] = await Promise.all([
+        mediaResponse.json(),
+        foldersResponse.json()
+      ]);
+
+      if (controller.signal.aborted) return;
+
+      setAssets(media.assets);
+      setHasMore(Boolean(media.hasMore));
+
+      if (!media.assets.length && filters.page > 1) {
+        setPage(filters.page - 1);
+      }
+      setFolders(folderData.folders);
+
+      const visibleIds = new Set<string>(
+        (media.assets as Asset[]).map(asset => asset.id)
+      );
+
+      setSelected(previous =>
+        previous.filter(id => visibleIds.has(id))
+      );
+
+    } catch {
+      if (!controller.signal.aborted) {
+        setNotice("Unable to load media. Please retry.");
+      }
+    } finally {
+      if (!controller.signal.aborted) setLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    requestRef.current?.abort();
+
+    const timer = window.setTimeout(
+      () => { void load(); },
+      query.trim() ? 350 : 0
+    );
+
+    return () => {
+      window.clearTimeout(timer);
+      requestRef.current?.abort();
+    };
+  }, [query, folderId, page]);
+
   useEffect(() => {
     let active = true;
     fetch("/api/admin/media/storage-status").then(async response => {
@@ -42,11 +126,11 @@ export default function MediaLibrary() {
   async function upload(file: File) {
     setBusy(true); setNotice("");
     try {
-      const body = new FormData(); body.set("file", file); if (folderId) body.set("folderId", folderId);
+      const body = new FormData(); body.set("file", await prepareImageUpload(file, "general")); if (folderId) body.set("folderId", folderId);
       const response = await fetch("/api/admin/media", { method: "POST", body });
       const data = await response.json(); setNotice(response.ok ? "Image uploaded to Media Library." : data.error || "Upload failed");
       if (response.ok) await load();
-    } catch { setNotice("Upload failed. Check storage and retry."); }
+    } catch (error) { setNotice(error instanceof Error ? error.message : "Upload failed. Check storage and retry."); }
     finally { setBusy(false); }
   }
 
@@ -80,10 +164,18 @@ export default function MediaLibrary() {
       const preview = await action(asset, { action: "preview-delete" }) as DeletePreview;
       const refs = [...preview.products.map(item => `• Product: ${item.name}`), ...preview.otherLocations.map(item => `• ${item.type}: ${item.name}`)].join("\n") || "• No tracked references";
       const blockers = [...preview.unsupportedPlacements, ...preview.untrackedProductReferences.map(item => `untracked product: ${item.name}`)];
-      if (!preview.canDelete) { setNotice(`Global deletion blocked; untracked references: ${blockers.join(", ")}`); return; }
-      if (!window.confirm(`Delete permanently? This removes the image from:\n${refs}\nThe physical file will be deleted after database updates.`)) return;
+      if (!preview.canDelete) {
+        const references = [
+          ...preview.products.map(item => `product: ${item.name}`),
+          ...preview.otherLocations.map(item => `${item.type}: ${item.name}`),
+          ...blockers,
+        ];
+        setNotice(`Deletion blocked; media is still referenced or protected: ${references.join(", ") || "Media Library folder or active cleanup claim"}`);
+        return;
+      }
+      if (!window.confirm(`Queue this unreferenced file for deletion?\n${refs}\nThe background worker will remove it after a final reference check.`)) return;
       const response = await fetch(`/api/admin/media/${asset.id}`, { method: "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ confirm: true }) });
-      const result = await response.json(); setNotice(response.ok ? "Image deleted globally." : result.error || "Deletion incomplete"); await load();
+      const result = await response.json(); setNotice(response.ok ? "Unreferenced image queued for safe background cleanup." : result.error || "Deletion incomplete"); await load();
     } catch (error) { setNotice(error instanceof Error ? error.message : "Could not delete image"); }
   }
   async function move(asset: Asset, value: string) {
@@ -96,34 +188,76 @@ export default function MediaLibrary() {
     setSelected([]);
   }
 
-  return <section style={{ padding: 24 }}>
-    <div style={{ display: "flex", justifyContent: "space-between", gap: 12, flexWrap: "wrap", alignItems: "center" }}>
+  return <section className="skml-page">
+    <div className="skml-header">
       <div><h1>Media Library</h1><p>Manage uploaded images and their product references.</p></div>
-      <label style={{ cursor: "pointer", padding: "10px 16px", background: "#10213b", color: "white", borderRadius: 8 }}>{busy ? "Uploading…" : "Upload image"}<input type="file" accept="image/jpeg,image/png,image/webp" hidden disabled={busy} onChange={event => { const file = event.target.files?.[0]; if (file) void upload(file); event.currentTarget.value = ""; }} /></label>
+      <label className="skml-upload"><Upload size={18}/>{busy ? "Uploading…" : "Upload image"}<input type="file" accept="image/jpeg,image/png,image/webp,image/bmp,image/x-ms-bmp,image/tiff,image/avif,.bmp,.tif,.tiff,.avif" hidden disabled={busy} onChange={event => { const file = event.target.files?.[0]; if (file) void upload(file); event.currentTarget.value = ""; }} /></label>
     </div>
-    <div style={{ display: "flex", gap: 10, flexWrap: "wrap", margin: "18px 0" }}>
-      <input value={query} onChange={event => setQuery(event.target.value)} placeholder="Search filename or photo number" aria-label="Search media" />
-      <select value={folderId} onChange={event => setFolderId(event.target.value)}><option value="">All folders</option>{folders.map(folder => <option key={folder.id} value={folder.id}>{folder.name}</option>)}</select>
-      <button onClick={createFolder}>New folder / subfolder</button>
-      {folderId && <>{folders.find(folder => folder.id === folderId) && <button onClick={() => void renameFolder(folders.find(folder => folder.id === folderId)!)}>Rename folder</button>}<button onClick={() => { const folder = folders.find(item => item.id === folderId); if (folder) void deleteFolder(folder); }}>Delete folder</button></>}
-      <button disabled={!selected.length} onClick={() => void bulkDelete()}>Delete selected ({selected.length})</button>
-      <button onClick={async () => { const response = await fetch("/api/admin/media/deletion-jobs/retry", { method: "POST" }); const data = await response.json(); setNotice(response.ok ? `Deletion retries complete: ${data.removed} removed, ${data.remaining} remain.` : data.error); }}>Retry failed file deletions</button>
+    <div className="skml-toolbar">
+      <div className="skml-search"><Search size={18}/><input value={query} onChange={event => {
+          setPage(1);
+          setSelected([]);
+          setQuery(event.target.value);
+        }} placeholder="Search filename or photo number" aria-label="Search media" /></div>
+      <div className="skml-folder-filter"><FolderOpen size={17}/><select aria-label="Filter by folder" value={folderId} onChange={event => {
+          setPage(1);
+          setSelected([]);
+          setFolderId(event.target.value);
+        }}><option value="">All folders</option>{folders.map(folder => <option key={folder.id} value={folder.id}>{folder.name}</option>)}</select></div>
+      <button className="skml-btn" onClick={createFolder}><FolderPlus size={16}/>New folder / subfolder</button>
+      {folderId && <>{folders.find(folder => folder.id === folderId) && <button onClick={() => void renameFolder(folders.find(folder => folder.id === folderId)!)}><Pencil size={15}/>Rename folder</button>}<button onClick={() => { const folder = folders.find(item => item.id === folderId); if (folder) void deleteFolder(folder); }}><Trash2 size={15}/>Delete folder</button></>}
+      <button className="skml-danger" disabled={!selected.length} onClick={() => void bulkDelete()}><Trash2 size={16}/>Delete selected ({selected.length})</button>
+      <button onClick={async () => { const response = await fetch("/api/admin/media/deletion-jobs/retry", { method: "POST" }); const data = await response.json(); setNotice(response.ok ? `Deletion retries complete: ${data.removed} removed, ${data.remaining} remain.` : data.error); }}><RefreshCw size={15}/>Retry failed deletions</button>
+      <button onClick={async () => { const response = await fetch("/api/admin/media/storage-audit", { cache: "no-store" }); const data = await response.json(); setNotice(response.ok ? `Storage audit: ${data.totalManagedFiles} files, ${data.unreferencedCandidates} unreferenced candidates (${(data.recoverableBytes / 1048576).toFixed(1)} MB), ${data.missingFiles.length} missing references.` : data.error); }}><Info size={15}/>Audit storage</button>
     </div>
-    {notice && <p role="status">{notice}</p>}
-    <p role="status">{storageMessage}</p>
-    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(225px,1fr))", gap: 16 }}>
-      {assets.map(asset => <article key={asset.id} style={{ background: "white", border: "1px solid #e4e0d8", borderRadius: 12, padding: 12, minWidth: 0 }}>
-        <label><input type="checkbox" checked={selected.includes(asset.id)} onChange={event => setSelected(current => event.target.checked ? [...current, asset.id] : current.filter(id => id !== asset.id))} /> Select</label>
-        <a href={`/api/media/products/${asset.storageKey}`} target="_blank" rel="noreferrer"><Image src={`/api/media/products/${asset.storageKey}`} alt={asset.filename} width={320} height={220} unoptimized style={{ width: "100%", height: 180, objectFit: "contain", background: "#f7f5f0" }} /></a>
-        <strong style={{ display: "block", overflowWrap: "anywhere" }}>{asset.filename}</strong>
-        <small>{(asset.sizeBytes / 1024).toFixed(0)} KB{asset.photoNumber ? ` · Photo ${asset.photoNumber}` : ""}</small>
-        <p>{asset.references.length ? `Used by ${asset.references.filter(ref => ref.product).map(ref => ref.product!.name).join(", ")}` : "Unused"}</p>
-        <a href={`/api/media/products/${asset.storageKey}`} download={asset.filename}>Download</a>
-        <label style={{ display: "block", marginTop: 8 }}>Move to <select value={asset.folderId ?? ""} onChange={event => void move(asset, event.target.value)}><option value="">All / unfiled</option>{folders.map(folder => <option key={folder.id} value={folder.id}>{folder.name}</option>)}</select></label>
-        {asset.references.filter(ref => ref.product).map(ref => <button key={ref.id} onClick={() => void removeFromProduct(asset, ref.product!.id)}>Remove from {ref.product!.name}</button>)}
-        <button onClick={() => void deletePermanently(asset)}>Delete permanently</button>
+    {notice && <p className="skml-notice" role="status"><Info size={17}/>{notice}</p>}
+    <div className="skml-summary">
+      <span className="skml-storage" role="status">
+        {storageMessage.startsWith("Persistent storage ready:")
+          ? <><CheckCircle2 size={17}/> Media storage connected</>
+          : <><Info size={17}/>{storageMessage}</>}
+      </span>
+      <span className="skml-count">{loading ? "Loading media…" : `${assets.length} files · Page ${page}`}</span>
+    </div>
+    <div className="skml-grid">
+      {assets.map(asset => <article key={asset.id} className={`skml-card ${selected.includes(asset.id) ? "is-selected" : ""}`}>
+        <label className="skml-select"><input type="checkbox" checked={selected.includes(asset.id)} onChange={event => setSelected(current => event.target.checked ? [...current, asset.id] : current.filter(id => id !== asset.id))} /> Select</label>
+        <a href={`/api/media/products/${asset.storageKey}`} target="_blank" rel="noreferrer" className="skml-preview"><Image src={`/api/media/products/${asset.storageKey}`} alt={asset.filename} width={320} height={220} loading="lazy" decoding="async" unoptimized className="skml-image" /></a>
+        <strong className="skml-filename" title={asset.filename}>{asset.filename}</strong>
+        <small className="skml-size">{(asset.sizeBytes / 1024).toFixed(0)} KB{asset.photoNumber ? ` · Photo ${asset.photoNumber}` : ""}</small>
+        <p className={`skml-usage ${asset.references.length ? "is-used" : ""}`}>{asset.references.length ? `Used by ${asset.references.filter(ref => ref.product).map(ref => ref.product!.name).join(", ")}` : "Unused"}</p>
+        <a href={`/api/media/products/${asset.storageKey}`} download={asset.filename} className="skml-download"><Download size={16}/>Download</a>
+        <label className="skml-move"><span><FolderInput size={15}/>Move to folder</span><select value={asset.folderId ?? ""} onChange={event => void move(asset, event.target.value)}><option value="">All / unfiled</option>{folders.map(folder => <option key={folder.id} value={folder.id}>{folder.name}</option>)}</select></label>
+        {asset.references.filter(ref => ref.product).map(ref => <button className="skml-detach" key={ref.id} onClick={() => void removeFromProduct(asset, ref.product!.id)}><Unlink size={15}/>Remove from {ref.product!.name}</button>)}
+        <button className="skml-danger skml-delete" onClick={() => void deletePermanently(asset)}><Trash2 size={16}/>Delete permanently</button>
       </article>)}
     </div>
-    {!assets.length && <p>No media found. Upload an image or import products with images.</p>}
+    <div className="skml-toolbar" style={{ marginTop: 20, justifyContent: "center" }}>
+      <button
+        className="skml-btn"
+        disabled={loading || page <= 1}
+        onClick={() => {
+          setSelected([]);
+          setPage(current => Math.max(1, current - 1));
+        }}
+      >Previous</button>
+
+      <span>Page {page}</span>
+
+      <button
+        className="skml-btn"
+        disabled={loading || !hasMore}
+        onClick={() => {
+          setSelected([]);
+          setPage(current => current + 1);
+        }}
+      >Next</button>
+    </div>
+
+    {!loading && !assets.length && <div className="skml-empty">
+      <ImageIcon size={42} strokeWidth={1.3}/>
+      <h2>No media found</h2>
+      <p>Upload an image or import products with images.</p>
+    </div>}
   </section>;
 }

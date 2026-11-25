@@ -6,6 +6,7 @@ import { getCurrentAdmin } from "@/lib/admin-auth";
 import { validOrigin } from "@/lib/admin/origin";
 import { readBoundedBody } from "@/lib/payments/request-guard-stream";
 import { defaultAboutPageContent, validateAboutPageContent } from "@/lib/about-page-content";
+import { assertManagedMediaAvailable, queueReleasedMedia } from "@/lib/admin/global-media-references";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -40,7 +41,12 @@ export async function PUT(req: NextRequest) {
     }
   }
   try {
-    await prisma.aboutPageContent.upsert({ where: { id: "primary" }, create: { id: "primary", content: content as Prisma.InputJsonValue }, update: { content: content as Prisma.InputJsonValue } });
+    await prisma.$transaction(async tx => {
+      const old = await tx.aboutPageContent.findUnique({ where: { id: "primary" } });
+      await assertManagedMediaAvailable(tx, content);
+      const updated = await tx.aboutPageContent.upsert({ where: { id: "primary" }, create: { id: "primary", content: content as Prisma.InputJsonValue }, update: { content: content as Prisma.InputJsonValue } });
+      await queueReleasedMedia(tx, old?.content ?? null, updated.content);
+    });
     revalidatePath("/about");
     return NextResponse.json({ success: true });
   } catch (error) {

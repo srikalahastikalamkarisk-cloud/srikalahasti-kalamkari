@@ -121,7 +121,7 @@ export default function StoriesInMotion({ stories }: { stories: Story[] }) {
   }, [count]);
   useEffect(() => {
     const el = rail.current;
-    if (!el || count < 2 || !visible || reduced || paused || !motion || soundId) return;
+    if (!el || count < 2 || !visible || reduced || paused || !motion || soundId || isMobile || youtubeSound || hovered) return;
     last.current = 0;
     const tick = (time: number) => {
       if (last.current) {
@@ -141,7 +141,7 @@ export default function StoriesInMotion({ stories }: { stories: Story[] }) {
     };
     frame.current = window.requestAnimationFrame(tick);
     return () => window.cancelAnimationFrame(frame.current);
-  }, [count, visible, reduced, paused, motion, soundId]);
+  }, [count, visible, reduced, paused, motion, soundId, isMobile, youtubeSound, hovered]);
   useEffect(() => {
     const el = rail.current;
     if (!el) return;
@@ -158,7 +158,10 @@ export default function StoriesInMotion({ stories }: { stories: Story[] }) {
 
         video.muted = !isActive || soundId !== video.dataset.story;
 
-        if (visible && entry.isIntersecting && !reduced) {
+        if (
+          visible && entry.isIntersecting && !reduced &&
+          (!isMobile || isActive)
+        ) {
           void video.play().catch(() => {
             // Browser autoplay policies may prevent playback.
           });
@@ -182,7 +185,10 @@ export default function StoriesInMotion({ stories }: { stories: Story[] }) {
           bounds.right > viewport.left &&
           bounds.left < viewport.right;
 
-        if (visible && inView && !reduced) {
+        const isActive =
+          video.closest(".sim4-card")?.classList.contains("is-active");
+
+        if (visible && inView && !reduced && (!isMobile || isActive)) {
           if (video.paused) {
             video.muted = true;
             void video.play().catch(() => {
@@ -206,7 +212,10 @@ export default function StoriesInMotion({ stories }: { stories: Story[] }) {
         bounds.right > viewport.left &&
         bounds.left < viewport.right;
 
-      if (!visible || reduced || !inView || video.ended) return;
+      if (
+        !visible || reduced || !inView || video.ended ||
+        isMobile
+      ) return;
 
       window.setTimeout(() => {
         if (!video.isConnected || !video.paused) return;
@@ -236,7 +245,7 @@ export default function StoriesInMotion({ stories }: { stories: Story[] }) {
       });
       observer.disconnect();
     };
-  }, [active, activeCopy, soundId, visible, reduced, stories]);
+  }, [active, activeCopy, soundId, visible, reduced, stories, isMobile]);
 
   useEffect(() => {
     setSoundId(null);
@@ -272,10 +281,10 @@ export default function StoriesInMotion({ stories }: { stories: Story[] }) {
                     src={videoSource}
                     poster={story.poster}
                     playsInline
-                    autoPlay={visible && !reduced}
+                    autoPlay={visible && !reduced && (!isMobile || focused)}
                     loop
-                    muted={soundId !== story.id}
-                    preload={focused ? "auto" : "metadata"}
+                    muted={!focused || soundId !== story.id}
+                    preload={visible && focused ? "metadata" : "none"}
                     onLoadedData={event => {
                       setAvailable(previous =>
                         previous[story.id] ? previous : {
@@ -338,9 +347,9 @@ export default function StoriesInMotion({ stories }: { stories: Story[] }) {
                 )}
                 
                 
-                {source && <button type="button" className="sim4-sound" onClick={() => {
+                {source && <button type="button" className="sim4-sound sk-story-sound-control" onClick={() => {
                   const el = rail.current;
-                  const target = el?.querySelectorAll<HTMLVideoElement>("video[data-story]")[i];
+                  const target = el?.querySelectorAll(".sim4-card")[i]?.querySelector<HTMLVideoElement>("video[data-story]");
                   if (!target) return;
                   const enable = target.muted;
                   el?.querySelectorAll<HTMLVideoElement>("video[data-story]").forEach(video => {
@@ -348,7 +357,25 @@ export default function StoriesInMotion({ stories }: { stories: Story[] }) {
                   });
                   target.muted = !enable;
                   setSoundId(enable ? story.id : null);
-                }} aria-label="Toggle video sound">{soundId === story.id && focused ? "♪" : "♫̸"}</button>}
+                }} aria-label="Toggle video sound"
+        aria-pressed={soundId === story.id && focused}>{soundId === story.id && focused ? (
+      <svg viewBox="0 0 24 24" width="20" height="20"
+        fill="none" stroke="currentColor" strokeWidth="1.8"
+        strokeLinecap="round" strokeLinejoin="round"
+        aria-hidden="true" focusable="false">
+        <path d="M11 5 6 9H3v6h3l5 4V5Z" />
+        <path d="M15 9a4 4 0 0 1 0 6" />
+        <path d="M18 6a8 8 0 0 1 0 12" />
+      </svg>
+    ) : (
+      <svg viewBox="0 0 24 24" width="20" height="20"
+        fill="none" stroke="currentColor" strokeWidth="1.8"
+        strokeLinecap="round" strokeLinejoin="round"
+        aria-hidden="true" focusable="false">
+        <path d="M11 5 6 9H3v6h3l5 4V5Z" />
+        <path d="m16 9 6 6m0-6-6 6" />
+      </svg>
+    )}</button>}
                 {focused && externalUrl && !source && (
                   <a
                     className="sim4-external"

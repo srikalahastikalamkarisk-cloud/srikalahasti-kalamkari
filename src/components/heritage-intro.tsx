@@ -8,41 +8,52 @@ type HeritageIntroProps = {
   storeName?: string | null;
 };
 
-const SESSION_KEY = "srikalahasti-heritage-intro-v3";
+
 
 export default function HeritageIntro({
-  logoUrl,
   storeName,
 }: HeritageIntroProps) {
-  const [visible, setVisible] = useState(false);
+  const [visible, setVisible] = useState(true);
   const [closing, setClosing] = useState(false);
+  const [logoReady, setLogoReady] = useState(false);
 
   useEffect(() => {
-    const preview = new URLSearchParams(window.location.search).get("intro") === "1";
+    let cancelled = false;
+    let exit = 0;
+    let finish = 0;
 
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-
-    try {
-      // Always show the intro when the homepage is opened.
-    } catch {
-      // Continue without storage.
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      setVisible(false);
+      return;
     }
 
-    const start = window.setTimeout(() => setVisible(true), 0);
-    const exit = window.setTimeout(() => setClosing(true), 2900);
-    const finish = window.setTimeout(() => {
+    const fallback = window.setTimeout(() => {
       setVisible(false);
-      if (!preview) {
-        try {
-          sessionStorage.setItem(SESSION_KEY, "seen");
-        } catch {
-          // Storage is optional.
-        }
-      }
-    }, 4000);
+    }, 1800);
+
+    const image = new Image();
+    image.src = "/intro/heritage-logo-optimized.webp";
+
+    image.decode().then(() => {
+      if (cancelled) return;
+
+      window.clearTimeout(fallback);
+      setLogoReady(true);
+
+      exit = window.setTimeout(() => {
+        setClosing(true);
+      }, 2900);
+
+      finish = window.setTimeout(() => {
+        setVisible(false);
+      }, 4000);
+    }).catch(() => {
+      if (!cancelled) setVisible(false);
+    });
 
     return () => {
-      window.clearTimeout(start);
+      cancelled = true;
+      window.clearTimeout(fallback);
       window.clearTimeout(exit);
       window.clearTimeout(finish);
     };
@@ -52,7 +63,7 @@ export default function HeritageIntro({
 
   return (
     <div
-      className={`sk-heritage-intro${closing ? " is-closing" : ""}`}
+      className={`sk-heritage-intro${logoReady ? " is-ready" : ""}${closing ? " is-closing" : ""}`}
       aria-hidden="true"
     >
       <div className="sk-heritage-light" />
@@ -86,7 +97,10 @@ export default function HeritageIntro({
         <div className="sk-heritage-logo-wrap">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src="/intro/heritage-logo.png"
+            src="/intro/heritage-logo-optimized.webp"
+            loading="eager"
+            fetchPriority="high"
+            decoding="async"
             alt={storeName || "Srikalahasti Kalamkari"}
             className="sk-heritage-main-logo"
           />

@@ -1,3 +1,4 @@
+import { optimizeImage } from "./image-optimizer";
 import { lookup } from "node:dns/promises";
 import { isIP } from "node:net";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
@@ -103,8 +104,14 @@ export async function saveProductImage(bytes: Uint8Array, extension: "jpg" | "pn
   if (!type || type.ext !== extension || bytes.byteLength > MAX_IMAGE_BYTES) throw new Error("ZIP image content or size is invalid");
   const directory = path.join(safeRoot, "products");
   await mkdir(directory, { recursive: true, mode: 0o750 });
-  const filename = `${randomUUID()}.${extension}`;
-  await writeFile(path.join(directory, filename), bytes, { flag: "wx", mode: 0o640 });
+  const optimized = await optimizeImage(bytes, "product");
+  const filename = `${randomUUID()}.${optimized.extension}`;
+
+  await writeFile(
+    path.join(directory, filename),
+    optimized.bytes,
+    { flag: "wx", mode: 0o640 }
+  );
   return `/api/media/products/${filename}`;
 }
 

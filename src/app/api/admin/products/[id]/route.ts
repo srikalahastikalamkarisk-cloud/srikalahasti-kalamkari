@@ -6,6 +6,9 @@ import { validOrigin } from "@/lib/admin/origin";
 import { productInput } from "@/lib/admin/product-input";
 import { CatalogDeletionError, deleteProduct } from "@/lib/admin/catalog-deletion";
 import { setProductInventory } from "@/lib/admin/inventory";
+import { assertManagedMediaAvailable, queueReleasedMedia } from "@/lib/admin/global-media-references";
+import { lockMediaMutation } from "@/lib/admin/media-mutation-lock";
+import { registerProductImages } from "@/lib/admin/register-media";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -84,7 +87,13 @@ export async function PATCH(req: NextRequest, context: Context) {
       ...scalarData
     } = data;
 
-    const product = await prisma.$transaction(async tx => {
+    const { product, cleanupCandidates } = await prisma.$transaction(async tx => {
+      await lockMediaMutation(tx);
+      const previous = await tx.product.findUniqueOrThrow({
+        where: { id },
+        select: { images: true, specifications: true }
+      });
+      await assertManagedMediaAvailable(tx, [images, specifications]);
       const inventory = await setProductInventory(tx, {
         productId: id,
         stock: data.stock,
@@ -95,7 +104,7 @@ export async function PATCH(req: NextRequest, context: Context) {
       const productFields: Partial<typeof scalarData> = { ...scalarData };
       delete productFields.stock;
       delete productFields.availabilityStatus;
-      return tx.product.update({
+      let updated = await tx.product.update({
         where: { id },
         data: {
           ...productFields,
@@ -121,9 +130,31 @@ export async function PATCH(req: NextRequest, context: Context) {
           category: { select: { id: true, name: true, slug: true } },
         },
       });
+      if (images !== undefined) {
+        await registerProductImages(tx, id, images);
+
+        updated = await tx.product.findUniqueOrThrow({
+          where: { id },
+          include: {
+            category: {
+              select: { id: true, name: true, slug: true }
+            }
+          }
+        });
+      }
+
+      const cleanupCandidates = await queueReleasedMedia(
+        tx, previous, updated
+      );
+
+      return { product: updated, cleanupCandidates };
     });
 
-    return NextResponse.json({ success: true, product });
+    return NextResponse.json({
+      success: true,
+      product,
+      cleanupCandidates
+    });
   } catch (error) {
     if (typeof error === "object" && error !== null && "code" in error) {
       if (error.code === "P2002") {
@@ -163,10 +194,19 @@ export async function DELETE(req: NextRequest, context: Context) {
   }
 
   try {
-    await prisma.$transaction(async tx => {
+    const cleanupCandidates = await prisma.$transaction(async tx => {
+      await lockMediaMutation(tx);
       const product = await tx.product.findUnique({
         where: { id },
-        select: { id: true, name: true },
+        select: {
+          id: true,
+          name: true,
+          images: true,
+          specifications: true,
+          variants: {
+            select: { imageUrl: true, attributes: true }
+          }
+        },
       });
 
       if (!product || product.name !== body.confirmName.trim()) {
@@ -174,9 +214,14 @@ export async function DELETE(req: NextRequest, context: Context) {
       }
 
       await deleteProduct(tx, id);
+
+      return queueReleasedMedia(tx, product, null);
     });
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json({
+      success: true,
+      cleanupCandidates
+    });
   } catch (error) {
     if (error instanceof CatalogDeletionError && error.message === "PRODUCT_NOT_FOUND") {
       return errorResponse("Product not found", 404);

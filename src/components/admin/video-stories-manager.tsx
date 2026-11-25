@@ -98,8 +98,8 @@ export default function VideoStoriesManager() {
 
     if (!file) return;
 
-    if (!["video/mp4", "video/webm"].includes(file.type)) {
-      setError("Only MP4 and WebM videos are supported.");
+    if (!/\.(mp4|mov|avi|mkv|webm|m4v|mpeg|mpg|3gp|wmv)$/i.test(file.name)) {
+      setError("Choose a supported video file.");
       return;
     }
 
@@ -305,7 +305,7 @@ export default function VideoStoriesManager() {
                     {uploading ? "Uploading video..." : "Choose MP4 / WebM Video"}
                     <input
                       type="file"
-                      accept="video/mp4,video/webm,.mp4,.webm"
+                      accept="video/*,.mp4,.mov,.avi,.mkv,.webm,.m4v,.mpeg,.mpg,.3gp,.wmv"
                       disabled={uploading || saving}
                       onChange={event => void uploadVideo(event)}
                     />

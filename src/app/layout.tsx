@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { getPublicStoreSettings } from "@/lib/public-store-settings";
 import "./globals.css";
+import StorefrontMotion from "@/components/storefront-motion";
 import "./step443-universal-alternate-palettes.css";
 import { ORIGINAL_THEME_ID, resolveStoreTheme, STORE_THEME_BY_ID, themeCssVariables } from "@/lib/store-themes";
 import type { CSSProperties } from "react";
@@ -61,7 +62,10 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   return (
     <html lang="en" data-storefront-theme={theme.id} style={themeCssVariables(theme) as CSSProperties}>
       <body>
-        <div className="sk-store-theme">{children}</div>
+        <div className="sk-store-theme">
+          {children}
+          <StorefrontMotion />
+        </div>
       </body>
     </html>
   );

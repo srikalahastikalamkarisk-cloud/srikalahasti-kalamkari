@@ -130,7 +130,23 @@ export default function ProductDetail({product:p,relatedProducts}:{product:Produ
     <nav className="skpd-crumb" aria-label="Breadcrumb"><Link href="/shop"><ArrowLeft size={15}/> Shop</Link>{p.categoryPath.map((category,index)=><span key={`${category}-${index}`}>/ {index===p.categoryPath.length-1?<Link href={`/shop?category=${encodeURIComponent(p.categorySlug)}`}>{category}</Link>:category}</span>)}<span>/</span><span>{p.name}</span></nav>
     <div className="skpd-layout">
       <div className="skpd-visual"><div className="skpd-visual-sticky"><div className="skpd-gallery-layout"><div className="skpd-photo">
-        <button className="skpd-image-open" type="button" onClick={()=>selectedImage&&setZoom(true)} aria-label={selectedImage?`Zoom image of ${p.name}`:`No product image available for ${p.name}`} disabled={!selectedImage}>
+        <button className="skpd-image-open" type="button"
+          onPointerMove={event=>{
+            if(event.pointerType!=="mouse"||!selectedImage)return;
+            const rect=event.currentTarget.getBoundingClientRect();
+            const x=Math.max(0,Math.min(100,(event.clientX-rect.left)/rect.width*100));
+            const y=Math.max(0,Math.min(100,(event.clientY-rect.top)/rect.height*100));
+            event.currentTarget.style.setProperty("--skpd-zoom-x",`${x}%`);
+            event.currentTarget.style.setProperty("--skpd-zoom-y",`${y}%`);
+            event.currentTarget.dataset.hoverZoom="true";
+          }}
+          onPointerLeave={event=>{
+            delete event.currentTarget.dataset.hoverZoom;
+          }}
+          onPointerCancel={event=>{
+            delete event.currentTarget.dataset.hoverZoom;
+          }}
+          onClick={()=>selectedImage&&setZoom(true)} aria-label={selectedImage?`Zoom image of ${p.name}`:`No product image available for ${p.name}`} disabled={!selectedImage}>
           {selectedImage?<img src={selectedImage} alt={p.name}/>:<div className="skpd-image-fallback"><ShoppingBag size={30}/><span>Product image unavailable</span></div>}
           {selectedImage&&<span className="skpd-zoom-hint"><ZoomIn size={17}/> View larger</span>}
         </button>

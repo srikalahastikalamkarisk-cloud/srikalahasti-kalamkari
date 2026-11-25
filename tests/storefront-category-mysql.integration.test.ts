@@ -143,10 +143,9 @@ test("isolated MySQL category hierarchy, product assignment, availability and dy
 
     const rootPage = await getPage(`/${root.slug}`);
     assert.equal(rootPage.status, 200);
-    const rootCards = renderedProductNames(rootPage.html);
-    assert.ok(rootCards.includes(productName("root")));
-    assert.ok(rootCards.includes(productName("grand")));
-    assert.ok(!rootCards.includes(productName("unrelated")));
+    assert.match(rootPage.html, /class="skshop-collection-card"/, "category landing should preserve the approved child-collection layout");
+    assert.ok(rootPage.html.includes(`${prefix} child`), "root landing should expose its direct child collection");
+    assert.deepEqual(renderedProductNames(rootPage.html), [], "parent collection landing presents child collections before product results");
 
     const nestedPage = await getPage(`/${root.slug}?subcategory=${grandchild.slug}`);
     assert.equal(nestedPage.status, 200);

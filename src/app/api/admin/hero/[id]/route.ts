@@ -5,6 +5,7 @@ import { getCurrentAdmin } from "@/lib/admin-auth";
 import { validOrigin } from "@/lib/admin/origin";
 import { readBoundedBody } from "@/lib/payments/request-guard-stream";
 import { validateSlideMedia } from "@/lib/hero-media";
+import { assertManagedMediaAvailable, queueReleasedMedia } from "@/lib/admin/global-media-references";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -125,21 +126,15 @@ export async function PATCH(req: NextRequest, context: Context) {
   }
 
   try {
-    const result = await prisma.heroSlide.updateMany({
-      where: { id },
-      data,
+    const slide = await prisma.$transaction(async tx => {
+      const old = await tx.heroSlide.findUnique({ where: { id } });
+      if (!old) return null;
+      await assertManagedMediaAvailable(tx, data);
+      const updated = await tx.heroSlide.update({ where: { id }, data });
+      await queueReleasedMedia(tx, old, updated);
+      return updated;
     });
-
-    if (result.count === 0) {
-      return NextResponse.json(
-        { error: "Slide not found" },
-        { status: 404 }
-      );
-    }
-
-    const slide = await prisma.heroSlide.findUnique({
-      where: { id },
-    });
+    if (!slide) return NextResponse.json({ error: "Slide not found" }, { status: 404 });
 
     return NextResponse.json({ success: true, slide });
   } catch {
@@ -162,11 +157,14 @@ export async function DELETE(req: NextRequest, context: Context) {
   const { id } = await context.params;
 
   try {
-    const result = await prisma.heroSlide.deleteMany({
-      where: { id },
+    const deleted = await prisma.$transaction(async tx => {
+      const old = await tx.heroSlide.findUnique({ where: { id } });
+      if (!old) return false;
+      await tx.heroSlide.delete({ where: { id } });
+      await queueReleasedMedia(tx, old, null);
+      return true;
     });
-
-    if (result.count === 0) {
+    if (!deleted) {
       return NextResponse.json(
         { error: "Slide not found" },
         { status: 404 }

@@ -10,7 +10,17 @@ export async function GET() {
   const [profile, addresses, orders] = await Promise.all([
     prisma.customer.findUnique({ where: { id: customer.id }, select: { id: true, name: true, email: true, phone: true, emailVerifiedAt: true, createdAt: true } }),
     prisma.customerAddress.findMany({ where: { customerId: customer.id }, orderBy: [{ isDefault: "desc" }, { createdAt: "desc" }] }),
-    prisma.order.findMany({ where: { customerEmail: customer.email }, orderBy: { createdAt: "desc" }, select: { id: true, orderNumber: true, totalAmount: true, orderStatus: true, paymentStatus: true, createdAt: true } }),
+    prisma.order.findMany({ where: { customerEmail: customer.email }, orderBy: { createdAt: "desc" }, select: { id: true, orderNumber: true, totalAmount: true, orderStatus: true, paymentStatus: true, createdAt: true,
+          items: {
+            select: {
+              id: true,
+              productName: true,
+              productImage: true,
+              quantity: true,
+              totalPrice: true
+            }
+          }
+        } }),
   ]);
   return NextResponse.json({ profile, addresses, orders }, { headers: { "Cache-Control": "no-store" } });
 }

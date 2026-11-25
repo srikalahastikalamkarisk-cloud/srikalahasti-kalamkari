@@ -1,6 +1,11 @@
+import { optimizeVideoFile } from "@/lib/admin/video-optimizer";
+import { mkdtemp, rm, chmod, link } from "node:fs/promises";
+import { createWriteStream } from "node:fs";
+import { pipeline } from "node:stream/promises";
+import { Readable } from "node:stream";
 import { NextRequest, NextResponse } from "next/server";
 import { randomUUID } from "node:crypto";
-import { mkdir, realpath, stat, open, unlink } from "node:fs/promises";
+import { mkdir, realpath, stat } from "node:fs/promises";
 import path from "node:path";
 import { getCurrentAdmin } from "@/lib/admin-auth";
 import { validOrigin } from "@/lib/admin/origin";
@@ -10,32 +15,6 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 const MAX_SIZE = 50 * 1024 * 1024;
-
-function detectVideo(bytes: Uint8Array) {
-  if (
-    bytes.length >= 12 &&
-    Buffer.from(bytes.slice(4, 8)).toString("ascii") === "ftyp"
-  ) {
-    const brand = Buffer.from(bytes.slice(8, 12)).toString("ascii");
-    if (["isom", "iso2", "mp41", "mp42", "avc1", "M4V "].includes(brand)) {
-      return { ext: "mp4", mime: "video/mp4" };
-    }
-  }
-
-  if (
-    bytes.length >= 4 &&
-    bytes[0] === 0x1a &&
-    bytes[1] === 0x45 &&
-    bytes[2] === 0xdf &&
-    bytes[3] === 0xa3 &&
-    Buffer.from(bytes.subarray(0, Math.min(bytes.length, 4096)))
-      .includes(Buffer.from("webm"))
-  ) {
-    return { ext: "webm", mime: "video/webm" };
-  }
-
-  return null;
-}
 
 export async function POST(req: NextRequest) {
   if (!await getCurrentAdmin()) {
@@ -85,17 +64,20 @@ export async function POST(req: NextRequest) {
     file.size > MAX_SIZE
   ) {
     return NextResponse.json(
-      { error: "Choose an MP4 or WebM video up to 50 MB" },
+      { error: "Choose a supported video up to 50 MB" },
       { status: 400 }
     );
   }
 
-  const bytes = new Uint8Array(await file.arrayBuffer());
-  const detected = detectVideo(bytes);
 
-  if (!detected || file.type !== detected.mime) {
+  const extension = path.extname(file.name).toLowerCase();
+
+  if (![
+    ".mp4", ".mov", ".avi", ".mkv", ".webm",
+    ".m4v", ".mpeg", ".mpg", ".3gp", ".wmv"
+  ].includes(extension)) {
     return NextResponse.json(
-      { error: "Invalid MP4 or WebM video" },
+      { error: "Unsupported video format. Audio-only files are not videos." },
       { status: 400 }
     );
   }
@@ -123,23 +105,47 @@ export async function POST(req: NextRequest) {
       throw new Error("Unsafe video directory");
     }
 
-    const filename = `${randomUUID()}.${detected.ext}`;
+
+    const temporary = await mkdtemp(
+      path.join(root, ".video-processing-")
+    );
+
+    const filename = `${randomUUID()}.mp4`;
     const target = path.join(resolved, filename);
-
-    // HERO_VIDEO_UPLOAD_SECURITY_V2
-    const handle = await open(target, "wx", 0o640);
-
-    let completed = false;
+    let optimization;
 
     try {
-      await handle.writeFile(bytes);
-      completed = true;
-    } finally {
-      await handle.close();
+      const input = path.join(temporary, "input" + extension);
+      const output = path.join(temporary, "optimized.mp4");
 
-      if (!completed) {
-        await unlink(target).catch(() => undefined);
+      await pipeline(
+        Readable.fromWeb(
+          file.stream() as import("node:stream/web").ReadableStream
+        ),
+        createWriteStream(input, {
+          flags: "wx",
+          mode: 0o600
+        })
+      );
+
+      optimization = await optimizeVideoFile(
+        input,
+        output,
+        "story"
+      );
+
+      if (optimization.optimizedSize > MAX_SIZE) {
+        throw new Error("Optimized video exceeds storage limit");
       }
+
+      await chmod(output, 0o640);
+      await link(output, target);
+
+    } finally {
+      await rm(temporary, {
+        recursive: true,
+        force: true
+      }).catch(() => undefined);
     }
 
     return NextResponse.json(
@@ -147,12 +153,14 @@ export async function POST(req: NextRequest) {
         success: true,
         url: `/api/media/story-videos/${filename}`,
         filename,
+        originalSize: optimization.originalSize,
+        optimizedSize: optimization.optimizedSize,
       },
       { status: 201 }
     );
   } catch {
     return NextResponse.json(
-      { error: "Unable to store video" },
+      { error: "Video optimization failed. Check format, duration or retry shortly." },
       { status: 500 }
     );
   }
