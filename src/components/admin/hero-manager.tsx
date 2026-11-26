@@ -643,7 +643,7 @@ export default function HeroManager() {
             }}>
               {([
                 ["image", "Image", "Use desktop and mobile images", <ImageIcon size={20} key="image-icon" />],
-                ["video", "Uploaded Video", "Upload MP4 or WebM files", <Video size={20} key="video-icon" />],
+                ["video", "Uploaded Video", "Upload optimized MP4 files", <Video size={20} key="video-icon" />],
                 ["url", "Video URL", "YouTube, Instagram, Pinterest, MP4 or WebM", <Link2 size={20} key="url-icon" />],
               ] as const).map(([type, title, description, icon]) => {
                 const selected = type === "url" ? externalTypes.includes(form.mediaType as typeof externalTypes[number]) : form.mediaType === type;
@@ -715,14 +715,14 @@ export default function HeroManager() {
                   <article className="hero-manager__asset-card" key={target}>
                     <strong>{label}</strong>
                     <div className="hero-manager__asset-preview is-video">
-                      {form[target] ? <video src={form[target]} poster={form.posterImage || undefined} controls muted playsInline preload="metadata" /> : <span>Choose an MP4 or WebM video</span>}
+                      {form[target] ? <video src={form[target]} poster={form.posterImage || undefined} controls muted playsInline preload="metadata" /> : <span>Choose an optimized MP4 video</span>}
                     </div>
                     <span className="hero-manager__filename">{form[target] ? mediaFilename(target, form[target]) : "No video selected"}</span>
                     <div className="hero-manager__asset-actions">
                       <button type="button" onClick={() => videoInputs.current[target]?.click()}><Replace size={15} />Replace</button>
                       {form[target] && <button type="button" className="is-remove" onClick={() => removeMedia(target)}><Trash2 size={15} />Remove</button>}
                     </div>
-                    <input ref={node => { videoInputs.current[target] = node; }} className="hero-manager__hidden-input" type="file" accept="video/*,.mp4,.mov,.avi,.mkv,.webm,.m4v,.mpeg,.mpg,.3gp,.wmv" disabled={videoUploading} onChange={event => void uploadVideo(event, target)} aria-label={`Replace ${label}`} />
+                    <input ref={node => { videoInputs.current[target] = node; }} className="hero-manager__hidden-input" type="file" accept="video/mp4,.mp4" disabled={videoUploading} onChange={event => void uploadVideo(event, target)} aria-label={`Replace ${label}`} />
                   </article>
                 ))}
               </div>

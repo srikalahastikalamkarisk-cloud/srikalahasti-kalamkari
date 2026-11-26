@@ -307,7 +307,7 @@ export default function VideoStoriesManager() {
                     id="vsm-video-upload"
                     className="vsm-file-input"
                     type="file"
-                    accept="video/*,.mp4,.mov,.avi,.mkv,.webm,.m4v,.mpeg,.mpg,.3gp,.wmv"
+                    accept="video/mp4,.mp4"
                     aria-label="Choose a video to upload"
                     aria-describedby="vsm-video-upload-help"
                     disabled={uploading || saving}
@@ -320,7 +320,7 @@ export default function VideoStoriesManager() {
                     disabled={uploading || saving}
                   >
                     <Upload size={16} aria-hidden="true" />
-                    {uploading ? "Uploading and optimizing…" : "Choose video to upload"}
+                    {uploading ? "Uploading…" : "Choose video to upload"}
                   </button>
 
                   {form.videoFile && (
@@ -345,7 +345,7 @@ export default function VideoStoriesManager() {
                   />
                 )}
 
-                <small id="vsm-video-upload-help">MP4, MOV, AVI, MKV, WebM, M4V, MPEG, MPG, 3GP or WMV. Maximum 50 MB and 10 minutes. Replace by uploading another video. Remove only detaches the video from this form.</small>
+                <small id="vsm-video-upload-help">Upload a web-ready MP4 (H.264/AAC recommended). Maximum 50 MB. Compress before uploading. Replace by uploading another video. Remove only detaches the video from this form.</small>
               </div>
             )}
 

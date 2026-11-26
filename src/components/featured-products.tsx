@@ -2,9 +2,11 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { hasPurchasableInventory, productAvailabilityLabel } from "@/lib/storefront-product-policy";
 import { Heart, ImageIcon, ShoppingBag, Star, ZoomIn, X } from "lucide-react";
 import type { StorefrontProduct } from "@/lib/storefront-products";
-import { addToCart, toggleWishlist, useShopState } from "@/lib/shop-state";
+import { addToCart, buyNow, toggleWishlist, useShopState } from "@/lib/shop-state";
 import "./featured-products.css";
 
 type ProductWithImages = StorefrontProduct;
@@ -19,6 +21,7 @@ function imageFor(product: ProductWithImages) {
 }
 
 export default function FeaturedProducts({ products }: Props) {
+  const router = useRouter();
   const featured = products;
   const { wishlist } = useShopState();
   const [preview, setPreview] = useState<ProductWithImages | null>(null);
@@ -40,10 +43,10 @@ export default function FeaturedProducts({ products }: Props) {
             const hasPrice = typeof product.price === "number" && product.price > 0;
             const original = product.originalPrice;
             const hasOriginal = typeof original === "number" && hasPrice && original > product.price;
-            const canPurchase =
-              hasPrice &&
-              product.stock > 0 &&
-              product.availabilityStatus === "IN_STOCK";
+            const canPurchase = hasPurchasableInventory(product);
+            const requiresOptions =
+              product.variants.length > 0 ||
+              product.pricingMode !== "FIXED";
             const discount = hasOriginal ? Math.round((1 - product.price / original) * 100) : null;
             return (
               <article className="skfp-card" key={product.id}>
@@ -73,12 +76,24 @@ export default function FeaturedProducts({ products }: Props) {
                   <div className="skfp-meta">
                     <span className="skfp-price">{hasPrice ? `₹${product.price.toLocaleString("en-IN")}` : "Price on request"}</span>
                     {hasOriginal && <del>₹{original.toLocaleString("en-IN")}</del>}
-                    
+
                   </div>
                   <div className="skfp-purchase-actions">
-                    <button className="skfp-cart" type="button" disabled={!canPurchase} title="Price and availability are not confirmed" onClick={() => setMessage(`Price and availability for ${product.name} need confirmation.`)}><ShoppingBag size={14} /> Buy Now</button>
+                    <button className="skfp-cart" type="button" disabled={!canPurchase} onClick={() => {
+                      if (!canPurchase) return;
+                      if (requiresOptions) {
+                        router.push(`/product/${product.id}`);
+                        return;
+                      }
+                      buyNow(product.id);
+                      router.push("/checkout?buyNow=1");
+                    }}><ShoppingBag size={14} /> {canPurchase ? requiresOptions ? "Choose Options" : "Buy Now" : productAvailabilityLabel(product)}</button>
                     <button className="skfp-cart-icon" type="button" aria-label={`Add ${product.name} to cart`} title="Add to cart" disabled={!canPurchase} onClick={() => {
                       if (!canPurchase) return;
+                      if (requiresOptions) {
+                        router.push(`/product/${product.id}`);
+                        return;
+                      }
                       addToCart(product.id);
                       setMessage(`${product.name} added to cart.`);
                     }}><ShoppingBag size={16} /></button>
