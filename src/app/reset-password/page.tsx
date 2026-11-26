@@ -6,8 +6,9 @@ import { ArrowRight, Eye, EyeOff, LockKeyhole, ShieldCheck } from "lucide-react"
 import "@/components/customer-auth.css";
 
 function passwordStrength(password: string) {
-  const checks = [password.length >= 12, /[a-z]/.test(password), /[A-Z]/.test(password), /\d/.test(password), /[^A-Za-z0-9]/.test(password)];
-  return { count: checks.filter(Boolean).length, valid: checks.every(Boolean) };
+  return {
+    valid: password.length >= 6 && password.length <= 128
+  };
 }
 
 export default function ResetPasswordPage() {
@@ -27,7 +28,7 @@ export default function ResetPasswordPage() {
     const token = new URLSearchParams(window.location.hash.slice(1)).get("token") || "";
     const nextPassword = String(form.get("password") || "");
     if (!token) { setError("This password reset link is missing or invalid. Request a new reset email to continue."); setExpired(true); setBusy(false); return; }
-    if (!strength.valid) { setError("Use at least 12 characters with uppercase, lowercase, a number and a symbol."); setBusy(false); return; }
+    if (!strength.valid) { setError("Use a password with 6 to 128 characters."); setBusy(false); return; }
     if (nextPassword !== String(form.get("confirmPassword") || "")) { setError("Your passwords do not match."); setBusy(false); return; }
     try {
       const response = await fetch("/api/customer/reset-password", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ token, password: nextPassword }) });
@@ -53,14 +54,13 @@ export default function ResetPasswordPage() {
         <div className="skauth-heading">
           <p className="skauth-overline"><ShieldCheck size={14} /> SECURE ACCOUNT RECOVERY</p>
           <h1 id="reset-title">Choose a new password</h1>
-          <p className="skauth-intro">Create a strong password to secure your Srikalahasti Kalamkari account.</p>
+          <p className="skauth-intro">Choose a password with at least 6 characters. Longer passwords are recommended.</p>
         </div>
         {message ? <div className="skauth-notice skauth-notice-success" role="status"><strong>Password updated</strong><span>{message}</span><Link className="skauth-submit skauth-result-button" href="/login">Continue to Sign In <ArrowRight size={17} /></Link></div> : <>
           <form className="skauth-form" onSubmit={submit}>
-            <label>New password<div className="skauth-input-wrap"><LockKeyhole size={17} aria-hidden="true" /><input name="password" type={visible ? "text" : "password"} autoComplete="new-password" minLength={12} maxLength={128} required value={password} onChange={event => setPassword(event.target.value)} placeholder="12+ characters, mixed case, number and symbol" /><button type="button" className="skauth-eye" onClick={() => setVisible(value => !value)} aria-label={visible ? "Hide password" : "Show password"}>{visible ? <EyeOff size={18} /> : <Eye size={18} />}</button></div></label>
-            <div className="skauth-password-strength" aria-live="polite"><div className="skauth-strength-track" aria-hidden="true">{[1, 2, 3, 4, 5].map(level => <span key={level} className={strength.count >= level ? "is-filled" : ""} />)}</div><span>{password ? strength.valid ? "Strong password" : "Complete all password requirements" : "Password requirements"}</span></div>
-            <ul className="skauth-password-rules"><li className={password.length >= 12 ? "is-met" : ""}>At least 12 characters</li><li className={/[a-z]/.test(password) ? "is-met" : ""}>One lowercase and one uppercase letter</li><li className={/\d/.test(password) ? "is-met" : ""}>One number</li><li className={/[^A-Za-z0-9]/.test(password) ? "is-met" : ""}>One symbol</li></ul>
-            <label>Confirm password<div className="skauth-input-wrap"><LockKeyhole size={17} aria-hidden="true" /><input name="confirmPassword" type={visible ? "text" : "password"} autoComplete="new-password" minLength={12} maxLength={128} required placeholder="Enter your new password again" /></div></label>
+            <label>New password<div className="skauth-input-wrap"><LockKeyhole size={17} aria-hidden="true" /><input name="password" type={visible ? "text" : "password"} autoComplete="new-password" minLength={6} maxLength={128} required value={password} onChange={event => setPassword(event.target.value)} placeholder="Minimum 6 characters" /><button type="button" className="skauth-eye" onClick={() => setVisible(value => !value)} aria-label={visible ? "Hide password" : "Show password"}>{visible ? <EyeOff size={18} /> : <Eye size={18} />}</button></div></label>
+            <ul className="skauth-password-rules"><li className={strength.valid ? "is-met" : ""}>At least 6 characters</li><li>Longer passwords are recommended.</li></ul>
+            <label>Confirm password<div className="skauth-input-wrap"><LockKeyhole size={17} aria-hidden="true" /><input name="confirmPassword" type={visible ? "text" : "password"} autoComplete="new-password" minLength={6} maxLength={128} required placeholder="Enter your new password again" /></div></label>
             <button className="skauth-submit" type="submit" disabled={busy}>{busy ? "Updating password…" : "Reset password"}<ArrowRight size={17} /></button>
             {error && <div className="skauth-notice skauth-notice-error" role="alert"><strong>{expired ? "Reset link unavailable" : "Unable to reset password"}</strong><span>{error}</span>{expired && <Link href="/forgot-password">Request a new reset email</Link>}</div>}
           </form>

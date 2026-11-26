@@ -37,9 +37,9 @@ export default function AdminLogoutButton() {
       style={{
         padding: "12px 20px",
         borderRadius: 8,
-        border: "1px solid #172b46",
-        background: "#172b46",
-        color: "#fff",
+        border: "1px solid var(--skad-primary)",
+        background: "var(--skad-primary-button)",
+        color: "var(--skad-button-text)",
         cursor: "pointer",
       }}
     >

@@ -43,7 +43,10 @@ export default function StoriesInMotion({ stories }: { stories: Story[] }) {
   const [visible, setVisible] = useState(false);
   const [reduced, setReduced] = useState(false);
   const [active, setActive] = useState(0);
-  const [activeCopy, setActiveCopy] = useState(1);
+  const [activeCopy, setActiveCopy] = useState(
+    stories.length > 1 ? 1 : 0
+  );
+  const interactionUntil = useRef(0);
   const [soundId, setSoundId] = useState<string | null>(null);
   const [youtubeSound, setYoutubeSound] = useState<string | null>(null);
   const [failed, setFailed] = useState<Record<string, boolean>>({});
@@ -247,6 +250,29 @@ export default function StoriesInMotion({ stories }: { stories: Story[] }) {
     };
   }, [active, activeCopy, soundId, visible, reduced, stories, isMobile]);
 
+  // STEP 848C: Mobile automatic slide navigation.
+  useEffect(() => {
+    if (
+      !isMobile || count < 2 || !visible ||
+      reduced || paused || soundId || youtubeSound
+    ) return;
+
+    const timer = window.setInterval(() => {
+      if (
+        manualPause.current ||
+        Date.now() < interactionUntil.current ||
+        document.visibilityState !== "visible"
+      ) return;
+
+      jumpTo(activeRef.current + 1);
+    }, 6500);
+
+    return () => window.clearInterval(timer);
+  }, [
+    isMobile, count, visible, reduced,
+    paused, soundId, youtubeSound, jumpTo
+  ]);
+
   useEffect(() => {
     setSoundId(null);
   }, [active]);
@@ -256,7 +282,15 @@ export default function StoriesInMotion({ stories }: { stories: Story[] }) {
     <section className="sim4-section" id="stories-in-motion" aria-label="Kalamkari video stories">
       <div className="sim4-heading"><span className="sim4-eyebrow">✦ THE SRIKALAHASTI EDIT ✦</span><h2>Stories in <em>Motion.</em></h2><p>Crafted by hand. Told in motion.</p></div>
       <div className="sim4-stage" onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)} onFocusCapture={() => setHovered(true)} onBlurCapture={event => { if (!event.currentTarget.contains(event.relatedTarget)) setHovered(false); }}>
-        <div className="sim4-rail" ref={rail} onPointerDown={() => { manualPause.current = true; setMotion(false); }} onPointerUp={() => { if (manualPause.current) { manualPause.current = false; setMotion(true); } }} onPointerCancel={() => { manualPause.current = false; setMotion(true); }}>
+        <div className="sim4-rail" ref={rail} onPointerDown={() => {
+            manualPause.current = true;
+            interactionUntil.current = Date.now() + 8000;
+            setMotion(false);
+          }} onPointerUp={() => { if (manualPause.current) { manualPause.current = false; setMotion(true); } }} onPointerCancel={() => {
+            manualPause.current = false;
+            interactionUntil.current = Date.now() + 8000;
+            setMotion(true);
+          }}>
           {reelList.map(({ story, index, key }, i) => {
             const copy = Math.floor(i / count);
             const yt = youtubeId(story.youtubeUrl || "");
@@ -268,23 +302,39 @@ export default function StoriesInMotion({ stories }: { stories: Story[] }) {
                 ? story.instagramUrl
                 : pinterest || undefined;
             const focused = index === active && copy === activeCopy;
+            const nearby =
+              Math.abs(i - (activeCopy * count + active)) <= 1;
             const videoSource = isMobile && story.mobileMp4
               ? story.mobileMp4
               : story.mp4;
             const source = videoSource && !failed[story.id];
             return <article key={key} className={`sim4-card ${focused ? "is-active" : ""}`} data-copy={copy} aria-label={story.title}>
               <div className="sim4-frame">
+                {isMobile && source && !story.poster && (
+                  <div className="sim4-mobile-fallback"
+                    aria-hidden="true">
+                    <span>✦</span>
+                    <small>THE SRIKALAHASTI EDIT</small>
+                  </div>
+                )}
                 {source ? (
                   <video
                     key={`${story.id}-${videoSource}`}
                     data-story={story.id}
+                    onCanPlay={event => {
+                      event.currentTarget.dataset.ready = "true";
+                    }}
                     src={videoSource}
-                    poster={story.poster}
+                    poster={story.poster || undefined}
                     playsInline
                     autoPlay={visible && !reduced && (!isMobile || focused)}
                     loop
                     muted={!focused || soundId !== story.id}
-                    preload={visible && focused ? "metadata" : "none"}
+                    preload={
+                      visible && (focused || (isMobile && nearby))
+                        ? "auto"
+                        : "none"
+                    }
                     onLoadedData={event => {
                       setAvailable(previous =>
                         previous[story.id] ? previous : {

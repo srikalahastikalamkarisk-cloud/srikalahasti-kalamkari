@@ -12,7 +12,7 @@ export async function POST(request: NextRequest) {
   if (!isValidRequestOrigin(request)) return NextResponse.json({ error: "Invalid request." }, { status: 400 });
   const customer = await getCurrentCustomer(); if (!customer) return NextResponse.json({ error: "Sign in required." }, { status: 401 });
   if (!await customerRateAllowed("change-password", customer.id, 5, 15 * 60000)) return NextResponse.json({ error: "Please wait before trying again." }, { status: 429 });
-  const parsed = schema.safeParse(await request.json()); if (!parsed.success || !strongCustomerPassword(parsed.data.password)) return NextResponse.json({ error: "Use a matching password with 12 characters, uppercase, lowercase, number, and symbol." }, { status: 400 });
+  const parsed = schema.safeParse(await request.json()); if (!parsed.success || !strongCustomerPassword(parsed.data.password)) return NextResponse.json({ error: "Use a matching password with 6 to 128 characters." }, { status: 400 });
   const row = await prisma.customer.findUnique({ where: { id: customer.id }, select: { passwordHash: true } });
   if (!row || !(await compare(parsed.data.currentPassword, row.passwordHash))) return NextResponse.json({ error: "Current password is incorrect." }, { status: 400 });
   await prisma.customer.update({ where: { id: customer.id }, data: { passwordHash: await hash(parsed.data.password, 12), sessionVersion: { increment: 1 } } });

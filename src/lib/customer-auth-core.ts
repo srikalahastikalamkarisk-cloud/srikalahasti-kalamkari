@@ -20,6 +20,5 @@ export function validCustomerToken(token: string) {
 }
 
 export function strongCustomerPassword(password: string) {
-  return password.length >= 12 && password.length <= 128 &&
-    /[a-z]/.test(password) && /[A-Z]/.test(password) && /\d/.test(password) && /[^A-Za-z0-9]/.test(password);
+  return password.length >= 6 && password.length <= 128;
 }

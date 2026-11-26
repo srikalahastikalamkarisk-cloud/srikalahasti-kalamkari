@@ -878,3 +878,53 @@ html[data-storefront-theme] .sk-store-theme
     font-size: 16px;
   }
 }
+
+/* STEP 853 - Compact registration consent checkbox */
+
+.skauth-register-compact .skauth-form .skauth-consent {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: flex-start !important;
+  justify-content: flex-start !important;
+  gap: 9px !important;
+  width: 100%;
+  text-align: left;
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1.6;
+  cursor: pointer;
+}
+
+.skauth-register-compact .skauth-form
+.skauth-consent input[type="checkbox"] {
+  appearance: auto !important;
+  -webkit-appearance: checkbox !important;
+  display: inline-block !important;
+  width: 16px !important;
+  height: 16px !important;
+  min-width: 16px !important;
+  min-height: 16px !important;
+  max-width: 16px !important;
+  max-height: 16px !important;
+  flex: 0 0 16px !important;
+  padding: 0 !important;
+  margin: 2px 0 0 !important;
+  box-shadow: none !important;
+  cursor: pointer;
+  accent-color: var(--sk-theme-color-primary, auto);
+}
+
+.skauth-register-compact .skauth-form
+.skauth-consent > span {
+  display: inline !important;
+  flex: 1;
+  min-width: 0;
+  line-height: 1.6;
+}
+
+.skauth-register-compact .skauth-form
+.skauth-consent a {
+  display: inline !important;
+  font-weight: 500;
+  text-decoration: underline;
+}

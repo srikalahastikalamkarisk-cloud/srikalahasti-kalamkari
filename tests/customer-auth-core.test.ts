@@ -12,13 +12,16 @@ test("customer tokens are URL-safe, unique, and persisted as one-way hashes", ()
   assert.equal(validCustomerToken("short"), false);
 });
 
-test("customer passwords require all configured character classes and 12 characters", () => {
+test("customer passwords allow 6 to 128 characters without mandatory character classes", () => {
+  assert.equal(strongCustomerPassword(""), false);
+  assert.equal(strongCustomerPassword("abcd"), false);
+  assert.equal(strongCustomerPassword("abcde"), false);
+  assert.equal(strongCustomerPassword("abcdef"), true);
+  assert.equal(strongCustomerPassword("ABCDEF"), true);
+  assert.equal(strongCustomerPassword("123456"), true);
+  assert.equal(strongCustomerPassword("short1!A"), true);
   assert.equal(strongCustomerPassword("Atelier2026!Craft"), true);
-  assert.equal(strongCustomerPassword("short1!A"), false);
-  assert.equal(strongCustomerPassword("lowercase2026!"), false);
-  assert.equal(strongCustomerPassword("UPPERCASE2026!"), false);
-  assert.equal(strongCustomerPassword("NoNumber!Atelier"), false);
-  assert.equal(strongCustomerPassword("NoSymbol2026Atelier"), false);
+  assert.equal(strongCustomerPassword("A".repeat(128)), true);
   assert.equal(strongCustomerPassword("A".repeat(129)), false);
 });
 

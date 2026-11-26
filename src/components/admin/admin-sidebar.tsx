@@ -279,8 +279,8 @@ export default function AdminSidebar() {
             >
               <span className="skad-dock-icon">
                 <Icon
-                  size={isAdd ? 27 : 21}
-                  strokeWidth={isAdd ? 2.4 : 1.8}
+                  size={22}
+                  strokeWidth={1.8}
                 />
               </span>
 

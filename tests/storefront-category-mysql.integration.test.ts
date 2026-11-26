@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
 import { PrismaClient } from "../src/generated/prisma/client";
 import { PrismaMariaDb } from "@prisma/adapter-mariadb";
+import mariadb from "mariadb";
 import { request as httpRequest } from "node:http";
 
 const rawUrl = process.env.FIXTURE_TEST_DATABASE_URL;
@@ -17,18 +18,20 @@ test("isolated MySQL category hierarchy, product assignment, availability and dy
   assert.equal(baseUrl, "http://127.0.0.1:3001");
 
   process.env.DATABASE_URL = url.toString();
-  const prisma = new PrismaClient({
-    adapter: new PrismaMariaDb({
-      host: url.hostname,
-      port: Number(url.port),
-      user: decodeURIComponent(url.username),
-      password: decodeURIComponent(url.password),
-      database: decodeURIComponent(url.pathname.slice(1)),
-      connectionLimit: 5,
-      connectTimeout: 5000,
-      allowPublicKeyRetrieval: true,
-    }),
+  const pool = mariadb.createPool({
+    host: url.hostname,
+    port: Number(url.port),
+    user: decodeURIComponent(url.username),
+    password: decodeURIComponent(url.password),
+    database: decodeURIComponent(url.pathname.slice(1)),
+    connectionLimit: 5,
+    connectTimeout: 5000,
+    allowPublicKeyRetrieval: true,
   });
+  // The adapter currently resolves its own MariaDB version, while this test
+  // uses the app's direct dependency. Their pool interfaces match at runtime;
+  // the cast bridges duplicate, version-skewed type declarations.
+  const prisma = new PrismaClient({ adapter: new PrismaMariaDb(pool as never, { disposeExternalPool: true }) });
   const suffix = randomUUID().replaceAll("-", "");
   const createdProductIds: string[] = [];
   const createdCategoryIds: string[] = [];

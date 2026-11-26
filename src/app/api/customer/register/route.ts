@@ -42,7 +42,7 @@ export async function POST(request: NextRequest) {
     const parsed = schema.safeParse(input);
     if (!parsed.success || !strongCustomerPassword(parsed.data?.password ?? "")) {
       console.warn("customer_registration_rejected", { requestId, category: "input_validation" });
-      return NextResponse.json({ error: "Enter valid details and a password with 12 characters, uppercase, lowercase, number, and symbol.", requestId }, { status: 400, headers: { "X-Request-Id": requestId, "Cache-Control": "no-store" } });
+      return NextResponse.json({ error: "Enter valid details and a password with 6 to 128 characters.", requestId }, { status: 400, headers: { "X-Request-Id": requestId, "Cache-Control": "no-store" } });
     }
     const data = parsed.data; const email = data.email.toLowerCase();
     const emailLimit = await checkCustomerRateLimit("register-email", email, 5, 60 * 60 * 1000);

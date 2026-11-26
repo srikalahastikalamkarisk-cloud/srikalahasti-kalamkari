@@ -40,7 +40,7 @@ export default async function AdminDashboard() {
   ]);
 
   const metrics = [
-    { title: "Total Products", value: productCount.toLocaleString("en-IN"), icon: Package, note: `${activeProducts} active products`, tone: "primary" },
+    { title: "Total Products", value: productCount.toLocaleString("en-IN"), icon: Package, note: `${activeProducts} active products`, tone: "standard" },
     { title: "Categories", value: categoryCount.toLocaleString("en-IN"), icon: Layers3, note: "Catalog categories", tone: "standard" },
     { title: "Low Stock", value: lowStockCount.toLocaleString("en-IN"), icon: Warehouse, note: "5 or fewer units", tone: "standard" },
   ];

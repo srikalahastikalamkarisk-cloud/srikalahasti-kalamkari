@@ -50,9 +50,23 @@
   box-shadow:0 5px 20px #132b4507;
 }
 .skcm-stat:first-child{
-  background:linear-gradient(135deg,#10233d,#1b385a);
-  color:#fff;
-  border-color:#1b385a;
+  background:var(--skad-primary-button);
+  color:var(--skad-button-text);
+  border-color:var(--skad-primary);
+}
+
+/* STEP 850B - Dynamic Total Categories card */
+.sk-admin-theme-root .skcm-stats > .skcm-stat:first-child{
+  background:var(--skad-primary-button) !important;
+  color:var(--skad-button-text) !important;
+  border-color:var(--skad-primary) !important;
+}
+
+.sk-admin-theme-root .skcm-stats > .skcm-stat:first-child > span,
+.sk-admin-theme-root .skcm-stats > .skcm-stat:first-child > strong,
+.sk-admin-theme-root .skcm-stats > .skcm-stat:first-child > small{
+  color:var(--skad-button-text) !important;
+  -webkit-text-fill-color:var(--skad-button-text) !important;
 }
 .skcm-stat>span{display:block;font-size:12px;font-weight:700}
 .skcm-stat strong{
@@ -61,7 +75,7 @@
   margin:15px 0 10px;
 }
 .skcm-stat small{color:#8190a2;font-size:11px}
-.skcm-stat:first-child small{color:#c8d5e5}
+.skcm-stat:first-child small{color:var(--skad-button-text)}
 .skcm-panel{
   background:#fff;
   border:1px solid #e3e9f0;

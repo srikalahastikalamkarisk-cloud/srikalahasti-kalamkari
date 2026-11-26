@@ -71,3 +71,51 @@ test("all storefront CSS theme variables resolve from every palette", () => {
     }
   }
 });
+
+test("admin routes use the shared theme variables for chrome, controls, and authentication", () => {
+  const adminLayout = readFileSync("src/app/admin/layout.tsx", "utf8");
+  const adminStyles = readFileSync("src/app/admin/admin-theme.css", "utf8");
+
+  assert.match(adminLayout, /admin-theme\.css/);
+  assert.match(adminLayout, /sk-admin-theme-root/);
+  for (const selector of [
+    ".skad-sidebar",
+    ".skad-mobile-dock",
+    ".skad-topbar",
+    "table",
+    "input, select, textarea",
+    ".sk-admin-login",
+    ".sk-admin-recovery",
+    "[class*=\"dialog\"]",
+  ]) {
+    assert.ok(adminStyles.includes(selector), `admin theme is missing ${selector}`);
+  }
+
+  for (const theme of STORE_THEMES) {
+    const variables = themeCssVariables(theme);
+    assert.equal(variables["--sk-theme-navigation"], theme.gradients.navigation);
+    assert.equal(variables["--sk-theme-primaryButton"], theme.gradients.primaryButton);
+    assert.equal(variables["--sk-theme-color-inputBackground"], theme.colors.inputBackground);
+    assert.equal(variables["--sk-theme-color-success"], theme.colors.success);
+    assert.equal(variables["--sk-theme-color-error"], theme.colors.error);
+  }
+});
+
+test("appearance preview, publish, restore, refresh, and persistence share one theme control", () => {
+  const manager = readFileSync("src/components/admin/theme-manager.tsx", "utf8");
+  const appearanceApi = readFileSync("src/app/api/admin/appearance/route.ts", "utf8");
+  const rootLayout = readFileSync("src/app/layout.tsx", "utf8");
+
+  assert.match(manager, /setPublishedId\(current\);\s*setPreviewId\(current\)/);
+  assert.match(manager, /setPreviewId\(ORIGINAL_THEME_ID\)/);
+  assert.match(manager, /applyDocumentTheme\(themeId\);\s*router\.refresh\(\)/);
+  assert.match(manager, /applyDocumentTheme\(publishedId\);\s*router\.refresh\(\)/);
+  assert.match(manager, /applyTheme\("POST", previewId\)/);
+  assert.match(manager, /applyTheme\("PUT", previewId\)/);
+  assert.match(manager, /applyTheme\("DELETE"\)/);
+  assert.match(appearanceApi, /storeSettings\.upsert/);
+  assert.match(appearanceApi, /previewCookie, result\.themeId/);
+  assert.match(appearanceApi, /previewCookie, "".*maxAge: 0/);
+  assert.match(rootLayout, /findUnique\([\s\S]*select: \{ themeId: true \}/);
+  assert.match(rootLayout, /getCurrentAdmin\(\)/);
+});

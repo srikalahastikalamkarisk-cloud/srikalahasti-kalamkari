@@ -135,8 +135,8 @@ export default function CustomerAuth({ mode }: { mode: Mode }) {
                   autoComplete={
                     isRegister ? "new-password" : "current-password"
                   }
-                minLength={isRegister ? 12 : 1}
-                placeholder={isRegister ? "12+ characters, mixed case, number and symbol" : "Your password"}
+                minLength={isRegister ? 6 : 1}
+                placeholder={isRegister ? "Minimum 6 characters" : "Your password"}
                   required
                 maxLength={128}
                 />
@@ -162,7 +162,7 @@ export default function CustomerAuth({ mode }: { mode: Mode }) {
                 name="confirmPassword"
                 type={visible ? "text" : "password"}
                 autoComplete="new-password"
-                minLength={12}
+                minLength={6}
                 placeholder="Confirm your password"
                 required
                 maxLength={128}
@@ -179,9 +179,12 @@ export default function CustomerAuth({ mode }: { mode: Mode }) {
           )}
 
           {isRegister && (
-            <p className="skauth-terms">
-              <label className="skauth-terms"><input type="checkbox" name="termsAccepted" required /> I agree to the <Link href="/terms">Terms of Service</Link> and <Link href="/privacy-policy">Privacy Policy</Link>.</label>
-            </p>
+            <div className="skauth-terms">
+              <label className="skauth-consent">
+                <input type="checkbox" name="termsAccepted" required />
+                <span>I agree to the <Link href="/terms">Terms of Service</Link> and <Link href="/privacy-policy">Privacy Policy</Link>.</span>
+              </label>
+            </div>
           )}
 
           <button className="skauth-submit" type="submit">

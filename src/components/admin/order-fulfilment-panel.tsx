@@ -278,7 +278,7 @@ export default function OrderFulfilmentPanel(props: Props) {
           props.paymentStatus === "UNPAID" &&
           props.inventoryStatus === "PENDING" &&
           !cancelled && (
-          <div style={{ marginTop: 18, paddingTop: 16, borderTop: "1px solid #ddd" }}>
+          <div style={{ marginTop: 18, paddingTop: 16, borderTop: "1px solid var(--skad-border)" }}>
             <p style={{ marginBottom: 10 }}>
               Unpaid order? Cancellation requires a fresh Razorpay LIVE check. If verification fails or any payment activity exists, cancellation is blocked for manual review.
             </p>
@@ -289,8 +289,8 @@ export default function OrderFulfilmentPanel(props: Props) {
               style={{
                 padding: "11px 18px",
                 borderRadius: 8,
-                border: "1px solid #b42318",
-                color: "#b42318",
+                border: "1px solid var(--skad-error)",
+                color: "var(--skad-error)",
                 background: "transparent",
                 cursor: cancelling ? "wait" : "pointer",
                 fontWeight: 700

@@ -460,7 +460,7 @@ export default function HeroManager() {
           ...prev,
           [key]: type === "number" ? Number(e.target.value) : e.target.value,
         }))}
-        style={{ padding: 12, border: "1px solid #ccc", borderRadius: 8 }}
+        style={{ padding: 12, border: "1px solid var(--skad-border)", borderRadius: 8 }}
       />
     </label>
   );
@@ -486,15 +486,15 @@ export default function HeroManager() {
             alignItems: "center",
             justifyContent: "center",
             gap: 8,
-            background: "#142b49",
-            color: "#fff",
-            border: "1px solid #cba35c",
+            background: "var(--skad-primary-button)",
+            color: "var(--skad-button-text)",
+            border: "1px solid var(--skad-border)",
             borderRadius: 10,
             padding: "12px 20px",
             fontSize: 14,
             fontWeight: 700,
             cursor: "pointer",
-            boxShadow: "0 4px 12px rgba(20,43,73,.15)"
+            boxShadow: "0 4px 12px color-mix(in srgb, var(--skad-primary) 18%, transparent)"
           }}
         >
           <Plus size={17} aria-hidden="true" />
@@ -502,8 +502,8 @@ export default function HeroManager() {
         </button>
       </header>
 
-      {error && <p role="alert" style={{ color: "#b91c1c" }}>{error}</p>}
-      {notice && <p role="status" style={{ color: "#15803d" }}>{notice}</p>}
+      {error && <p role="alert" style={{ color: "var(--skad-error)" }}>{error}</p>}
+      {notice && <p role="status" style={{ color: "var(--skad-success)" }}>{notice}</p>}
       {loading && <p>Loading slides...</p>}
 
       {!loading && slides.length === 0 && (
@@ -535,7 +535,7 @@ export default function HeroManager() {
             }}
             onDragEnd={() => { dragIndex.current = null; }}
             style={{
-              border: "1px solid #ddd",
+              border: "1px solid var(--skad-border)",
               borderRadius: 12,
               padding: 18,
               cursor: reordering ? "wait" : "grab",
@@ -578,8 +578,8 @@ export default function HeroManager() {
           }}
         >
           <div style={{
-            background: "#fff",
-            color: "#111",
+            background: "var(--sk-theme-card)",
+            color: "var(--skad-ink)",
             padding: 24,
             borderRadius: 14,
             width: "min(900px,100%)",
@@ -605,7 +605,7 @@ export default function HeroManager() {
                   type="button"
                   key={asset.id}
                   onClick={() => chooseMedia(asset)}
-                  style={{ border: "1px solid #ddd", padding: 8, borderRadius: 10 }}
+                  style={{ border: "1px solid var(--skad-border)", padding: 8, borderRadius: 10 }}
                 >
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
@@ -624,12 +624,12 @@ export default function HeroManager() {
       )}
 
       {editing && (
-        <div className="hero-manager__editor" style={{ marginTop: 28, padding: 24, border: "1px solid #ddd", borderRadius: 12 }}>
+        <div className="hero-manager__editor" style={{ marginTop: 28, padding: 24, border: "1px solid var(--skad-border)", borderRadius: 12 }}>
           {/* HERO_VIDEO_CONTROLS_V1 */}
           <div style={{
             marginTop: 22,
             padding: 20,
-            border: "1px solid #ddd",
+            border: "1px solid var(--skad-border)",
             borderRadius: 12,
             display: "grid",
             gap: 16
@@ -664,16 +664,16 @@ export default function HeroManager() {
                     padding: 18,
                     textAlign: "left",
                     borderRadius: 12,
-                    border: "1px solid #d6dce5",
-                    background: "#ffffff",
-                    color: "#142b49",
+                    border: "1px solid var(--skad-border)",
+                    background: "var(--sk-theme-color-surface)",
+                    color: "var(--skad-ink)",
                     cursor: "pointer",
                     minHeight: 125
                   }}
                 >
                   <span aria-hidden="true" className="hero-manager__type-icon">{icon}</span>
                   <strong style={{ fontSize: 15 }}>{title}</strong>
-                  <span style={{ fontSize: 12, color: "#65758b" }}>
+                  <span style={{ fontSize: 12, color: "var(--skad-muted)" }}>
                     {description}
                   </span>
                 </button>
@@ -868,7 +868,7 @@ export default function HeroManager() {
                 <strong>{key === "desktopImage" ? "Desktop Preview" : "Mobile Preview"}</strong>
                 <div style={{
                   marginTop: 10,
-                  background: "#222",
+                  background: "var(--skad-primary)",
                   borderRadius: 12,
                   overflow: "hidden",
                   aspectRatio: key === "desktopImage" ? "16 / 9" : "9 / 16",
@@ -886,7 +886,7 @@ export default function HeroManager() {
                       display: "grid",
                       placeItems: "center",
                       height: "100%",
-                      color: "#fff"
+                      color: "var(--skad-on-dark)"
                     }}>
                       No image selected
                     </div>

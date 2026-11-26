@@ -233,16 +233,16 @@ export default function CustomerGalleryManager() {
   const fieldStyle = {
     width: "100%",
     padding: "12px 14px",
-    border: "1px solid #d9d2c4",
+    border: "1px solid var(--skad-border)",
     borderRadius: 10,
-    background: "#fff",
-    color: "#17243b",
+    background: "var(--skad-surface)",
+    color: "var(--skad-ink)",
   };
 
   return (
-    <section style={{ padding: 24, color: "#17243b" }}>
+    <section style={{ padding: 24, color: "var(--skad-ink)" }}>
       <header style={{ marginBottom: 24 }}>
-        <p style={{ color: "#aa8441", fontWeight: 700, letterSpacing: 2 }}>
+        <p style={{ color: "var(--skad-accent-text)", fontWeight: 700, letterSpacing: 2 }}>
           CONTENT MANAGEMENT
         </p>
         <h1 style={{ fontSize: 30, margin: "8px 0" }}>Customer Gallery</h1>
@@ -250,8 +250,8 @@ export default function CustomerGalleryManager() {
       </header>
 
       <div style={{
-        background: "#faf8f3",
-        border: "1px solid #e7dfcf",
+        background: "var(--sk-theme-card)",
+        border: "1px solid var(--skad-border)",
         borderRadius: 18,
         padding: 22,
         marginBottom: 28,
@@ -266,8 +266,8 @@ export default function CustomerGalleryManager() {
               display: "inline-flex",
               alignItems: "center",
               gap: 8,
-              background: "#17243b",
-              color: "#fff",
+              background: "var(--skad-primary-button)",
+              color: "var(--skad-button-text)",
               padding: "12px 18px",
               borderRadius: 10,
               cursor: busy ? "not-allowed" : "pointer",
@@ -401,8 +401,8 @@ export default function CustomerGalleryManager() {
               display: "inline-flex",
               alignItems: "center",
               gap: 8,
-              background: "#17243b",
-              color: "white",
+              background: "var(--skad-primary-button)",
+              color: "var(--skad-button-text)",
               border: 0,
               borderRadius: 10,
               padding: "12px 20px",
@@ -438,8 +438,8 @@ export default function CustomerGalleryManager() {
       }}>
         {photos.map(photo => (
           <article key={photo.id} style={{
-            background: "white",
-            border: "1px solid #e6dfd3",
+            background: "var(--sk-theme-card)",
+            border: "1px solid var(--skad-border)",
             borderRadius: 16,
             overflow: "hidden",
           }}>

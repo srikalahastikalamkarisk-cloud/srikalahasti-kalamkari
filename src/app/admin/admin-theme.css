@@ -1,0 +1,572 @@
+/* Admin surfaces inherit the one published storefront palette from <html>.
+   The selector is deliberately scoped so storefront presentation is unchanged. */
+.sk-admin-theme-root {
+  --skad-page: var(--sk-theme-color-pageBackground, #f8f3e9);
+  --skad-page-gradient: var(--sk-theme-pageBackground, linear-gradient(180deg, #f8f3e9, #fffdf8));
+  --skad-surface: var(--sk-theme-color-surface, #fffdf8);
+  --skad-surface-soft: var(--sk-theme-color-surfaceSoft, #f1e8d8);
+  --skad-surface-gradient: var(--sk-theme-card, linear-gradient(145deg, #fffdf8, #f1e8d8));
+  --skad-ink: var(--sk-theme-color-body, #1c2737);
+  --skad-heading: var(--sk-theme-color-heading, #08162c);
+  --skad-muted: var(--sk-theme-muted, #626e7d);
+  --skad-border: var(--sk-theme-border, #b58a43);
+  --skad-divider: var(--sk-theme-color-divider, #b58a43aa);
+  --skad-accent: var(--sk-theme-accent, #b58a43);
+  --skad-accent-text: var(--sk-theme-color-accentForeground, #08162c);
+  --skad-primary: var(--sk-theme-primary, #08162c);
+  --skad-secondary: var(--sk-theme-secondary, #172b49);
+  --skad-navigation: var(--sk-theme-navigation, linear-gradient(90deg, #172b49, #08162c));
+  --skad-navigation-text: var(--sk-theme-color-navigationText, #fffdf8);
+  --skad-on-dark: var(--sk-theme-onDark, #fffdf8);
+  --skad-input: var(--sk-theme-input, linear-gradient(180deg, #fffdf8, #f8f3e9));
+  --skad-primary-button: var(--sk-theme-primaryButton, linear-gradient(105deg, #10213b, #172b49));
+  --skad-secondary-button: var(--sk-theme-secondaryButton, linear-gradient(120deg, #fffdf8, #f1e8d8));
+  --skad-button-text: var(--sk-theme-color-buttonText, #fffdf8);
+  --skad-hover: var(--sk-theme-hover, linear-gradient(105deg, #08162c, #172b49));
+  --skad-focus: var(--sk-theme-focus, #b58a43);
+  --skad-success: var(--sk-theme-color-success, #27734a);
+  --skad-error: var(--sk-theme-color-error, #a23b32);
+  --about-navy: var(--skad-heading);
+  --about-ivory: var(--skad-surface);
+  --about-paper: var(--skad-surface-soft);
+  --about-gold: var(--skad-accent);
+  --about-border: var(--skad-border);
+  --hero-navy: var(--skad-primary);
+  --hero-gold: var(--skad-accent);
+  --hero-ivory: var(--skad-page);
+  --hero-surface: var(--skad-surface);
+  --hero-border: var(--skad-border);
+  --hero-muted: var(--skad-muted);
+  --hero-white: var(--skad-on-dark);
+  --import-navy: var(--skad-primary);
+  --import-gold: var(--skad-accent);
+  --import-ink: var(--skad-ink);
+  --import-line: var(--skad-border);
+  --import-muted: var(--skad-muted);
+  --ml-navy: var(--skad-primary);
+  --ml-border: var(--skad-border);
+  --ml-muted: var(--skad-muted);
+  --ta-ink: var(--skad-ink);
+  --ta-muted: var(--skad-muted);
+  --ta-gold: var(--skad-accent-text);
+  --action-bg: var(--skad-primary-button);
+  --action-border: var(--skad-border);
+  --action-hover: var(--skad-hover);
+  --action-text: var(--skad-button-text);
+
+  display: flow-root;
+  min-height: 100svh;
+  color: var(--skad-ink);
+  background-color: var(--skad-page);
+  background-image: var(--skad-page-gradient);
+  color-scheme: light;
+  accent-color: var(--skad-accent);
+}
+
+.sk-admin-theme-root,
+.sk-admin-theme-root * {
+  box-sizing: border-box;
+}
+
+.sk-admin-theme-root :is(.skad-shell, .skad-app) {
+  --navy: var(--skad-primary);
+  --navy2: var(--skad-secondary);
+  --gold: var(--skad-accent);
+  --ink: var(--skad-ink);
+  --muted: var(--skad-muted);
+  --line: var(--skad-border);
+  color: var(--skad-ink);
+  background-color: var(--skad-page) !important;
+  background-image: var(--skad-page-gradient) !important;
+}
+
+.sk-admin-theme-root :is(.about-editor, .hero-manager, .skml-app, .sk-theme-admin) {
+  --about-navy: var(--skad-heading);
+  --about-ivory: var(--skad-surface);
+  --about-paper: var(--skad-surface-soft);
+  --about-gold: var(--skad-accent);
+  --about-border: var(--skad-border);
+  --hero-navy: var(--skad-primary);
+  --hero-gold: var(--skad-accent);
+  --hero-ivory: var(--skad-page);
+  --hero-surface: var(--skad-surface);
+  --hero-border: var(--skad-border);
+  --hero-muted: var(--skad-muted);
+  --hero-white: var(--skad-on-dark);
+  --ml-navy: var(--skad-primary);
+  --ml-border: var(--skad-border);
+  --ml-muted: var(--skad-muted);
+  --ta-ink: var(--skad-ink);
+  --ta-muted: var(--skad-muted);
+  --ta-gold: var(--skad-accent-text);
+}
+
+.sk-admin-theme-root .skad-main {
+  color: var(--skad-ink);
+  background-color: transparent;
+}
+
+.sk-admin-theme-root .skad-mobile-dock {
+  color: var(--skad-ink);
+  background: var(--skad-surface-gradient) !important;
+  border-color: var(--skad-border) !important;
+}
+
+.sk-admin-theme-root .skad-dock-item {
+  color: var(--skad-ink);
+}
+
+.sk-admin-theme-root .skad-dock-item.is-active,
+.sk-admin-theme-root .skad-dock-item.is-add {
+  color: var(--skad-button-text) !important;
+  background: var(--skad-primary-button) !important;
+  border-color: var(--skad-primary) !important;
+}
+
+/* Shared navigation and admin chrome. */
+.sk-admin-theme-root .skad-sidebar {
+  color: var(--skad-navigation-text);
+  background: var(--skad-navigation) !important;
+  border-color: var(--sk-theme-color-borderOnDark, var(--skad-border));
+}
+
+.sk-admin-theme-root :is(.skad-brand, .skad-sidebar-footer, .skad-store-status) {
+  border-color: color-mix(in srgb, var(--sk-theme-color-borderOnDark, var(--skad-accent)) 32%, transparent);
+}
+
+.sk-admin-theme-root .skad-brand-mark {
+  color: var(--sk-theme-color-accentOnDark, var(--skad-accent));
+  border-color: var(--sk-theme-color-borderOnDark, var(--skad-accent));
+  background: var(--skad-primary);
+}
+
+.sk-admin-theme-root .skad-brand-copy :is(strong, small),
+.sk-admin-theme-root .skad-store-status,
+.sk-admin-theme-root .skad-nav-heading,
+.sk-admin-theme-root .skad-nav-link,
+.sk-admin-theme-root .skad-coming,
+.sk-admin-theme-root .skad-collapse,
+.sk-admin-theme-root .skad-mobile-close,
+.sk-admin-theme-root .skad-logout {
+  color: var(--skad-navigation-text);
+}
+
+.sk-admin-theme-root .skad-nav-heading,
+.sk-admin-theme-root .skad-coming {
+  opacity: .76;
+}
+
+.sk-admin-theme-root :is(.skad-nav-link:hover, .skad-logout:hover) {
+  color: var(--skad-navigation-text);
+  background: color-mix(in srgb, var(--sk-theme-color-navigationText, #fff) 12%, transparent);
+}
+
+.sk-admin-theme-root .skad-nav-link.is-active {
+  color: var(--skad-button-text) !important;
+  background: var(--skad-primary-button) !important;
+  box-shadow: 0 5px 16px color-mix(in srgb, var(--skad-primary) 22%, transparent);
+}
+
+.sk-admin-theme-root .skad-active-dot {
+  background: var(--skad-button-text);
+}
+
+.sk-admin-theme-root .skad-topbar {
+  color: var(--skad-ink);
+  background: var(--skad-surface-gradient) !important;
+  border-color: var(--skad-border);
+}
+
+.sk-admin-theme-root .skad-breadcrumb,
+.sk-admin-theme-root .skad-topbar-status {
+  color: var(--skad-muted);
+}
+
+.sk-admin-theme-root .skad-breadcrumb strong,
+.sk-admin-theme-root .skad-welcome h1,
+.sk-admin-theme-root .skad-section-heading h2,
+.sk-admin-theme-root .skad-panel-heading h2 {
+  color: var(--skad-heading);
+}
+
+.sk-admin-theme-root .skad-avatar,
+.sk-admin-theme-root .skad-mobile-trigger {
+  color: var(--skad-heading);
+  background: var(--skad-surface);
+  border-color: var(--skad-border);
+}
+
+.sk-admin-theme-root .skad-content,
+.sk-admin-theme-root :is(
+  .skcustomers-content, .skorders-content, .sk-settings-page, .skcm-content,
+  .skcoupons-content, .skpm-content, .skpm-page, .skin-content, .skin-page,
+  .skml-content, .hero-manager, .vsm-content, .vsm-page, .about-editor, .about-page-editor,
+  .sk-theme-admin, .sk-product-import
+) {
+  color: var(--skad-ink);
+}
+
+/* Dashboard cards retain their shape and spacing while using palette surfaces. */
+.sk-admin-theme-root :is(.skad-metric, .skad-panel, .skad-action-row, .skad-secondary-metrics > div) {
+  color: var(--skad-ink);
+  background: var(--skad-surface-gradient) !important;
+  border-color: var(--skad-border) !important;
+}
+
+.sk-admin-theme-root .skad-metric.primary {
+  color: var(--skad-on-dark) !important;
+  background: var(--sk-theme-primary, var(--skad-primary)) !important;
+  background-image: var(--sk-theme-primary, var(--skad-primary)) !important;
+  border-color: var(--sk-theme-color-borderOnDark, var(--skad-border)) !important;
+}
+
+.sk-admin-theme-root .skad-metric.primary :is(.skad-metric-icon, p) {
+  color: var(--skad-on-dark);
+}
+
+.sk-admin-theme-root :is(.skad-eyebrow, .skad-gold, .skad-hero-label, .skad-hero-tag) {
+  color: var(--sk-theme-color-accentOnDark, var(--skad-accent));
+}
+
+.sk-admin-theme-root .skad-hero {
+  color: var(--skad-on-dark);
+  background: var(--sk-theme-primary, var(--skad-primary)) !important;
+  background-image: var(--sk-theme-primary, var(--skad-primary)) !important;
+  border-color: var(--sk-theme-color-borderOnDark, var(--skad-border));
+}
+
+.sk-admin-theme-root .skad-hero :is(h2, em, p, .skad-hero-art span) {
+  color: var(--skad-on-dark);
+}
+
+.sk-admin-theme-root .skad-hero :is(.skad-hero-label, .skad-hero-tag, h2 em) {
+  color: var(--sk-theme-color-accentOnDark, var(--skad-accent));
+}
+
+.sk-admin-theme-root :is(.skad-outline-action, .skad-action-icon, .skad-empty-icon) {
+  color: var(--skad-accent-text);
+  background: var(--sk-theme-secondaryButton, var(--skad-surface-soft));
+  border-color: var(--skad-border);
+}
+
+.sk-admin-theme-root :is(.skad-outline-action:hover, .skad-action-row:hover) {
+  border-color: var(--skad-focus);
+  background: var(--sk-theme-secondaryButton, var(--skad-surface-soft)) !important;
+}
+
+/* Palette-driven surfaces for the component libraries used by every admin route. */
+.sk-admin-theme-root :is(
+  [class*="card"], [class*="panel"], [class*="dialog"], [class*="modal"],
+  [class*="-menu"], [class*="-dropdown"], [class*="-popover"],
+  [class*="-stats"] > article, [class*="-metric"], [class*="-section-card"],
+  [class*="-table-wrap"], [class*="-table-scroll"], [class*="-toolbar"],
+  [class*="-dropzone"], [class*="-drop-zone"], [class*="-upload-area"],
+  .about-editor__card, .ape-card, .sk-login-shell, .sk-recovery-card,
+  .sk-theme-controls, .sk-theme-preview-column, .sk-theme-library
+):not(.sk-theme-demo *):not([class*="backdrop"]):not([class*="swatch"]) {
+  border-color: var(--skad-border);
+}
+
+.sk-admin-theme-root :is(
+  [class*="card"], [class*="panel"], [class*="-stats"] > article,
+  [class*="-metric"], [class*="-section-card"], [class*="-menu"],
+  [class*="-dropdown"], [class*="-popover"], [class*="-dropzone"],
+  [class*="-drop-zone"], [class*="-upload-area"], .about-editor__card,
+  .ape-card, .sk-login-shell, .sk-recovery-card, .sk-theme-controls,
+  .sk-theme-preview-column, .sk-theme-library
+):not(.sk-theme-demo *):not([class*="swatch"]) {
+  color: var(--skad-ink);
+  background-color: var(--skad-surface) !important;
+  background-image: var(--sk-theme-card, none) !important;
+}
+
+.sk-admin-theme-root :is(
+  .skcustomers-heading h1, .skorders-heading h1, .sk-settings-page h1,
+  .skcm-page-head h1, .skcoupons-heading h1, .skpm-heading h1,
+  .skin-heading h1, .hero-manager h1, .vsm-header h1,
+  .about-editor h1, .about-page-editor h1, .sk-theme-admin h1
+) {
+  color: var(--skad-heading);
+}
+
+/* Component libraries use different page class names, so headings and modal
+   surfaces share the same tokens without changing the established layouts. */
+.sk-admin-theme-root :not(.sk-theme-demo *) :is(h1, h2, h3, h4) {
+  color: var(--skad-heading) !important;
+}
+
+.sk-admin-theme-root .skad-hero :is(h2, em, p, .skad-hero-art span) {
+  color: var(--skad-on-dark) !important;
+}
+
+.sk-admin-theme-root .skad-hero :is(.skad-hero-label, .skad-hero-tag, h2 em) {
+  color: var(--sk-theme-color-accentOnDark, var(--skad-accent)) !important;
+}
+
+.sk-admin-theme-root :not(.sk-theme-demo *)[class*="backdrop"] {
+  background-color: color-mix(in srgb, var(--skad-primary) 58%, transparent) !important;
+}
+
+.sk-admin-theme-root :not(.sk-theme-demo *) :is(option, optgroup) {
+  color: var(--skad-ink);
+  background: var(--skad-surface);
+}
+
+/* Auth screens are themed from the same server-rendered variables as the shell. */
+.sk-admin-theme-root :is(.sk-admin-login, .sk-admin-recovery) {
+  color: var(--skad-on-dark);
+  background: var(--sk-theme-loading, var(--skad-primary)) !important;
+}
+
+.sk-admin-theme-root :is(.sk-login-shell, .sk-recovery-card) {
+  color: var(--skad-ink);
+  border-color: var(--skad-border) !important;
+  background: var(--sk-theme-card, var(--skad-surface)) !important;
+}
+
+.sk-admin-theme-root :is(.sk-login-logo-frame, .sk-recovery-logo-frame) {
+  border-color: var(--sk-theme-color-borderOnDark, var(--skad-accent));
+  background: var(--skad-primary);
+}
+
+.sk-admin-theme-root :is(
+  .sk-login-brand-name strong, .sk-login-form-wrap h2, .sk-recovery-card h1,
+  .sk-recovery-brand strong
+) {
+  color: var(--skad-heading);
+}
+
+.sk-admin-theme-root :is(
+  .sk-login-label, .sk-login-brand-name span, .sk-login-gold-divider,
+  .sk-recovery-brand span, .sk-recovery-ornament, .sk-recovery-label,
+  .sk-theme-eyebrow, .sk-theme-small-label, .sk-theme-card-copy small
+) {
+  color: var(--skad-accent-text);
+}
+
+/* Fields, selects, search, focus, and table states share readable theme tokens. */
+.sk-admin-theme-root :not(.sk-theme-demo *):is(input, select, textarea) {
+  color: var(--skad-ink) !important;
+  background-color: var(--sk-theme-color-inputBackground, var(--skad-surface)) !important;
+  border-color: var(--skad-border) !important;
+  accent-color: var(--skad-accent);
+}
+
+/* Keep the About editor's visually hidden file picker from expanding the
+   document width when shared admin input styles are active. */
+.sk-admin-theme-root .about-editor__upload input[type="file"] {
+  width: 1px !important;
+  max-width: 1px;
+}
+
+.sk-admin-theme-root :not(.sk-theme-demo *)::placeholder {
+  color: var(--skad-muted);
+  opacity: .82;
+}
+
+.sk-admin-theme-root :not(.sk-theme-demo *):is(button, a, input, select, textarea, [tabindex]):focus-visible {
+  outline-color: var(--skad-focus) !important;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--skad-focus) 22%, transparent);
+}
+
+.sk-admin-theme-root :not(.sk-theme-demo *) :is(table, th, td) {
+  border-color: var(--sk-theme-color-divider, var(--skad-border));
+}
+
+.sk-admin-theme-root :not(.sk-theme-demo *) th {
+  color: var(--skad-muted);
+  background: var(--skad-surface-soft);
+}
+
+.sk-admin-theme-root :not(.sk-theme-demo *) tbody tr:hover {
+  background: color-mix(in srgb, var(--skad-accent) 9%, var(--skad-surface));
+}
+
+.sk-admin-theme-root :not(.sk-theme-demo *) :is(
+  .sk-login-form label, .sk-recovery-card label, .sk-settings-page label,
+  .ape-field, .skcustomers-filters, .skorders-filters, .skcm-field,
+  .skpm-filter, .skcoupons-field, .hero-manager label, .vsm-form label
+) {
+  color: var(--skad-ink);
+}
+
+/* Primary and secondary actions map to the selected palette; danger/success
+   states retain their meaning and use theme-defined status colors. */
+.sk-admin-theme-root :not(.sk-theme-demo *) :is(
+  button[type="submit"], [class*="-primary"], [class*="-save"],
+  [class*="-submit"], [class*="-confirm"], [class$="-add-btn"],
+  .sk-login-submit, .sk-recovery-card form button, .sk-settings-primary,
+  .about-editor__save, .ape-save, .skorder-fulfilment-save,
+  .skcoupons-primary, .skpm-add-btn, .skpm-export-btn
+):not([class*="danger"]):not([class*="delete"]):not([class*="error"]) {
+  color: var(--skad-button-text) !important;
+  background: var(--skad-primary-button) !important;
+  border-color: var(--skad-primary) !important;
+}
+
+.sk-admin-theme-root :not(.sk-theme-demo *) :is(
+  [class*="-secondary"], [class*="-cancel"], [class*="-back"],
+  .sk-theme-secondary, .sk-settings-secondary, .about-editor__secondary,
+  .skad-outline-action
+):not([class*="danger"]):not([class*="delete"]) {
+  color: var(--skad-ink) !important;
+  background: var(--skad-secondary-button) !important;
+  border-color: var(--skad-border) !important;
+}
+
+.sk-admin-theme-root :not(.sk-theme-demo *) :is(
+  button, a, [role="button"], .skcd-trigger, .skcd-option
+):not(:disabled):hover {
+  border-color: var(--skad-focus);
+}
+
+.sk-admin-theme-root :not(.sk-theme-demo *) :is(
+  .is-selected, .selected, [aria-selected="true"], [aria-pressed="true"]
+) {
+  border-color: var(--skad-accent);
+}
+
+.sk-admin-theme-root :not(.sk-theme-demo *) :is(
+  .skad-navigation-spinner, [role="progressbar"], .skml-spinner,
+  .sk-products-loading, .sk-theme-loading
+) {
+  border-color: var(--skad-border);
+  border-top-color: var(--skad-accent);
+}
+
+.sk-admin-theme-root :not(.sk-theme-demo *) :is(
+  .skad-loading-card, .skad-loading-content, [class*="-skeleton"]
+) {
+  background: var(--sk-theme-skeleton, var(--skad-surface-soft));
+  border-color: var(--skad-border);
+}
+
+.sk-admin-theme-root :not(.sk-theme-demo *) :is(.sk-skeleton, [class*="skeleton"]) {
+  background: var(--sk-theme-skeleton, var(--skad-surface-soft));
+}
+
+.sk-admin-theme-root :not(.sk-theme-demo *) :is(.sk-login-error, .sk-recovery-error, [role="alert"]) {
+  color: var(--sk-theme-color-error, var(--skad-error));
+}
+
+.sk-admin-theme-root :not(.sk-theme-demo *) :is(.sk-stock, .is-success, [data-status="success"]) {
+  color: var(--sk-theme-color-success, var(--skad-success));
+}
+
+.sk-admin-theme-root .sk-theme-demo,
+.sk-admin-theme-root .sk-theme-demo * {
+  color-scheme: light;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sk-admin-theme-root *,
+  .sk-admin-theme-root *::before,
+  .sk-admin-theme-root *::after {
+    scroll-behavior: auto !important;
+    transition-duration: .01ms !important;
+  }
+}
+
+
+/* STEP 851B - Minimal premium admin mobile dock */
+
+@media (max-width: 850px) {
+
+  .sk-admin-theme-root .skad-shell .skad-mobile-dock {
+    background: var(--skad-surface-gradient) !important;
+    border: 1px solid var(--skad-border) !important;
+    border-radius: 20px;
+    padding: 7px 5px;
+    gap: 2px;
+    box-shadow: 0 5px 20px rgba(0,0,0,.10);
+    align-items: stretch;
+  }
+
+  .sk-admin-theme-root .skad-mobile-dock .skad-dock-item,
+  .sk-admin-theme-root .skad-mobile-dock .skad-dock-item.is-add,
+  .sk-admin-theme-root .skad-mobile-dock .skad-dock-item.is-active {
+    background: transparent !important;
+    color: var(--skad-ink) !important;
+    border: 0 !important;
+    box-shadow: none !important;
+    border-radius: 10px;
+    min-height: 54px;
+    padding: 5px 0 8px;
+    gap: 4px;
+    opacity: 1;
+    transform: none;
+  }
+
+  .sk-admin-theme-root .skad-mobile-dock
+  .skad-dock-item .skad-dock-icon {
+    display: grid;
+    place-items: center;
+    width: 30px;
+    height: 26px;
+    margin: 0 !important;
+    padding: 0;
+    background: transparent !important;
+    border: 0 !important;
+    border-radius: 0;
+    box-shadow: none !important;
+    outline: none !important;
+    color: inherit !important;
+    transform: none;
+  }
+
+  .sk-admin-theme-root .skad-mobile-dock
+  .skad-dock-icon svg {
+    width: 22px;
+    height: 22px;
+    color: inherit !important;
+    stroke: currentColor;
+  }
+
+  .sk-admin-theme-root .skad-mobile-dock
+  .skad-dock-item .skad-dock-label {
+    color: inherit !important;
+    -webkit-text-fill-color: currentColor !important;
+    font-size: 10px;
+    font-weight: 500;
+    line-height: 1.2;
+    letter-spacing: 0;
+    opacity: 1;
+  }
+
+  .sk-admin-theme-root .skad-mobile-dock
+  .skad-dock-item.is-active .skad-dock-label {
+    font-weight: 700;
+  }
+
+  .sk-admin-theme-root .skad-mobile-dock
+  .skad-dock-item.is-active::after {
+    content: "";
+    position: absolute;
+    bottom: 2px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 16px;
+    height: 3px;
+    border-radius: 4px;
+    background: currentColor !important;
+  }
+
+  .sk-admin-theme-root .skad-mobile-dock
+  .skad-dock-item:focus-visible {
+    outline: 2px solid var(--skad-ink);
+    outline-offset: -2px;
+  }
+
+  .sk-admin-theme-root .skad-mobile-dock
+  .skad-navigation-spinner {
+    border-color: transparent;
+    border-top-color: currentColor;
+  }
+}
+
+@media (max-width: 360px) {
+  .sk-admin-theme-root .skad-mobile-dock
+  .skad-dock-item .skad-dock-label {
+    font-size: 9px;
+  }
+}

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState, type CSSProperties } from "react";
+import { useRouter } from "next/navigation";
 import { Check, Eye, Monitor, RotateCcw, Search, Smartphone, Sparkles } from "lucide-react";
 import {
   ORIGINAL_THEME_ID,
@@ -13,6 +14,7 @@ import {
 import "./theme-manager.css";
 
 export default function ThemeManager() {
+  const router = useRouter();
   const [previewId, setPreviewId] = useState(ORIGINAL_THEME_ID);
   const [publishedId, setPublishedId] = useState(ORIGINAL_THEME_ID);
   const [busy, setBusy] = useState(false);
@@ -20,7 +22,11 @@ export default function ThemeManager() {
   useEffect(() => {
     fetch("/api/admin/appearance", { cache: "no-store" })
       .then(async response => { if (!response.ok) throw new Error("Unable to load published theme"); return response.json(); })
-      .then(data => setPublishedId(data.themeId || ORIGINAL_THEME_ID))
+      .then(data => {
+        const current = data.themeId || ORIGINAL_THEME_ID;
+        setPublishedId(current);
+        setPreviewId(current);
+      })
       .catch(error => setMessage(error.message));
   }, []);
 
@@ -35,7 +41,14 @@ export default function ThemeManager() {
       });
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || "Theme action failed");
-      if (method === "PUT" && themeId) setPublishedId(themeId);
+      if (method === "PUT" && themeId) {
+        setPublishedId(themeId);
+        applyDocumentTheme(themeId);
+        router.refresh();
+      } else if (method === "DELETE") {
+        applyDocumentTheme(publishedId);
+        router.refresh();
+      }
       if (storefrontWindow) storefrontWindow.location.href = "/";
       if (method === "POST") {
         setMessage("Private preview opened in a new tab for one hour.");
@@ -230,6 +243,15 @@ export default function ThemeManager() {
       </section>
     </div>
   );
+}
+
+function applyDocumentTheme(themeId: string) {
+  const theme = resolveStoreTheme(themeId);
+  const root = document.documentElement;
+  root.dataset.storefrontTheme = theme.id;
+  for (const [name, value] of Object.entries(themeCssVariables(theme))) {
+    root.style.setProperty(name, value);
+  }
 }
 
 function ThemePreview({

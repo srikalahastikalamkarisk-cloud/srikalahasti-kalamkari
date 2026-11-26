@@ -11,7 +11,7 @@ const schema = z.object({ token: z.string().max(64), password: z.string().max(12
 export async function POST(request: NextRequest) {
   try {
     if (!isValidRequestOrigin(request)) return NextResponse.json({ error: "Invalid request." }, { status: 400 });
-    const parsed = schema.safeParse(await request.json()); if (!parsed.success || !validCustomerToken(parsed.data.token)) return NextResponse.json({ error: "Invalid reset link." , code: "invalid" }, { status: 400 }); if (!strongCustomerPassword(parsed.data.password)) return NextResponse.json({ error: "Your password does not meet the security requirements.", code: "invalid_password" }, { status: 400 });
+    const parsed = schema.safeParse(await request.json()); if (!parsed.success || !validCustomerToken(parsed.data.token)) return NextResponse.json({ error: "Invalid reset link." , code: "invalid" }, { status: 400 }); if (!strongCustomerPassword(parsed.data.password)) return NextResponse.json({ error: "Use a password with 6 to 128 characters.", code: "invalid_password" }, { status: 400 });
     if (!await customerRateAllowed("reset-redeem", request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown", 12, 15 * 60000)) return NextResponse.json({ error: "Please wait before trying again." }, { status: 429 });
     const tokenHash = hashCustomerToken(parsed.data.token); const now = new Date(); const passwordHash = await hash(parsed.data.password, 12);
     const owner = await prisma.customerPasswordResetToken.findFirst({ where: { tokenHash, usedAt: null, expiresAt: { gt: now } }, select: { id: true, customerId: true } }); if (!owner) return NextResponse.json({ error: "This reset link has expired or was already used.", code: "expired" }, { status: 400 });
