@@ -40,7 +40,9 @@ export default function StoriesInMotion({ stories }: { stories: Story[] }) {
   const activeRef = useRef(0);
   const [paused, setPaused] = useState(false);
   const [hovered, setHovered] = useState(false);
+  const [nearViewport, setNearViewport] = useState(false);
   const [visible, setVisible] = useState(false);
+  const [limitedConnection, setLimitedConnection] = useState(true);
   const [reduced, setReduced] = useState(false);
   const [active, setActive] = useState(0);
   const [activeCopy, setActiveCopy] = useState(
@@ -50,7 +52,8 @@ export default function StoriesInMotion({ stories }: { stories: Story[] }) {
   const [soundId, setSoundId] = useState<string | null>(null);
   const [youtubeSound, setYoutubeSound] = useState<string | null>(null);
   const [failed, setFailed] = useState<Record<string, boolean>>({});
-  const [available, setAvailable] = useState<Record<string, boolean>>({});
+  const [videoRetries, setVideoRetries] = useState<Record<string, number>>({});
+  const retriedStories = useRef(new Set<string>());
   const [motion, setMotion] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
 
@@ -60,6 +63,13 @@ export default function StoriesInMotion({ stories }: { stories: Story[] }) {
     update();
     query.addEventListener("change", update);
     return () => query.removeEventListener("change", update);
+  }, []);
+  useEffect(() => {
+    const connection = (navigator as Navigator & { connection?: EventTarget & { saveData?: boolean; effectiveType?: string } }).connection;
+    const update = () => setLimitedConnection(Boolean(connection?.saveData || /^(slow-2g|2g)$/.test(connection?.effectiveType || "")));
+    update();
+    connection?.addEventListener("change", update);
+    return () => connection?.removeEventListener("change", update);
   }, []);
   const count = stories.length;
   const jumpTo = useCallback((index: number, smooth = true) => {
@@ -87,9 +97,11 @@ export default function StoriesInMotion({ stories }: { stories: Story[] }) {
   useEffect(() => {
     const el = rail.current;
     if (!el) return;
-    const observer = new IntersectionObserver(([entry]) => setVisible(entry.isIntersecting), { threshold: 0.08 });
-    observer.observe(el);
-    return () => observer.disconnect();
+    const nearObserver = new IntersectionObserver(([entry]) => setNearViewport(entry.isIntersecting), { rootMargin: "500px 0px" });
+    const visibleObserver = new IntersectionObserver(([entry]) => setVisible(entry.isIntersecting), { threshold: 0.08 });
+    nearObserver.observe(el);
+    visibleObserver.observe(el);
+    return () => { nearObserver.disconnect(); visibleObserver.disconnect(); };
   }, []);
   // Keep the rail in its middle duplicate, avoiding layout jumps or repeated scroll feedback.
   useEffect(() => {
@@ -161,12 +173,9 @@ export default function StoriesInMotion({ stories }: { stories: Story[] }) {
 
         video.muted = !isActive || soundId !== video.dataset.story;
 
-        if (
-          visible && entry.isIntersecting && !reduced &&
-          (!isMobile || isActive)
-        ) {
+        if (visible && entry.isIntersecting && !reduced && isActive) {
           void video.play().catch(() => {
-            // Browser autoplay policies may prevent playback.
+            // Browser autoplay policies may prevent playback; the poster remains visible.
           });
         } else {
           video.pause();
@@ -179,76 +188,10 @@ export default function StoriesInMotion({ stories }: { stories: Story[] }) {
 
     videos.forEach(video => observer.observe(video));
 
-    const syncPlayback = () => {
-      const viewport = el.getBoundingClientRect();
-
-      videos.forEach(video => {
-        const bounds = video.getBoundingClientRect();
-        const inView =
-          bounds.right > viewport.left &&
-          bounds.left < viewport.right;
-
-        const isActive =
-          video.closest(".sim4-card")?.classList.contains("is-active");
-
-        if (visible && inView && !reduced && (!isMobile || isActive)) {
-          if (video.paused) {
-            video.muted = true;
-            void video.play().catch(() => {
-              // Browser playback restrictions are handled gracefully.
-            });
-          }
-        } else if (!video.paused) {
-          video.pause();
-        }
-      });
-    };
-
-    el.addEventListener("scroll", syncPlayback, { passive: true });
-    syncPlayback();
-
-    const recoverPlayback = (event: Event) => {
-      const video = event.currentTarget as HTMLVideoElement;
-      const viewport = el.getBoundingClientRect();
-      const bounds = video.getBoundingClientRect();
-      const inView =
-        bounds.right > viewport.left &&
-        bounds.left < viewport.right;
-
-      if (
-        !visible || reduced || !inView || video.ended ||
-        isMobile
-      ) return;
-
-      window.setTimeout(() => {
-        if (!video.isConnected || !video.paused) return;
-
-        const currentViewport = el.getBoundingClientRect();
-        const currentBounds = video.getBoundingClientRect();
-        const stillVisible =
-          currentBounds.right > currentViewport.left &&
-          currentBounds.left < currentViewport.right;
-
-        if (document.visibilityState === "visible" &&
-            stillVisible && !reduced) {
-          video.muted = true;
-          void video.play().catch(() => {});
-        }
-      }, 100);
-    };
-
-    videos.forEach(video => {
-      video.addEventListener("pause", recoverPlayback);
-    });
-
     return () => {
-      el.removeEventListener("scroll", syncPlayback);
-      videos.forEach(video => {
-        video.removeEventListener("pause", recoverPlayback);
-      });
       observer.disconnect();
     };
-  }, [active, activeCopy, soundId, visible, reduced, stories, isMobile]);
+  }, [active, activeCopy, soundId, visible, reduced, stories]);
 
   // STEP 848C: Mobile automatic slide navigation.
   useEffect(() => {
@@ -273,10 +216,6 @@ export default function StoriesInMotion({ stories }: { stories: Story[] }) {
     paused, soundId, youtubeSound, jumpTo
   ]);
 
-  useEffect(() => {
-    setSoundId(null);
-  }, [active]);
-
   if (!count) return null;
   return (
     <section className="sim4-section" id="stories-in-motion" aria-label="Kalamkari video stories">
@@ -285,6 +224,7 @@ export default function StoriesInMotion({ stories }: { stories: Story[] }) {
         <div className="sim4-rail" ref={rail} onPointerDown={() => {
             manualPause.current = true;
             interactionUntil.current = Date.now() + 8000;
+            setSoundId(null);
             setMotion(false);
           }} onPointerUp={() => { if (manualPause.current) { manualPause.current = false; setMotion(true); } }} onPointerCancel={() => {
             manualPause.current = false;
@@ -307,10 +247,25 @@ export default function StoriesInMotion({ stories }: { stories: Story[] }) {
             const videoSource = isMobile && story.mobileMp4
               ? story.mobileMp4
               : story.mp4;
-            const source = videoSource && !failed[story.id];
+            // STEP 864B: Keep existing stories visually available.
+            const needsVideoFrame = !story.poster;
+
+            const shouldLoadVideo =
+              nearViewport &&
+              !failed[story.id] &&
+              (
+                focused ||
+                (nearby && !limitedConnection) ||
+                needsVideoFrame
+              );
+            const source = videoSource && shouldLoadVideo;
+            const retry = videoRetries[story.id] || 0;
+            const playbackSource = videoSource && retry
+              ? `${videoSource}${videoSource.includes("?") ? "&" : "?"}skv-retry=${retry}`
+              : videoSource;
             return <article key={key} className={`sim4-card ${focused ? "is-active" : ""}`} data-copy={copy} aria-label={story.title}>
               <div className="sim4-frame">
-                {isMobile && source && !story.poster && (
+                {source && !story.poster && (
                   <div className="sim4-mobile-fallback"
                     aria-hidden="true">
                     <span>✦</span>
@@ -319,55 +274,46 @@ export default function StoriesInMotion({ stories }: { stories: Story[] }) {
                 )}
                 {source ? (
                   <video
-                    key={`${story.id}-${videoSource}`}
+                    key={`${story.id}-${playbackSource}`}
                     data-story={story.id}
                     onCanPlay={event => {
                       event.currentTarget.dataset.ready = "true";
                     }}
-                    src={videoSource}
+                    src={playbackSource}
                     poster={story.poster || undefined}
                     playsInline
-                    autoPlay={visible && !reduced && (!isMobile || focused)}
+                    autoPlay={visible && focused && !reduced}
                     loop
                     muted={!focused || soundId !== story.id}
                     preload={
-                      visible && (focused || (isMobile && nearby))
+                      focused || !story.poster
                         ? "auto"
-                        : "none"
+                        : "metadata"
                     }
                     onLoadedData={event => {
-                      setAvailable(previous =>
-                        previous[story.id] ? previous : {
-                          ...previous,
-                          [story.id]: true
-                        }
-                      );
-
                       if (focused && visible && !reduced) {
                         const video = event.currentTarget;
                         video.muted = soundId !== story.id;
 
-                        void video.play().catch(error => {
-                          console.warn(
-                            "Story autoplay failed:",
-                            error
-                          );
+                        void video.play().catch(() => {
+                          // Autoplay may be blocked; the optimized poster stays visible.
                         });
                       }
                     }}
                     onError={() => {
                       if (focused) {
-                        console.error("Unable to load story video:", videoSource);
-                        setFailed(previous => ({
-                          ...previous,
-                          [story.id]: true
-                        }));
+                        if (!retriedStories.current.has(story.id)) {
+                          retriedStories.current.add(story.id);
+                          setVideoRetries(previous => ({ ...previous, [story.id]: 1 }));
+                        } else {
+                          setFailed(previous => ({ ...previous, [story.id]: true }));
+                        }
                       }
                     }}
                   />
-                ) : yt ? <iframe title={story.title} src={`https://www.youtube-nocookie.com/embed/${yt}?autoplay=1&mute=1&playsinline=1&loop=1&playlist=${yt}&enablejsapi=1&origin=${encodeURIComponent(window.location.origin)}`} allow="autoplay; encrypted-media; picture-in-picture" loading="lazy" referrerPolicy="strict-origin-when-cross-origin" /> : ig ? <iframe title={story.title} src={ig} loading="lazy" allow="encrypted-media; picture-in-picture" referrerPolicy="strict-origin-when-cross-origin" /> : <div className="sim4-cover" style={story.poster ? { backgroundImage: `url(${story.poster})` } : undefined}><span className="sim4-flower">✦</span><span>THE ART OF<br/>KALAMKARI</span></div>}
+                ) : yt && focused && visible ? <iframe title={story.title} src={`https://www.youtube-nocookie.com/embed/${yt}?autoplay=1&mute=1&playsinline=1&loop=1&playlist=${yt}&enablejsapi=1&origin=${encodeURIComponent(window.location.origin)}`} allow="autoplay; encrypted-media; picture-in-picture" loading="lazy" referrerPolicy="strict-origin-when-cross-origin" /> : ig && focused && visible ? <iframe title={story.title} src={ig} loading="lazy" allow="encrypted-media; picture-in-picture" referrerPolicy="strict-origin-when-cross-origin" /> : <div className="sim4-cover" style={story.poster ? { backgroundImage: `url(${story.poster})` } : undefined}><span className="sim4-flower">✦</span><span>THE ART OF<br/>KALAMKARI</span></div>}
 
-                {yt && !source && (
+                {yt && !source && focused && visible && (
                   <button
                     type="button"
                     className="sim4-sound"

@@ -27,6 +27,7 @@
 .vsm-message{padding:13px 16px;border-radius:9px;margin-bottom:18px;font-size:13px}
 .vsm-error{background:#fff1f0;color:#a11d17}
 .vsm-success{background:#eef7f0;color:#246a38}
+@media(max-width:850px){.vsm-header{padding-left:52px}}
 @media(max-width:1050px){.vsm-layout{grid-template-columns:1fr}}
 @media(max-width:650px){.vsm-header{align-items:flex-start;flex-direction:column}.vsm-panel{padding:17px}.vsm-item{align-items:flex-start;flex-direction:column}.vsm-item-actions{width:100%}}
 
@@ -34,7 +35,13 @@
 /* VIDEO STORIES UPLOAD CONTROLS */
 .vsm-upload{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin-top:10px}
 .vsm-upload-button{display:inline-flex!important;align-items:center;justify-content:center;background:#10213b;color:#fff;padding:11px 16px;border-radius:8px;cursor:pointer;font-size:13px!important}
-.vsm-upload-button input[type=file]{display:none}
-.vsm-upload-button:has(input:disabled){opacity:.55;cursor:not-allowed}
+.vsm-upload-field{display:flex;flex-direction:column;gap:7px;font-size:13px;font-weight:600}
+.vsm-file-input{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;overflow:hidden!important;clip:rect(0,0,0,0)!important;white-space:nowrap!important;clip-path:inset(50%)!important}
+.vsm-upload-button{gap:8px!important;background:var(--sk-theme-primaryButton,linear-gradient(105deg,#10213b,#172b49))!important;color:var(--sk-theme-color-buttonText,#fffdf8)!important;border:1px solid var(--sk-theme-color-border,#b58a43)!important;border-radius:10px!important;min-height:44px;transition:filter .16s ease,transform .16s ease}
+.vsm-upload-button:hover:not(:disabled){filter:brightness(1.08);transform:translateY(-1px)}
+.vsm-upload-button:focus-visible{outline:3px solid var(--sk-theme-focus,#b58a43);outline-offset:3px}
+.vsm-upload-button:disabled{opacity:.55;cursor:not-allowed;transform:none}
 .vsm-upload .vsm-secondary{background:#fff;color:#10213b;border:1px solid #d3dce8;border-radius:8px;padding:10px 14px;cursor:pointer}
 .vsm-video-preview{display:block;width:100%;max-width:360px;max-height:430px;object-fit:contain;background:#0d1828;border-radius:10px;margin-top:12px}
+.vsm-message.vsm-error{background:color-mix(in srgb,var(--sk-theme-color-error,#a11d17) 9%,white);color:var(--sk-theme-color-error,#a11d17);border:1px solid color-mix(in srgb,var(--sk-theme-color-error,#a11d17) 35%,white)}
+.vsm-message.vsm-success{background:color-mix(in srgb,var(--sk-theme-color-success,#246a38) 9%,white);color:var(--sk-theme-color-success,#246a38);border:1px solid color-mix(in srgb,var(--sk-theme-color-success,#246a38) 35%,white)}

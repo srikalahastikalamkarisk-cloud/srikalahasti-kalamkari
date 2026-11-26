@@ -257,6 +257,7 @@ export default function HeroManager() {
         ...prev,
         mediaType: "video",
         [target]: result.url,
+        posterImage: prev.posterImage || result.posterUrl || "",
       }));
       setMediaNames(prev => ({ ...prev, [target]: file.name }));
 

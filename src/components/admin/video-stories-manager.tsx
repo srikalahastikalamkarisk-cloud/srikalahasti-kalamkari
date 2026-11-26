@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { Upload } from "lucide-react";
 import "./video-stories-manager.css";
 
 type Story = {
@@ -80,7 +81,7 @@ export default function VideoStoriesManager() {
   }, []);
 
   useEffect(() => {
-    void loadStories();
+    void Promise.resolve().then(loadStories);
   }, [loadStories]);
 
   function update<K extends keyof FormData>(key: K, value: FormData[K]) {
@@ -132,6 +133,7 @@ export default function VideoStoriesManager() {
         ...previous,
         sourceType: "upload",
         videoFile: result.url,
+        posterImage: previous.posterImage || result.posterUrl || "",
       }));
 
       setNotice("Video uploaded. Click Add Story or Save Changes to publish it.");
@@ -295,21 +297,31 @@ export default function VideoStoriesManager() {
                   placeholder="YouTube, Instagram, Pinterest or HTTPS MP4/WebM" />
               </label>
             ) : (
-              <label>
-                Uploaded Video Path
-                <input required value={form.videoFile}
+              <div className="vsm-upload-field" aria-busy={uploading}>
+                <label htmlFor="vsm-video-file-path">Uploaded Video Path</label>
+                <input id="vsm-video-file-path" required value={form.videoFile}
                   onChange={event => update("videoFile", event.target.value)}
                   placeholder="/api/media/... or /uploads/..."/>
                 <div className="vsm-upload">
-                  <label className="vsm-upload-button">
-                    {uploading ? "Uploading video..." : "Choose MP4 / WebM Video"}
-                    <input
-                      type="file"
-                      accept="video/*,.mp4,.mov,.avi,.mkv,.webm,.m4v,.mpeg,.mpg,.3gp,.wmv"
-                      disabled={uploading || saving}
-                      onChange={event => void uploadVideo(event)}
-                    />
-                  </label>
+                  <input
+                    id="vsm-video-upload"
+                    className="vsm-file-input"
+                    type="file"
+                    accept="video/*,.mp4,.mov,.avi,.mkv,.webm,.m4v,.mpeg,.mpg,.3gp,.wmv"
+                    aria-label="Choose a video to upload"
+                    aria-describedby="vsm-video-upload-help"
+                    disabled={uploading || saving}
+                    onChange={event => void uploadVideo(event)}
+                  />
+                  <button
+                    className="vsm-upload-button"
+                    type="button"
+                    onClick={() => document.getElementById("vsm-video-upload")?.click()}
+                    disabled={uploading || saving}
+                  >
+                    <Upload size={16} aria-hidden="true" />
+                    {uploading ? "Uploading and optimizing…" : "Choose video to upload"}
+                  </button>
 
                   {form.videoFile && (
                     <button
@@ -333,8 +345,8 @@ export default function VideoStoriesManager() {
                   />
                 )}
 
-                <small>Maximum 50 MB. Replace by uploading another video. Remove only detaches the video from this form.</small>
-              </label>
+                <small id="vsm-video-upload-help">MP4, MOV, AVI, MKV, WebM, M4V, MPEG, MPG, 3GP or WMV. Maximum 50 MB and 10 minutes. Replace by uploading another video. Remove only detaches the video from this form.</small>
+              </div>
             )}
 
             <label>
