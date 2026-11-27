@@ -1260,3 +1260,15 @@ body {
   color: #80602d !important;
   opacity: 1;
 }
+
+
+/* STEP 896L — COLLECTION IMAGE OVERLAP FIX */
+.skshop .skshop-collection-image {
+  position: relative !important;
+  overflow: hidden;
+}
+
+.skshop .skshop-collection-info {
+  position: relative;
+  z-index: 1;
+}
