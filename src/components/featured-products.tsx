@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { hasPurchasableInventory, productAvailabilityLabel } from "@/lib/storefront-product-policy";
 import { Heart, ImageIcon, ShoppingBag, Star, ZoomIn, X } from "lucide-react";
@@ -56,7 +57,7 @@ export default function FeaturedProducts({ products }: Props) {
                     className="skfp-product-link"
                     aria-label={`View ${product.name}`}
                   />
-                  {image ? <img src={image} alt={product.name} loading="lazy" /> : (
+                  {image ? <Image src={image} alt={product.name} fill sizes="(max-width: 640px) 80vw, (max-width: 1024px) 45vw, 25vw" loading="lazy" style={{ objectFit: "cover" }} /> : (
                     <div className="skfp-placeholder"><ImageIcon size={25} strokeWidth={1.2} /><span>SRIKALAHASTI</span><small>KALAMKARI</small></div>
                   )}
                   {discount !== null && discount > 0 && <span className="skfp-badge">{discount}% OFF</span>}
@@ -106,7 +107,7 @@ export default function FeaturedProducts({ products }: Props) {
         {featured.length === 0 && <p className="skfp-empty">Products will appear here when the catalog is ready.</p>}
         {message && <p className="skfp-status" role="status">{message}</p>}
       </div>
-      {preview && <div className="skfp-overlay" onClick={()=>setPreview(null)}><div className="skfp-modal" role="dialog" aria-modal="true" aria-label={preview.name} onClick={e=>e.stopPropagation()}><button className="skfp-close" aria-label="Close preview" onClick={()=>setPreview(null)}><X size={20}/></button><div className="skfp-modal-photo">{imageFor(preview) ? <img src={imageFor(preview)!} alt={preview.name} /> : <ImageIcon size={45}/>}</div><h3>{preview.name}</h3><p>{preview.price > 0 ? `₹${preview.price.toLocaleString("en-IN")}` : "Price on request · Preview listing"}</p></div></div>}
+      {preview && <div className="skfp-overlay" onClick={()=>setPreview(null)}><div className="skfp-modal" role="dialog" aria-modal="true" aria-label={preview.name} onClick={e=>e.stopPropagation()}><button className="skfp-close" aria-label="Close preview" onClick={()=>setPreview(null)}><X size={20}/></button><div className="skfp-modal-photo">{imageFor(preview) ? <Image src={imageFor(preview)!} alt={preview.name} fill sizes="(max-width: 640px) 90vw, 520px" style={{ objectFit: "contain" }} /> : <ImageIcon size={45}/>}</div><h3>{preview.name}</h3><p>{preview.price > 0 ? `₹${preview.price.toLocaleString("en-IN")}` : "Price on request · Preview listing"}</p></div></div>}
     </section>
   );
 }

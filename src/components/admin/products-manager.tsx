@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import {
   Package, Plus, Search, RefreshCw, Pencil, Trash2, X, Download,
@@ -69,9 +69,52 @@ function money(value: string | number | null) {
   }).format(amount);
 }
 
+const PRODUCTS_VIEW_KEY = "sk-admin-products-view-v1";
+const PAGE_SIZE_OPTIONS = [20, 50, 100];
+
+const BULK_SETTINGS_FIELDS = [
+  { key: "isActive", label: "Active Product",
+    description: "Control product visibility on the website." },
+  { key: "isNewArrival", label: "New Arrivals",
+    description: "Mark selected products as new arrivals." },
+  { key: "isFeatured", label: "Featured Products",
+    description: "Include products in featured collections." },
+  { key: "allowCOD", label: "Cash on Delivery",
+    description: "Control the product COD setting." },
+  { key: "allowEnquiry", label: "Product Enquiry",
+    description: "Enable or disable product enquiry." },
+] as const;
+
+type BulkSettingKey =
+  typeof BULK_SETTINGS_FIELDS[number]["key"];
+
+type BulkSettingValue = "keep" | "enable" | "disable";
+
+type BulkSettingsDraft =
+  Record<BulkSettingKey, BulkSettingValue>;
+
+const EMPTY_BULK_SETTINGS: BulkSettingsDraft = {
+  isActive: "keep",
+  isNewArrival: "keep",
+  isFeatured: "keep",
+  allowCOD: "keep",
+  allowEnquiry: "keep",
+};
+
 export default function ProductsManager() {
+  const [viewReady, setViewReady] = useState(false);
+  const [pageSize, setPageSize] = useState(20);
+  const requestVersion = useRef(0);
   const [products, setProducts] = useState<Product[]>([]);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [settingsIds, setSettingsIds] = useState<string[]>([]);
+  const [settingsDraft, setSettingsDraft] =
+    useState<BulkSettingsDraft>(EMPTY_BULK_SETTINGS);
+  const [settingsBusy, setSettingsBusy] = useState(false);
+  const [settingsError, setSettingsError] = useState("");
+  const [settingsNotice, setSettingsNotice] = useState("");
+  const settingsLock = useRef(false);
   const [moveOpen, setMoveOpen] = useState(false);
   const [moveCategoryId, setMoveCategoryId] = useState("");
   const [moving, setMoving] = useState(false);
@@ -115,6 +158,62 @@ export default function ProductsManager() {
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState("");
 
+  // Restore the previous catalogue view for this browser tab.
+  useEffect(() => {
+    try {
+      const raw = sessionStorage.getItem(PRODUCTS_VIEW_KEY);
+
+      if (raw) {
+        const saved = JSON.parse(raw);
+
+        if (typeof saved.search === "string")
+          setSearch(saved.search);
+
+        if (typeof saved.categoryId === "string")
+          setCategoryId(saved.categoryId);
+
+        if (typeof saved.subcategoryId === "string")
+          setSubcategoryId(saved.subcategoryId);
+
+        if (["all", "active", "inactive"].includes(saved.status))
+          setStatus(saved.status);
+
+        if (Number.isSafeInteger(saved.page) && saved.page > 0)
+          setPage(saved.page);
+
+        if (PAGE_SIZE_OPTIONS.includes(saved.pageSize))
+          setPageSize(saved.pageSize);
+      }
+    } catch {
+      // Invalid or unavailable storage: use defaults.
+    } finally {
+      setViewReady(true);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!viewReady) return;
+
+    try {
+      sessionStorage.setItem(
+        PRODUCTS_VIEW_KEY,
+        JSON.stringify({
+          search,
+          categoryId,
+          subcategoryId,
+          status,
+          page,
+          pageSize
+        })
+      );
+    } catch {
+      // Catalogue remains usable without storage.
+    }
+  }, [
+    viewReady, search, categoryId,
+    subcategoryId, status, page, pageSize
+  ]);
+
   const loadCategories = useCallback(async () => {
     const response = await fetch("/api/admin/categories", {
       credentials: "same-origin",
@@ -130,13 +229,18 @@ export default function ProductsManager() {
   }, []);
 
   const loadProducts = useCallback(async () => {
+    if (!viewReady) return;
+
+    const version = ++requestVersion.current;
+
     setLoading(true);
+    setSelectedIds([]);
     setError("");
 
     try {
       const params = new URLSearchParams({
         page: String(page),
-        limit: "20",
+        limit: String(pageSize),
         status,
       });
 
@@ -158,17 +262,36 @@ export default function ProductsManager() {
         throw new Error(data.error || "Unable to load products");
       }
 
+      if (version !== requestVersion.current) return;
+
+      const lastPage = Math.max(
+        1, Number(data.pagination?.pages) || 1
+      );
+
+      if (page > lastPage) {
+        setProducts([]);
+        setSelectedIds([]);
+        setPage(lastPage);
+        return;
+      }
+
       setProducts(data.products ?? []);
       setSelectedIds([]);
       setPagination(data.pagination);
     } catch (err) {
+      if (version !== requestVersion.current) return;
+
       setError(
         err instanceof Error ? err.message : "Something went wrong"
       );
     } finally {
-      setLoading(false);
+      if (version === requestVersion.current)
+        setLoading(false);
     }
-  }, [page, search, categoryId, subcategoryId, status]);
+  }, [
+    viewReady, page, pageSize, search,
+    categoryId, subcategoryId, status
+  ]);
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -182,12 +305,17 @@ export default function ProductsManager() {
   }, [loadCategories]);
 
   useEffect(() => {
+    if (!viewReady) return;
+
     const timer = window.setTimeout(() => {
       void loadProducts();
     }, 250);
 
-    return () => window.clearTimeout(timer);
-  }, [loadProducts]);
+    return () => {
+      window.clearTimeout(timer);
+      requestVersion.current++;
+    };
+  }, [loadProducts, viewReady]);
 
   function toggleSelected(id: string, checked: boolean) {
     setSelectedIds(current =>
@@ -199,6 +327,85 @@ export default function ProductsManager() {
 
   function togglePageSelection(checked: boolean) {
     setSelectedIds(checked ? products.map(product => product.id) : []);
+  }
+
+  async function confirmBulkSettings() {
+    if (
+      settingsLock.current ||
+      loading ||
+      settingsIds.length === 0 ||
+      settingsIds.length > 100
+    ) return;
+
+    if (
+      settingsIds.length !== selectedIds.length ||
+      !settingsIds.every(id => selectedIds.includes(id))
+    ) {
+      setSettingsError(
+        "Product selection changed. Close and select again."
+      );
+      return;
+    }
+
+    const changes: Partial<Record<BulkSettingKey, boolean>> = {};
+
+    for (const field of BULK_SETTINGS_FIELDS) {
+      const value = settingsDraft[field.key];
+
+      if (value !== "keep") {
+        changes[field.key] = value === "enable";
+      }
+    }
+
+    if (Object.keys(changes).length === 0) {
+      setSettingsError("Choose at least one setting to change.");
+      return;
+    }
+
+    settingsLock.current = true;
+    setSettingsBusy(true);
+    setSettingsError("");
+    setSettingsNotice("");
+
+    try {
+      const response = await fetch(
+        "/api/admin/products/bulk-settings",
+        {
+          method: "PATCH",
+          credentials: "same-origin",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            productIds: settingsIds,
+            changes
+          }),
+        }
+      );
+
+      const result = await response.json();
+
+      if (!response.ok || result.success !== true) {
+        throw new Error(
+          result.error || "Unable to update product settings"
+        );
+      }
+
+      setSettingsOpen(false);
+      setSelectedIds([]);
+      setSettingsNotice(
+        `Settings updated for ${result.updatedCount} products.`
+      );
+
+      await loadProducts();
+    } catch (err) {
+      setSettingsError(
+        err instanceof Error
+          ? err.message
+          : "Unable to update product settings"
+      );
+    } finally {
+      settingsLock.current = false;
+      setSettingsBusy(false);
+    }
   }
 
   async function confirmBulkMove() {
@@ -622,6 +829,57 @@ export default function ProductsManager() {
           />
         </div>
 
+        {settingsNotice && (
+          <div className="skpm-settings-notice" role="status">
+            {settingsNotice}
+            <button
+              type="button"
+              onClick={() => setSettingsNotice("")}
+              aria-label="Dismiss notification"
+            >
+              <X size={16} />
+            </button>
+          </div>
+        )}
+
+        <div className="skpm-view-controls">
+          <label className="skpm-page-size">
+            <span>Products per page</span>
+            <select
+              aria-label="Products per page"
+              value={pageSize}
+              onChange={event => {
+                setSelectedIds([]);
+                setPageSize(Number(event.target.value));
+                setPage(1);
+              }}
+            >
+              {PAGE_SIZE_OPTIONS.map(size => (
+                <option key={size} value={size}>
+                  {size} Products
+                </option>
+              ))}
+            </select>
+          </label>
+
+          <label className="skpm-page-select">
+            <input
+              type="checkbox"
+              disabled={loading || products.length === 0}
+              checked={
+                products.length > 0 &&
+                products.every(product =>
+                  selectedIds.includes(product.id)
+                )
+              }
+              onChange={event =>
+                togglePageSelection(event.target.checked)
+              }
+            />
+            Select all {loading ? "" : products.length} on this page
+          </label>
+        </div>
+
         {selectedIds.length > 0 && (
           <div className="skpm-bulk-toolbar">
             <div className="skpm-bulk-summary">
@@ -634,6 +892,24 @@ export default function ProductsManager() {
               </button>
             </div>
             <div className="skpm-bulk-actions">
+              <button
+                type="button"
+                className="skpm-bulk-settings-trigger"
+                disabled={
+                  loading ||
+                  settingsBusy ||
+                  selectedIds.length > 100
+                }
+                onClick={() => {
+                  setSettingsIds([...selectedIds]);
+                  setSettingsDraft({ ...EMPTY_BULK_SETTINGS });
+                  setSettingsError("");
+                  setSettingsNotice("");
+                  setSettingsOpen(true);
+                }}
+              >
+                Product Settings
+              </button>
               <button
                 type="button"
                 disabled={moving || selectedIds.length > 100}
@@ -889,6 +1165,102 @@ export default function ProductsManager() {
           </>
         )}
       </section>
+      {settingsOpen && (
+        <div className="skpm-modal-backdrop">
+          <div
+            className="skpm-bulk-settings-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="skpm-settings-title"
+          >
+            <div className="skpm-settings-header">
+              <div>
+                <span>CATALOGUE MANAGEMENT</span>
+                <h2 id="skpm-settings-title">
+                  Bulk Product Settings
+                </h2>
+                <p>{settingsIds.length} selected products</p>
+              </div>
+              <button
+                type="button"
+                disabled={settingsBusy}
+                onClick={() => setSettingsOpen(false)}
+                aria-label="Close product settings"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            <div className="skpm-settings-fields">
+              {BULK_SETTINGS_FIELDS.map(field => (
+                <label
+                  className="skpm-settings-row"
+                  key={field.key}
+                >
+                  <span>
+                    <strong>{field.label}</strong>
+                    <small>{field.description}</small>
+                  </span>
+                  <select
+                    disabled={settingsBusy}
+                    value={settingsDraft[field.key]}
+                    onChange={event => {
+                      const value =
+                        event.target.value as BulkSettingValue;
+
+                      setSettingsDraft(current => ({
+                        ...current,
+                        [field.key]: value
+                      }));
+                    }}
+                  >
+                    <option value="keep">No Change</option>
+                    <option value="enable">Enable</option>
+                    <option value="disable">Disable</option>
+                  </select>
+                </label>
+              ))}
+            </div>
+
+            <p className="skpm-settings-info">
+              Only changed settings will be applied.
+              Other product details remain unchanged.
+            </p>
+
+            {settingsError && (
+              <div className="skpm-error" role="alert">
+                {settingsError}
+              </div>
+            )}
+
+            <div className="skpm-settings-footer">
+              <button
+                type="button"
+                disabled={settingsBusy}
+                onClick={() => setSettingsOpen(false)}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="skpm-settings-apply"
+                disabled={
+                  settingsBusy ||
+                  loading ||
+                  Object.values(settingsDraft)
+                    .every(value => value === "keep")
+                }
+                onClick={() => void confirmBulkSettings()}
+              >
+                {settingsBusy
+                  ? "Applying..."
+                  : `Apply to ${settingsIds.length} Products`}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {bulkDeleteOpen && (
         <div className="skpm-modal-backdrop">
           <div

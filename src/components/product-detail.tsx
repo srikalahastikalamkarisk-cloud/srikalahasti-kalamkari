@@ -3,13 +3,15 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import { ArrowLeft, Check, ChevronLeft, ChevronRight, Heart, MessageCircle, Minus, Plus, ShoppingBag, Video, X, ZoomIn } from "lucide-react";
-import type { StorefrontProduct as Product } from "@/lib/storefront-products";
+import type { StorefrontCatalogProduct, StorefrontProduct as Product } from "@/lib/storefront-products";
 import { addToCart, buyNow, toggleWishlist, useShopState } from "@/lib/shop-state";
+import { productWhatsApp } from "@/lib/product-whatsapp";
 import "./product-detail.css";
 
 const money=(n:number)=>new Intl.NumberFormat("en-IN",{style:"currency",currency:"INR",maximumFractionDigits:2}).format(n);
-const whatsapp=(message:string)=>`https://wa.me/917288848881?text=${encodeURIComponent(message)}`;
+
 const displayValue=(value:unknown):string=>typeof value==="string"||typeof value==="number"?String(value):"";
 function specificationRows(value:unknown):[string,string][] {
   if(Array.isArray(value))return value.flatMap(item=>item&&typeof item==="object"&&!Array.isArray(item)?Object.entries(item).filter(([,v])=>displayValue(v)).map(([k,v])=>[k,displayValue(v)] as [string,string]):[]);
@@ -17,7 +19,7 @@ function specificationRows(value:unknown):[string,string][] {
   return [];
 }
 const validDiscount=(price:number,original?:number)=>price>0&&Number.isFinite(original)&&Number(original)>price?Math.round((1-price/Number(original))*100):0;
-const requiresVariantCheckout=(p:Product)=>p.variants.length>0||p.pricingMode==="LENGTH_OPTIONS";
+const requiresVariantCheckout=(p:{variants:readonly unknown[];pricingMode:string})=>p.variants.length>0||p.pricingMode==="LENGTH_OPTIONS";
 const colorAttribute=(name:string)=>/color|colour/i.test(name);
 const sizeAttribute=(name:string)=>/^size$/i.test(name);
 function attributeValue(variant:Product["variants"][number], name:string):string|undefined {
@@ -30,7 +32,7 @@ function attributeValue(variant:Product["variants"][number], name:string):string
 }
 function validColorHex(value:string|null|undefined):value is string {return Boolean(value&&/^#[0-9a-fA-F]{6}$/.test(value));}
 
-export default function ProductDetail({product:p,relatedProducts}:{product:Product;relatedProducts:Product[]}) {
+export default function ProductDetail({product:p,relatedProducts,whatsappNumber}:{product:Product;relatedProducts:StorefrontCatalogProduct[];whatsappNumber?:string|null}) {
   const router=useRouter();const {wishlist}=useShopState();const rail=useRef<HTMLDivElement>(null);const relatedPause=useRef(false);
   const [relatedPosition,setRelatedPosition]=useState(1);const [expanded,setExpanded]=useState(false);const [quantity,setQuantity]=useState(1);const [selectedVariantId,setSelectedVariantId]=useState("");
   const [variantChoices,setVariantChoices]=useState<Record<string,string>>({});
@@ -49,6 +51,16 @@ export default function ProductDetail({product:p,relatedProducts}:{product:Produ
   const selected=p.variants;
   const selectedLabel=selectedVariant ? Object.entries(selectedVariant.attributes || {}).map(([name,value])=>`${name}: ${value}`).join(" · ") || (selectedVariant.lengthMeters!=null?`${selectedVariant.lengthMeters}m`:[selectedVariant.colorName,selectedVariant.size].filter(Boolean).join(" · ")) : "";
   const selection=`${p.name}${selectedLabel?` (${selectedLabel})`:""} (Product #${p.id})${quantity>1?`, quantity: ${quantity}${perMeter?"m":""}`:""}`;
+
+  const enquiryPrice =
+    variantCheckoutBlocked && !selectedVariant
+      ? "Depends on selected option"
+      : activePrice != null && activePrice > 0
+        ? `${money(activePrice)}${perMeter ? " / meter" : ""}`
+        : "Price on request";
+
+  const whatsapp = (message: string) =>
+    productWhatsApp(p, message, enquiryPrice, whatsappNumber);
   const colorLabel=p.showColors&&Array.isArray(p.colors)?p.colors.map(value=>value&&typeof value==="object"&&"name" in value?displayValue(value.name):displayValue(value)).filter(Boolean).join(", "):"";
   const sizeLabel=p.showSizes&&Array.isArray(p.sizes)?p.sizes.map(displayValue).filter(Boolean).join(", "):"";
 
@@ -147,12 +159,12 @@ export default function ProductDetail({product:p,relatedProducts}:{product:Produ
             delete event.currentTarget.dataset.hoverZoom;
           }}
           onClick={()=>selectedImage&&setZoom(true)} aria-label={selectedImage?`Zoom image of ${p.name}`:`No product image available for ${p.name}`} disabled={!selectedImage}>
-          {selectedImage?<img src={selectedImage} alt={p.name}/>:<div className="skpd-image-fallback"><ShoppingBag size={30}/><span>Product image unavailable</span></div>}
+          {selectedImage?<Image src={selectedImage} alt={p.name} fill priority sizes="(max-width: 900px) 100vw, 50vw" style={{ objectFit: "contain" }}/>:<div className="skpd-image-fallback"><ShoppingBag size={30}/><span>Product image unavailable</span></div>}
           {selectedImage&&<span className="skpd-zoom-hint"><ZoomIn size={17}/> View larger</span>}
         </button>
         <button className={`skpd-heart ${saved?"is-saved":""}`} type="button" aria-label={saved?"Remove from wishlist":"Add to wishlist"} aria-pressed={saved} onClick={()=>toggleWishlist(p.id)}><Heart size={21} fill={saved?"currentColor":"none"}/></button>
       </div>
-      {galleryImages.length>1&&<div className="skpd-thumbnail-rail" aria-label={`${p.name} image gallery`}>{galleryImages.map((image,index)=><button key={`${image}-${index}`} type="button" className={`skpd-thumbnail ${selectedImageIndex===index?"is-active":""}`} onClick={()=>setSelectedImageIndex(index)} aria-label={`View image ${index+1} of ${galleryImages.length}`} aria-pressed={selectedImageIndex===index}><img src={image} alt={`${p.name}, image ${index+1}`} loading="lazy"/></button>)}</div>}
+      {galleryImages.length>1&&<div className="skpd-thumbnail-rail" aria-label={`${p.name} image gallery`}>{galleryImages.map((image,index)=><button key={`${image}-${index}`} type="button" className={`skpd-thumbnail ${selectedImageIndex===index?"is-active":""}`} onClick={()=>setSelectedImageIndex(index)} aria-label={`View image ${index+1} of ${p.name}`} aria-pressed={selectedImageIndex===index}><Image src={image} alt="" width={120} height={120} loading="lazy"/></button>)}</div>}
       </div></div>
       {p.description&&<section className="skpd-long-description"><h2>Product Description</h2><p>{p.description}</p></section>}
       </div>
@@ -180,7 +192,7 @@ export default function ProductDetail({product:p,relatedProducts}:{product:Produ
     </div>
     {related.length>0&&<section className="skpd-related skpd-v5-related" aria-labelledby="skpd-related-title"><div className="skpd-related-head"><div><span className="skpd-eyebrow">DISCOVER MORE</span><h2 id="skpd-related-title">Related products</h2></div><div className="skpd-rail-controls"><button type="button" aria-label="Previous related products" onClick={()=>moveRelated(-1)}><ChevronLeft size={21}/></button><button type="button" aria-label="Next related products" onClick={()=>moveRelated(1)}><ChevronRight size={21}/></button></div></div>
       <div ref={rail} className="skpd-related-rail skpd-v5-rail" aria-label="Related products" onMouseEnter={()=>{relatedPause.current=true}} onMouseLeave={()=>{relatedPause.current=false}} onTouchStart={()=>{relatedPause.current=true}} onTouchEnd={()=>{relatedPause.current=false}} onFocusCapture={()=>{relatedPause.current=true}} onBlurCapture={e=>{if(!e.currentTarget.contains(e.relatedTarget))relatedPause.current=false}} onScroll={e=>{const el=e.currentTarget;const card=el.querySelector<HTMLElement>(".skpd-v5-card");if(card)setRelatedPosition(Math.min(related.length,Math.round(el.scrollLeft/(card.getBoundingClientRect().width+16))+1))}}>
-        {related.map(item=>{const itemSaved=wishlist.includes(item.id);const itemDiscount=validDiscount(item.price,item.originalPrice);const itemAvailable=item.availabilityStatus==="IN_STOCK"&&item.stock>0&&!requiresVariantCheckout(item);return <article className="skpd-v5-card" key={item.id}><div className="skpd-v5-photo"><Link href={`/product/${item.id}`} aria-label={`View ${item.name}`}>{item.image?<img src={item.image} alt={item.name} loading="lazy"/>:<div className="skpd-image-fallback"><ShoppingBag size={24}/><span>Image unavailable</span></div>}</Link>{itemDiscount>0&&<span className="skpd-v5-discount">{itemDiscount}% OFF</span>}<div className="skpd-v5-icons"><button type="button" aria-label={itemSaved?`Remove ${item.name} from wishlist`:`Add ${item.name} to wishlist`} aria-pressed={itemSaved} onClick={()=>toggleWishlist(item.id)}><Heart size={17} fill={itemSaved?"currentColor":"none"}/></button><Link href={`/product/${item.id}`} aria-label={`Open ${item.name}`}><ZoomIn size={17}/></Link></div></div><div className="skpd-v5-actions"><button type="button" disabled={!itemAvailable} onClick={()=>addToCart(item.id)}><ShoppingBag size={15}/><span>Add to Cart</span></button></div><div className="skpd-v5-body"><Link href={`/product/${item.id}`} className="skpd-v5-name">{item.name}</Link><div className="skpd-v5-price"><strong>{item.price>0?money(item.price):"Price on request"}</strong>{itemDiscount>0&&<del>{money(item.originalPrice!)}</del>}</div></div></article>})}
+        {related.map(item=>{const itemSaved=wishlist.includes(item.id);const itemDiscount=validDiscount(item.price,item.originalPrice);const itemAvailable=item.availabilityStatus==="IN_STOCK"&&item.stock>0&&!requiresVariantCheckout(item);return <article className="skpd-v5-card" key={item.id}><div className="skpd-v5-photo"><Link href={`/product/${item.id}`} aria-label={`View ${item.name}`}>{item.image?<Image src={item.image} alt={item.name} fill sizes="(max-width: 640px) 65vw, 260px" loading="lazy" style={{ objectFit: "cover" }}/>:<div className="skpd-image-fallback"><ShoppingBag size={24}/><span>Image unavailable</span></div>}</Link>{itemDiscount>0&&<span className="skpd-v5-discount">{itemDiscount}% OFF</span>}<div className="skpd-v5-icons"><button type="button" aria-label={itemSaved?`Remove ${item.name} from wishlist`:`Add ${item.name} to wishlist`} aria-pressed={itemSaved} onClick={()=>toggleWishlist(item.id)}><Heart size={17} fill={itemSaved?"currentColor":"none"}/></button><Link href={`/product/${item.id}`} aria-label={`Open ${item.name}`}><ZoomIn size={17}/></Link></div></div><div className="skpd-v5-actions"><button type="button" disabled={!itemAvailable} onClick={()=>addToCart(item.id)}><ShoppingBag size={15}/><span>Add to Cart</span></button></div><div className="skpd-v5-body"><Link href={`/product/${item.id}`} className="skpd-v5-name">{item.name}</Link><div className="skpd-v5-price"><strong>{item.price>0?money(item.price):"Price on request"}</strong>{itemDiscount>0&&<del>{money(item.originalPrice!)}</del>}</div></div></article>})}
       </div><div className="skpd-v5-foot"><span>{related.length} related products</span><span>{relatedPosition} / {related.length}</span></div></section>}
-  </div>{zoom&&selectedImage&&<div className="skpd-lightbox" role="dialog" aria-modal="true" aria-label={`Enlarged image of ${p.name}`} onClick={()=>setZoom(false)}><button type="button" className="skpd-lightbox-close" aria-label="Close zoom" onClick={()=>setZoom(false)}><X size={25}/></button><img src={selectedImage} alt={`Enlarged ${p.name}`} onClick={e=>e.stopPropagation()}/><span>Click outside image or press Escape to close</span></div>}</main>;
+  </div>{zoom&&selectedImage&&<div className="skpd-lightbox" role="dialog" aria-modal="true" aria-label={`Enlarged image of ${p.name}`} onClick={()=>setZoom(false)}><button type="button" className="skpd-lightbox-close" aria-label="Close zoom" onClick={()=>setZoom(false)}><X size={25}/></button><Image src={selectedImage} alt={`Enlarged ${p.name}`} width={1400} height={1400} style={{ width: "auto", height: "auto", maxWidth: "94vw", maxHeight: "84vh" }} onClick={e=>e.stopPropagation()}/><span>Click outside image or press Escape to close</span></div>}</main>;
 }

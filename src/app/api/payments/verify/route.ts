@@ -145,8 +145,10 @@ export async function POST(request: NextRequest) {
 
       if (
         lockedOrder.razorpayOrderId !== razorpayOrderId ||
-        lockedOrder.totalAmount.toString() !==
-          (attempt.amountPaise / 100).toFixed(2) ||
+        !lockedOrder.totalAmount.mul(100).isInteger() ||
+        !lockedOrder.totalAmount.mul(100).equals(attempt.amountPaise) ||
+        lockedAttempt.amountPaise !== attempt.amountPaise ||
+        lockedAttempt.currency !== attempt.currency ||
         lockedAttempt.razorpayOrderId !== razorpayOrderId
       ) {
         return "CONFLICT" as const;

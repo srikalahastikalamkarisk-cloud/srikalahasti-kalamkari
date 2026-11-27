@@ -7,17 +7,79 @@ import { productInput } from "@/lib/admin/product-input";
 import { recordInventoryMovement, setProductInventory } from "@/lib/admin/inventory";
 import { synchronizeAvailability } from "@/lib/admin/inventory-policy";
 import { parseCsvRows } from "@/lib/admin/csv-import";
-import { downloadProductImage, fetchProductImage, isStoredProductImage, readStoredProductImage, saveProductImage, validatePhotoNumbers, validateProductImageCount } from "@/lib/admin/secure-image-import";
-import { extractPhotoZip, MAX_ZIP_BYTES } from "@/lib/admin/photo-zip";
+import { streamImportCsv } from "@/lib/admin/large-csv-reader";
+import { openLargePhotoZip } from "@/lib/admin/large-zip-reader";
+import {
+  withStagedImport,
+  UploadError
+} from "@/lib/admin/import-upload-storage";
+import { fetchProductImage, isStoredProductImage, readStoredProductImage, saveProductImage, validatePhotoNumbers, validateProductImageCount } from "@/lib/admin/secure-image-import";
+import { extractPhotoZip, MAX_ZIP_BYTES, MissingZipPhotosError } from "@/lib/admin/photo-zip";
 import { registerProductImages } from "@/lib/admin/register-media";
 import { assertManagedMediaAvailable, queueReleasedMedia } from "@/lib/admin/global-media-references";
 import { normalizeProductImportHeader } from "@/lib/admin/product-import-columns";
 import { importSlugBase as slugBase, normalizeImportLabel, nonEmptyImportColumns, resolveImportMatch, uniqueImportSlug } from "@/lib/admin/product-import-rules";
 import { z } from "zod";
+import sharp from "sharp";
+import { createHash, randomUUID } from "node:crypto";
+import { readFile, writeFile, rename, rm } from "node:fs/promises";
+import path from "node:path";
+import { createImportImageCache } from "@/lib/admin/import-image-cache";
+
+const MAX_REMOTE_IMAGE_BYTES = 500 * 1024 * 1024;
+const PREVIEW_MAX_BYTES = 8 * 1024 * 1024;
+
+function createRemoteImageBudget(
+  fetchImage = fetchProductImage
+) {
+  let downloadedBytes = 0;
+
+  return async function download(url: string) {
+    if (downloadedBytes >= MAX_REMOTE_IMAGE_BYTES) {
+      throw new Error(
+        "Total image URL download limit of 500 MB reached"
+      );
+    }
+
+    const image = await fetchImage(url);
+
+    downloadedBytes += image.bytes.byteLength;
+
+    if (downloadedBytes > MAX_REMOTE_IMAGE_BYTES) {
+      throw new Error(
+        "Total image URL downloads exceed 500 MB"
+      );
+    }
+
+    return image;
+  };
+}
+const PREVIEW_MAX_IMAGE_BYTES = 12 * 1024;
+
+async function createImportThumbnail(bytes: Uint8Array) {
+  for (const size of [240, 160, 96]) {
+    const thumbnail = await sharp(Buffer.from(bytes), {
+      limitInputPixels: 40000000
+    })
+      .rotate()
+      .resize(size, size, {
+        fit: "inside",
+        withoutEnlargement: true
+      })
+      .webp({ quality: 55 })
+      .toBuffer();
+
+    if (thumbnail.length <= PREVIEW_MAX_IMAGE_BYTES) {
+      return `data:image/webp;base64,${thumbnail.toString("base64")}`;
+    }
+  }
+
+  return "";
+}
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
-const MAX_ROWS = 500;
+const MAX_ROWS = 1000;
 const MAX_BYTES = 2 * 1024 * 1024;
 const MAX_REQUEST_BYTES = MAX_BYTES + MAX_ZIP_BYTES + 1024 * 1024;
 const importedVariant = z.object({
@@ -75,27 +137,233 @@ async function ensureImportCategory(tx: Prisma.TransactionClient, categoryName: 
 }
 
 export async function POST(req: NextRequest) {
-  if (!await getCurrentAdmin()) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const admin = await getCurrentAdmin();
+  if (!admin) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   if (!validOrigin(req)) return NextResponse.json({ error: "Invalid origin" }, { status: 403 });
   const length = Number(req.headers.get("content-length"));
   if (!Number.isFinite(length) || length < 1 || length > MAX_REQUEST_BYTES) {
     return NextResponse.json({ error: "Combined CSV and ZIP upload exceeds the 23 MB request limit" }, { status: 413 });
   }
   const form = await req.formData().catch(() => null);
-  const file = form?.get("file");
-  if (!(file instanceof File) || !file.name.toLowerCase().endsWith(".csv") || file.size > MAX_BYTES) {
+
+  if (!form) {
+    return NextResponse.json({
+      error: "Invalid import request"
+    }, { status: 400 });
+  }
+
+  const csvId = form.get("csvUploadId");
+  const zipId = form.get("zipUploadId");
+
+  if (csvId !== null) {
+    if (
+      typeof csvId !== "string" ||
+      !/^[a-f0-9-]{36}$/.test(csvId) ||
+      (zipId !== null &&
+        (typeof zipId !== "string" ||
+         !/^[a-f0-9-]{36}$/.test(zipId)))
+    ) {
+      return NextResponse.json({
+        error: "Invalid staged upload ID"
+      }, { status: 400 });
+    }
+
+    try {
+      return await withStagedImport(
+        admin.id,
+        csvId,
+        zipId,
+        async (csvPath, zipPath) => {
+          const previewPath = path.join(
+            path.dirname(csvPath),
+            "preview-confirm.json"
+          );
+
+          const mode = form.get("mode");
+
+          if (mode !== "preview" && mode !== "confirm") {
+            return NextResponse.json({
+              error: "Invalid import mode"
+            }, { status: 400 });
+          }
+
+          const fingerprint = createHash("sha256")
+            .update(JSON.stringify({
+              csvId,
+              zipId,
+              downloadImages:
+                form.get("downloadImages") !== "false"
+            }))
+            .digest("hex");
+
+          if (mode === "preview") {
+            await rm(previewPath, { force: true });
+
+            const response = await processImport(
+              form, csvPath, zipPath
+            );
+
+            if (!response.ok) return response;
+
+            const result = await response.clone().json();
+
+            if (!result.success || !Array.isArray(result.preview)) {
+              return response;
+            }
+
+            const token = randomUUID();
+            const temporary = `${previewPath}.${token}`;
+
+            try {
+              await writeFile(
+                temporary,
+                JSON.stringify({
+                  token,
+                  fingerprint,
+                  createdAt: Date.now(),
+                  readyRows: result.preview.map(
+                    (item: { row: number }) => item.row
+                  ),
+                  skippedRows:
+                    (result.skippedImageRows ?? []).map(
+                      (item: { row: number }) => item.row
+                    )
+                }),
+                { flag: "wx", mode: 0o600 }
+              );
+
+              await rename(temporary, previewPath);
+            } finally {
+              await rm(temporary, { force: true });
+            }
+
+            return NextResponse.json({
+              ...result,
+              previewToken: token
+            });
+          }
+
+          const saved = await readFile(
+            previewPath, "utf8"
+          ).then(value => JSON.parse(value))
+           .catch(() => null);
+
+          if (
+            !saved ||
+            saved.token !== form.get("previewToken") ||
+            saved.fingerprint !== fingerprint ||
+            Date.now() - saved.createdAt >
+              60 * 60 * 1000
+          ) {
+            return NextResponse.json({
+              error: "Preview expired or files changed. Preview again before importing."
+            }, { status: 409 });
+          }
+
+          if (
+            Boolean(saved.skippedRows.length) !==
+            (form.get("allowPartialImages") === "true")
+          ) {
+            return NextResponse.json({
+              error: "Review excluded rows before confirming the import."
+            }, { status: 409 });
+          }
+
+          // Consume authorization before any product writes.
+          // A failed or interrupted confirmation needs a fresh preview.
+          await rm(previewPath, { force: true });
+
+          return processImport(
+            form,
+            csvPath,
+            zipPath,
+            {
+              readyRows: saved.readyRows,
+              skippedRows: saved.skippedRows
+            }
+          );
+        }
+      );
+    } catch (error) {
+      if (error instanceof UploadError) {
+        return NextResponse.json({
+          error: error.message
+        }, { status: error.status });
+      }
+
+      console.error("Staged import failed", error);
+
+      return NextResponse.json({
+        error: "Unable to process staged import"
+      }, { status: 500 });
+    }
+  }
+
+  if (form.get("mode") !== "preview") {
+    return NextResponse.json({
+      error: "Use the staged import workflow to preview and confirm products."
+    }, { status: 409 });
+  }
+
+  return processImport(form, null, null);
+}
+
+async function processImport(
+  form: FormData,
+  csvPath: string | null,
+  zipPath: string | null,
+  approvedPreview?: {
+    readyRows: number[];
+    skippedRows: number[];
+  }
+) {
+  const file = form.get("file");
+  if (!csvPath && (!(file instanceof File) || !file.name.toLowerCase().endsWith(".csv") || file.size > MAX_BYTES)) {
     return NextResponse.json({ error: "Choose a CSV file up to 2 MB" }, { status: 400 });
   }
 
   const mode = form?.get("mode") === "preview" ? "preview" : "confirm";
-  const zip = form?.get("zip");
+  const zip = csvPath ? null : form.get("zip");
+  const hasZip = Boolean(zipPath || zip);
   if (zip !== null && (!(zip instanceof File) || !zip.name.toLowerCase().endsWith(".zip") || zip.size < 1 || zip.size > MAX_ZIP_BYTES)) {
     return NextResponse.json({ error: "ZIP must be a valid .zip file up to 20 MB" }, { status: 413 });
   }
   const downloadImages = form?.get("downloadImages") !== "false";
+  const cachedImage = csvPath
+    ? await createImportImageCache(csvPath)
+    : fetchProductImage;
+
+  const fetchBudgetedImage =
+    createRemoteImageBudget(cachedImage);
 
   let rows: string[][];
-  try { rows = parseCsvRows(await file.text()); }
+  try {
+    if (csvPath) {
+      rows = [];
+      let retainedChars = 0;
+
+      for await (const row of streamImportCsv(csvPath)) {
+        retainedChars += row.reduce(
+          (sum, cell) => sum + cell.length,
+          0
+        );
+
+        if (retainedChars > 32 * 1024 * 1024) {
+          throw new Error(
+            "CSV parsed content exceeds the safe processing budget"
+          );
+        }
+
+        rows.push(row);
+      }
+    } else {
+      if (!(file instanceof File)) {
+        throw new Error("CSV file missing");
+      }
+
+      rows = parseCsvRows(await file.text());
+    }
+  }
   catch (error) { return NextResponse.json({ error: error instanceof Error ? error.message : "Invalid CSV" }, { status: 400 }); }
   if (rows.length < 2) return NextResponse.json({ error: "CSV must include a header and at least one product" }, { status: 400 });
   if (rows.length - 1 > MAX_ROWS) return NextResponse.json({ error: `Import is limited to ${MAX_ROWS} products per batch` }, { status: 413 });
@@ -240,11 +508,63 @@ export async function POST(req: NextRequest) {
   if (errors.length) return NextResponse.json({ error: "Import validation failed; no products were created", errors }, { status: 422 });
 
   let zipPhotos = new Map<string, ReturnType<typeof extractPhotoZip> extends Map<string, infer T> ? T : never>();
-  const requestedPhotoNumbers = input.flatMap(item => item.photoNumbers);
-  if (zip && new Set(requestedPhotoNumbers).size !== requestedPhotoNumbers.length) return NextResponse.json({ error: "ZIP photo numbers must not be assigned to multiple products", errors: input.filter(item => item.photoNumbers.length).map(item => ({ row: item.row, error: "Photo number is repeated across products; each ZIP image must map to one product" })) }, { status: 422 });
+
+  const largeZip = zipPath
+    ? await openLargePhotoZip(zipPath)
+    : null;
+
+  const photoExists = (number: string) =>
+    largeZip
+      ? largeZip.has(number)
+      : zipPhotos.has(number);
+
+  async function readPhoto(number: string) {
+    if (largeZip) return largeZip.read(number);
+
+    const image = zipPhotos.get(number);
+
+    if (!image) {
+      throw new Error(`Missing ZIP image: ${number}`);
+    }
+
+    return image;
+  }
+
+  try {
+  const skippedImageRows: Array<{
+    row: number;
+    error: string;
+  }> = [];
+
+  const allowPartialImages =
+    form?.get("allowPartialImages") === "true";
+
+  const requestedPhotoNumbers =
+    input.flatMap(item => item.photoNumbers);
+  if (hasZip && new Set(
+    requestedPhotoNumbers.map(
+      number => number.replace(/^0+(?=\d)/, "")
+    )
+  ).size !== requestedPhotoNumbers.length) return NextResponse.json({ error: "ZIP photo numbers must not be assigned to multiple products", errors: input.filter(item => item.photoNumbers.length).map(item => ({ row: item.row, error: "Photo number is repeated across products; each ZIP image must map to one product" })) }, { status: 422 });
   if (zip && requestedPhotoNumbers.length) {
-    try { zipPhotos = extractPhotoZip(new Uint8Array(await zip.arrayBuffer()), requestedPhotoNumbers); }
+    try { zipPhotos = extractPhotoZip(new Uint8Array(await zip.arrayBuffer()), requestedPhotoNumbers, true); }
     catch (error) {
+      if (error instanceof MissingZipPhotosError) {
+        const missing = new Set(error.numbers);
+
+        return NextResponse.json({
+          error: `ZIP is missing ${missing.size} requested image(s).`,
+          errors: input.flatMap(item =>
+            item.photoNumbers
+              .filter(number => missing.has(number))
+              .map(number => ({
+                row: item.row,
+                error: `Missing ZIP image for photo number ${number}`
+              }))
+          )
+        }, { status: 422 });
+      }
+
       const message = error instanceof Error ? error.message : "Invalid ZIP";
       const number = message.match(/(?:photo number |ZIP photo number: )([0-9]+)/i)?.[1];
       const affected = number ? input.filter(item => item.photoNumbers.includes(number)) : [];
@@ -254,7 +574,79 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "ZIP validation failed", errors: rowErrors }, { status: 422 });
     }
   }
+  if (!hasZip) {
+    for (let index = input.length - 1; index >= 0; index--) {
+      const item = input[index];
+
+      if (!item.photoNumbers.length) continue;
+
+      skippedImageRows.push({
+        row: item.row,
+        error: "Photo numbers supplied without a ZIP archive. Product row excluded."
+      });
+
+      input.splice(index, 1);
+    }
+
+    skippedImageRows.sort((a, b) => a.row - b.row);
+  }
+
+  if (hasZip) {
+    for (let index = input.length - 1; index >= 0; index--) {
+      const item = input[index];
+
+      const missing = item.photoNumbers.filter(
+        number => !photoExists(number)
+      );
+
+      if (!missing.length) continue;
+
+      skippedImageRows.push({
+        row: item.row,
+        error: `Missing ZIP images: ${missing.join(", ")}. Product row excluded.`
+      });
+
+      input.splice(index, 1);
+    }
+
+    skippedImageRows.sort((a, b) => a.row - b.row);
+  }
+
+  if (skippedImageRows.length && !input.length) {
+    return NextResponse.json({
+      error: "No products have complete image matches.",
+      errors: skippedImageRows
+    }, { status: 422 });
+  }
+
+  if (
+    mode === "confirm" &&
+    skippedImageRows.length &&
+    !allowPartialImages
+  ) {
+    return NextResponse.json({
+      error: "Review missing image rows before importing ready products.",
+      errors: skippedImageRows
+    }, { status: 422 });
+  }
+
   if (mode === "preview") {
+    let previewBytesUsed = 0;
+
+    async function boundedThumbnail(bytes: Uint8Array) {
+      const preview = await createImportThumbnail(bytes);
+
+      if (
+        previewBytesUsed + preview.length >
+        PREVIEW_MAX_BYTES
+      ) {
+        return "";
+      }
+
+      previewBytesUsed += preview.length;
+      return preview;
+    }
+
     const photoPreview: Array<{
       row: number; name: string; sku: string | null; category: string; pricingMode: string; action: "Create" | "Update"; imageStatus: string;
       price: number; stock: number; photoNumbers: string[]; imageCount: number;
@@ -262,20 +654,52 @@ export async function POST(req: NextRequest) {
       validationStatus: "Ready"; images: Array<{ number: string; filename: string; mime: string; preview: string; external?: boolean }>; urlCount: number;
     }> = [];
     for (const item of input) {
-      const images: Array<{ number: string; filename: string; mime: string; preview: string; external?: boolean }> = item.photoNumbers.filter(number => zipPhotos.has(number)).map(number => {
-        const image = zipPhotos.get(number)!;
-        return { number, filename: image.filename, mime: image.mime, preview: `data:${image.mime};base64,${image.bytes.toString("base64")}` };
-      });
+      const images: Array<{
+        number: string;
+        filename: string;
+        mime: string;
+        preview: string;
+        external?: boolean;
+      }> = [];
+
+      try {
+        for (const number of item.photoNumbers.filter(
+          number => photoExists(number)
+        )) {
+          const image = await readPhoto(number);
+
+          images.push({
+            number,
+            filename: image.filename,
+            mime: "image/webp",
+            preview: await boundedThumbnail(image.bytes)
+          });
+        }
+      } catch (error) {
+        return NextResponse.json({
+          error: "ZIP image preview failed",
+          errors: [{
+            row: item.row,
+            error: error instanceof Error
+              ? error.message
+              : "Invalid ZIP image"
+          }]
+        }, { status: 422 });
+      }
       try {
         for (const [index, url] of item.imageUrls.entries()) {
           if (!downloadImages && !isStoredProductImage(url)) {
             images.push({ number: `URL ${index + 1}`, filename: `External image URL ${index + 1}`, mime: "", preview: "", external: true });
             continue;
           }
-          const image = isStoredProductImage(url) ? await readStoredProductImage(url) : await fetchProductImage(url);
-          images.push({ number: `URL ${index + 1}`, filename: `Image URL ${index + 1}`, mime: image.mime, preview: `data:${image.mime};base64,${Buffer.from(image.bytes).toString("base64")}` });
-          const currentBytes = photoPreview.reduce((sum, row) => sum + row.images.reduce((sub, entry) => sub + entry.preview.length, 0), 0) + images.reduce((sum, entry) => sum + entry.preview.length, 0);
-          if (currentBytes > 8 * 1024 * 1024) return NextResponse.json({ error: "Preview images exceed 8 MB; reduce image sizes before preview" }, { status: 413 });
+          const image = isStoredProductImage(url) ? await readStoredProductImage(url) : await fetchBudgetedImage(url);
+          images.push({
+            number: `URL ${index + 1}`,
+            filename: `Image URL ${index + 1}`,
+            mime: "image/webp",
+            preview: await boundedThumbnail(image.bytes)
+          });
+
         }
       } catch (error) {
         return NextResponse.json({ error: "Image preview failed; no products were created", errors: [{ row: item.row, error: error instanceof Error ? error.message : "Image URL download failed" }] }, { status: 422 });
@@ -288,12 +712,18 @@ export async function POST(req: NextRequest) {
           : item.data.stock,
         photoNumbers: item.photoNumbers, imageCount: images.length || item.existingImageCount,
         imageStatus: images.length ? `${images.length} replacement image${images.length === 1 ? "" : "s"} mapped` : item.existingId && item.existingImageCount ? `${item.existingImageCount} existing image${item.existingImageCount === 1 ? "" : "s"} preserved` : "No images",
-        warnings: item.photoNumbers.length && !zip ? ["Photo numbers listed; no ZIP was supplied, so these images will be skipped."] : [],
+        warnings: [
+          ...(item.photoNumbers.length && !hasZip
+            ? ["Photo numbers listed; no ZIP was supplied, so these images will be skipped."]
+            : []),
+          ...(images.some(image => !image.external && !image.preview)
+            ? ["Some thumbnails are omitted to keep the preview lightweight. Image mappings are retained."]
+            : [])
+        ],
         validationStatus: "Ready", images, urlCount: item.imageUrls.length,
       });
     }
-    const previewBytes = photoPreview.reduce((sum, product) => sum + product.images.reduce((sub, image) => sub + image.preview.length, 0), 0);
-    if (previewBytes > 8 * 1024 * 1024) return NextResponse.json({ error: "Preview images exceed 8 MB; reduce ZIP images before preview" }, { status: 413 });
+
     const categoriesForPreview = await prisma.category.findMany({ select: { id: true, name: true, slug: true, parentId: true } });
     const newCategoryKeys = new Set<string>();
     const newSubcategoryKeys = new Set<string>();
@@ -305,7 +735,27 @@ export async function POST(req: NextRequest) {
         if (!child) newSubcategoryKeys.add(`${normalizeImportLabel(item.categoryPath.category)}:${normalizeImportLabel(item.categoryPath.subcategory)}`);
       }
     }
-    return NextResponse.json({ success: true, totalRows: rows.length - 1, newProducts: input.filter(item => !item.existingId).length, updates: input.filter(item => item.existingId).length, newCategories: newCategoryKeys.size, newSubcategories: newSubcategoryKeys.size, preview: photoPreview });
+    return NextResponse.json({ success: true, totalRows: rows.length - 1, newProducts: input.filter(item => !item.existingId).length, updates: input.filter(item => item.existingId).length, newCategories: newCategoryKeys.size, newSubcategories: newSubcategoryKeys.size, preview: photoPreview,
+      skippedImageRows
+    });
+  }
+
+  if (approvedPreview) {
+    const readyRows = input.map(item => item.row);
+    const skippedRows = skippedImageRows.map(
+      item => item.row
+    );
+
+    if (
+      JSON.stringify(readyRows) !==
+        JSON.stringify(approvedPreview.readyRows) ||
+      JSON.stringify(skippedRows) !==
+        JSON.stringify(approvedPreview.skippedRows)
+    ) {
+      return NextResponse.json({
+        error: "Product readiness changed. Preview again before importing."
+      }, { status: 409 });
+    }
   }
 
   // Download every image before writing any products. A download failure is reported by CSV row and the import can be retried.
@@ -313,14 +763,23 @@ export async function POST(req: NextRequest) {
   for (const item of input) {
     try {
       const paths: string[] = [];
-      for (const number of item.photoNumbers.filter(value => zipPhotos.has(value))) {
-        const image = zipPhotos.get(number)!;
+      for (const number of item.photoNumbers.filter(value => photoExists(value))) {
+        const image = await readPhoto(number);
         const extension = image.filename.toLowerCase().endsWith(".jpeg") ? "jpg" : image.filename.split(".").pop()!.toLowerCase() as "jpg" | "png" | "webp";
         paths.push(await saveProductImage(image.bytes, extension));
       }
       for (const url of item.imageUrls) {
         if (isStoredProductImage(url) || !downloadImages) paths.push(url);
-        else paths.push(await downloadProductImage(url));
+        else {
+          const image = await fetchBudgetedImage(url);
+
+          paths.push(
+            await saveProductImage(
+              image.bytes,
+              image.extension
+            )
+          );
+        }
       }
       downloaded.set(item.row, paths);
     } catch (error) {
@@ -376,7 +835,7 @@ export async function POST(req: NextRequest) {
             }
             if (item.supplied.has("imageUrls") || item.supplied.has("mainImage") || item.supplied.has("additionalImages") || item.supplied.has("photoNumbers")) {
               const images = downloaded.get(item.row) ?? [];
-              if (images.length) await registerProductImages(tx, item.existingId!, images, item.photoNumbers.filter(value => zipPhotos.has(value)));
+              if (images.length) await registerProductImages(tx, item.existingId!, images, item.photoNumbers.filter(value => photoExists(value)));
             }
             const after = await tx.product.findUniqueOrThrow({ where: { id: item.existingId! }, select: { images: true, specifications: true } });
             await queueReleasedMedia(tx, before, after);
@@ -414,7 +873,7 @@ export async function POST(req: NextRequest) {
               : Prisma.JsonNull,
           } });
           const productImages = downloaded.get(item.row) ?? [];
-          await registerProductImages(tx, created.id, productImages, item.photoNumbers.filter(value => zipPhotos.has(value)));
+          await registerProductImages(tx, created.id, productImages, item.photoNumbers.filter(value => photoExists(value)));
           if (item.variants.length) {
             await tx.productVariant.createMany({ data: item.variants.map((variant, sortOrder) => ({
               productId: created.id, sku: variant.sku || null, colorName: variant.colorName || null,
@@ -447,5 +906,13 @@ export async function POST(req: NextRequest) {
     }
   }
   const created = outcomes.length - updated;
-  return NextResponse.json({ success: errors.length === 0, created, updated, skipped: 0, failed: errors.length, outcomes, errors }, { status: errors.length ? 207 : 201 });
+  return NextResponse.json({ success: errors.length === 0, created, updated,
+    skipped: skippedImageRows.length,
+    failed: errors.length,
+    outcomes,
+    errors,
+    skippedImageRows }, { status: errors.length ? 207 : 201 });
+  } finally {
+    if (largeZip) await largeZip.close();
+  }
 }

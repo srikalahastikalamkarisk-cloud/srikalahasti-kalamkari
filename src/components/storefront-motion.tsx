@@ -29,6 +29,13 @@ export default function StorefrontMotion() {
 
     const mobile = window.matchMedia("(max-width: 767px)").matches;
 
+    // Avoid catalog-wide reveal processing on mobile.
+    if (mobile && route !== "" &&
+        route !== "about" &&
+        route !== "contact" &&
+        route !== "contact-info" &&
+        route !== "product") return;
+
     const seen = new WeakSet<Element>();
     const running = new Set<Element>();
     const timers = new Map<Element, number>();
@@ -100,7 +107,7 @@ export default function StorefrontMotion() {
       frame = requestAnimationFrame(scan);
     });
 
-    if (root) {
+    if (root && !mobile) {
       changes.observe(root, {
         childList: true,
         subtree: true,

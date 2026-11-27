@@ -3,9 +3,10 @@ import type { Metadata } from "next";
 import PremiumHeader from "@/components/storefront-header";
 import PremiumFooter from "@/components/premium-footer";
 import ProductDetail from "@/components/product-detail";
+import { getPublicStoreSettings } from "@/lib/public-store-settings";
 import {
   getStorefrontProduct,
-  getStorefrontProducts,
+  getStorefrontCategoryProducts,
   selectRelatedProducts,
 } from "@/lib/storefront-products";
 import { BreadcrumbJsonLd, SeoJsonLd } from "@/components/seo-jsonld";
@@ -70,12 +71,13 @@ function productStructuredData(product: NonNullable<Awaited<ReturnType<typeof ge
 export default async function ProductPage({ params }: Props) {
   const { id } = await params;
 
-  const [product, products] = await Promise.all([
+  const [product, settings] = await Promise.all([
     getStorefrontProduct(id),
-    getStorefrontProducts(),
+    getPublicStoreSettings(),
   ]);
 
   if (!product) notFound();
+  const products = await getStorefrontCategoryProducts(product.categorySlug);
   const relatedProducts = selectRelatedProducts(product, products.filter(item => item.id !== product.id));
 
   return (
@@ -84,7 +86,7 @@ export default async function ProductPage({ params }: Props) {
       <main id="main-content">
         <SeoJsonLd data={productStructuredData(product)} />
         <BreadcrumbJsonLd items={[{ name: "Home", url: `${siteUrl}/` }, { name: product.categoryPath[0] || product.category, url: `${siteUrl}/${encodeURIComponent(product.categoryParentSlug || product.categorySlug)}` }, { name: product.name, url: `${siteUrl}/product/${encodeURIComponent(product.id)}` }]} />
-        <ProductDetail key={product.id} product={product} relatedProducts={relatedProducts} />
+        <ProductDetail key={product.id} product={product} relatedProducts={relatedProducts} whatsappNumber={settings?.whatsappNumber} />
       </main>
       <PremiumFooter />
     </>

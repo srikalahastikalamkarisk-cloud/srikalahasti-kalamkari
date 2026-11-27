@@ -105,6 +105,7 @@ test("appearance preview, publish, restore, refresh, and persistence share one t
   const manager = readFileSync("src/components/admin/theme-manager.tsx", "utf8");
   const appearanceApi = readFileSync("src/app/api/admin/appearance/route.ts", "utf8");
   const rootLayout = readFileSync("src/app/layout.tsx", "utf8");
+  const publicSettings = readFileSync("src/lib/public-store-settings.ts", "utf8");
 
   assert.match(manager, /setPublishedId\(current\);\s*setPreviewId\(current\)/);
   assert.match(manager, /setPreviewId\(ORIGINAL_THEME_ID\)/);
@@ -116,6 +117,9 @@ test("appearance preview, publish, restore, refresh, and persistence share one t
   assert.match(appearanceApi, /storeSettings\.upsert/);
   assert.match(appearanceApi, /previewCookie, result\.themeId/);
   assert.match(appearanceApi, /previewCookie, "".*maxAge: 0/);
-  assert.match(rootLayout, /findUnique\([\s\S]*select: \{ themeId: true \}/);
+  assert.match(rootLayout, /getPublicStoreSettings\(\)/);
+  assert.match(publicSettings, /unstable_cache\([\s\S]*themeId: true/);
+  assert.match(publicSettings, /tags: \[PUBLIC_STORE_SETTINGS_CACHE_TAG\]/);
+  assert.match(appearanceApi, /revalidateTag\(PUBLIC_STORE_SETTINGS_CACHE_TAG, \{ expire: 0 \}\)/);
   assert.match(rootLayout, /getCurrentAdmin\(\)/);
 });

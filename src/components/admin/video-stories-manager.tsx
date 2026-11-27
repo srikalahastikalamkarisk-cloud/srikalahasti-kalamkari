@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { Upload } from "lucide-react";
+import { uploadVideoPoster } from "@/lib/browser-video-poster";
 import "./video-stories-manager.css";
 
 type Story = {
@@ -84,6 +85,72 @@ export default function VideoStoriesManager() {
     void Promise.resolve().then(loadStories);
   }, [loadStories]);
 
+  const [backfillRunning, setBackfillRunning] = useState(false);
+
+  async function backfillStoryPosters() {
+    if (backfillRunning) return;
+
+    const pending = stories.filter(story =>
+      story.sourceType === "upload" &&
+      story.videoFile &&
+      !story.posterImage?.trim()
+    );
+
+    if (!pending.length) return;
+
+    setBackfillRunning(true);
+
+    let completed = 0;
+    let failed = 0;
+
+    try {
+      for (const story of pending) {
+        try {
+          setNotice(
+            `Preparing video thumbnail ${completed + failed + 1}/${pending.length}...`
+          );
+
+          const posterImage = await uploadVideoPoster(
+            story.videoFile!
+          );
+
+          const response = await fetch(
+            `/api/admin/video-stories/${encodeURIComponent(story.id)}`,
+            {
+              method: "PATCH",
+              credentials: "same-origin",
+              headers: {
+                "Content-Type": "application/json"
+              },
+              body: JSON.stringify({ posterImage }),
+              signal: AbortSignal.timeout(15000)
+            }
+          );
+
+          if (!response.ok) {
+            throw new Error("Thumbnail save failed");
+          }
+
+          setStories(previous => previous.map(item =>
+            item.id === story.id
+              ? { ...item, posterImage }
+              : item
+          ));
+
+          completed++;
+        } catch {
+          failed++;
+        }
+      }
+
+      setNotice(
+        `Thumbnail update complete: ${completed} saved, ${failed} unsuccessful.`
+      );
+    } finally {
+      setBackfillRunning(false);
+    }
+  }
+
   function update<K extends keyof FormData>(key: K, value: FormData[K]) {
     setForm(previous => ({ ...previous, [key]: value }));
   }
@@ -93,13 +160,31 @@ export default function VideoStoriesManager() {
     setForm({ ...emptyForm });
   }
 
+  useEffect(() => {
+    if (stories.length === 0) return;
+
+    const pending = stories.some(story =>
+      story.sourceType === "upload" &&
+      story.videoFile &&
+      !story.posterImage?.trim()
+    );
+
+    if (!pending) return;
+
+    const button = document.getElementById(
+      "sk-story-poster-backfill"
+    );
+
+    if (button) button.hidden = false;
+  }, [stories]);
+
   async function uploadVideo(event: React.ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
     event.target.value = "";
 
     if (!file) return;
 
-    if (!/\.(mp4|mov|avi|mkv|webm|m4v|mpeg|mpg|3gp|wmv)$/i.test(file.name)) {
+    if (!/\.mp4$/i.test(file.name)) {
       setError("Choose a supported video file.");
       return;
     }
@@ -129,14 +214,29 @@ export default function VideoStoriesManager() {
         throw new Error(result.error || "Video upload failed.");
       }
 
+      let posterUrl = result.posterUrl || "";
+
+      if (!posterUrl) {
+        setNotice("Video uploaded. Preparing thumbnail...");
+
+        try {
+          posterUrl = await uploadVideoPoster(file);
+        } catch {
+          // A thumbnail failure must not block a valid video upload.
+        }
+      }
+
       setForm(previous => ({
         ...previous,
         sourceType: "upload",
         videoFile: result.url,
-        posterImage: previous.posterImage || result.posterUrl || "",
+        posterImage: posterUrl,
       }));
 
-      setNotice("Video uploaded. Click Add Story or Save Changes to publish it.");
+      setNotice(posterUrl
+        ? "Video and thumbnail ready. Save to publish."
+        : "Video uploaded. Automatic thumbnail unavailable. You can still save the video."
+      );
     } catch (err) {
       setError(err instanceof Error ? err.message : "Video upload failed.");
     } finally {
@@ -254,6 +354,28 @@ export default function VideoStoriesManager() {
 
   return (
     <main className="vsm-page">
+      <button
+        id="sk-story-poster-backfill"
+        type="button"
+        disabled={backfillRunning}
+        onClick={() => void backfillStoryPosters()}
+        hidden={!stories.some(story =>
+          story.sourceType === "upload" &&
+          story.videoFile &&
+          !story.posterImage?.trim()
+        )}
+        style={{
+          padding: "12px 18px",
+          marginBottom: "16px",
+          borderRadius: "8px",
+          cursor: backfillRunning ? "wait" : "pointer"
+        }}
+      >
+        {backfillRunning
+          ? "Preparing video thumbnails..."
+          : "Generate Missing Video Thumbnails"}
+      </button>
+
       <header className="vsm-header">
         <div>
           <span className="vsm-eyebrow">CONTENT MANAGEMENT</span>

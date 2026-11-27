@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { prisma } from "@/lib/prisma";
+import { reconcilePaidInventory } from "@/lib/payments/reconcile-paid-inventory";
+import { reconcileCouponRedemption } from "@/lib/checkout/reconcile-coupon-redemption";
 import { paymentRequestGuard } from "@/lib/payments/request-guard";
 import { recoveryStatusFromOrder } from "@/lib/payments/recovery-status";
 import { checkPaymentRecoveryRateLimit } from "@/lib/payments/rate-limit";
@@ -43,12 +45,21 @@ export async function POST(request: NextRequest) {
         checkoutKey: body.checkoutKey,
       },
       select: {
+        id: true,
         customerEmail: true,
         orderNumber: true,
         paymentStatus: true,
         orderStatus: true,
+        items: {
+          select: {
+            productId: true,
+            variantId: true,
+            quantity: true,
+          },
+        },
         paymentAttempts: {
           select: {
+            id: true,
             status: true,
             razorpayOrderId: true,
             amountPaise: true,
@@ -62,11 +73,21 @@ export async function POST(request: NextRequest) {
       },
     });
 
+    console.info("[PAYMENT-RECOVERY]", {
+      orderFound: Boolean(order),
+      paymentStatus: order?.paymentStatus ?? null,
+      orderStatus: order?.orderStatus ?? null,
+      attempts: order?.paymentAttempts.length ?? 0,
+      ownershipMatches: order
+        ? order.customerEmail === customer.email
+        : null
+    });
+
     if (!order) {
       return NextResponse.json(
         {
-          success: false,
-          status: "REVIEW_REQUIRED",
+          success: true,
+          status: "ORDER_NOT_FOUND",
           retryAllowed: false,
         },
         { headers }
@@ -98,6 +119,7 @@ export async function POST(request: NextRequest) {
     }
 
     const latestAttempt = order.paymentAttempts[0];
+    let recoveredPaid = false;
     let retryAllowed = false;
     let interrupted = false;
     if (
@@ -112,7 +134,98 @@ export async function POST(request: NextRequest) {
           razorpay.orders.fetch(latestAttempt.razorpayOrderId),
           razorpay.orders.fetchPayments(latestAttempt.razorpayOrderId),
         ]);
-        retryAllowed = canRetryRazorpayOrder({
+        const captured = providerPayments.items.filter(payment =>
+          payment.status === "captured" &&
+          payment.captured === true &&
+          payment.order_id === latestAttempt.razorpayOrderId &&
+          payment.amount === latestAttempt.amountPaise &&
+          payment.currency === "INR" &&
+          /^pay_[A-Za-z0-9]+$/.test(payment.id)
+        );
+
+        if (
+          captured.length === 1 &&
+          providerOrder.id === latestAttempt.razorpayOrderId &&
+          providerOrder.status === "paid" &&
+          providerOrder.currency === "INR" &&
+          providerOrder.amount === latestAttempt.amountPaise &&
+          providerOrder.amount_paid === latestAttempt.amountPaise
+        ) {
+          const payment = captured[0];
+
+          recoveredPaid = await prisma.$transaction(async tx => {
+            await tx.$queryRaw<Array<{ id: string }>>`
+              SELECT id FROM \`Order\`
+              WHERE id = ${order.id}
+              FOR UPDATE
+            `;
+
+            const lockedOrder = await tx.order.findUnique({
+              where: { id: order.id }
+            });
+
+            const lockedAttempt = await tx.paymentAttempt.findUnique({
+              where: { id: latestAttempt.id }
+            });
+
+            if (
+              !lockedOrder ||
+              !lockedAttempt ||
+              lockedOrder.customerEmail !== customer.email ||
+              lockedOrder.orderStatus === "CANCELLED" ||
+              lockedAttempt.orderId !== lockedOrder.id ||
+              lockedOrder.razorpayOrderId !== payment.order_id ||
+              lockedAttempt.razorpayOrderId !== payment.order_id ||
+              lockedAttempt.amountPaise !== payment.amount ||
+              lockedAttempt.currency !== "INR" ||
+              lockedOrder.currency !== "INR" ||
+              !lockedOrder.totalAmount.mul(100).equals(payment.amount) ||
+              (lockedOrder.paymentId &&
+                lockedOrder.paymentId !== payment.id) ||
+              (lockedAttempt.razorpayPaymentId &&
+                lockedAttempt.razorpayPaymentId !== payment.id)
+            ) return false;
+
+            await tx.paymentAttempt.update({
+              where: { id: lockedAttempt.id },
+              data: {
+                status: "CAPTURED",
+                razorpayPaymentId: payment.id
+              }
+            });
+
+            await tx.order.update({
+              where: { id: lockedOrder.id },
+              data: {
+                paymentStatus: "PAID",
+                paymentId: payment.id,
+                paidAt: lockedOrder.paidAt ?? new Date()
+              }
+            });
+
+            return true;
+          }, {
+            isolationLevel: "ReadCommitted",
+            maxWait: 10000,
+            timeout: 20000
+          });
+
+          if (recoveredPaid) {
+            try {
+              await reconcileCouponRedemption(order.id);
+            } catch {
+              console.error("Recovery coupon reconciliation requires review");
+            }
+
+            try {
+              await reconcilePaidInventory(order.id);
+            } catch {
+              console.error("Recovery inventory reconciliation requires review");
+            }
+          }
+        }
+
+        retryAllowed = !recoveredPaid && canRetryRazorpayOrder({
           expectedOrderId: latestAttempt.razorpayOrderId,
           expectedAmountPaise: latestAttempt.amountPaise,
           order: providerOrder,
@@ -124,7 +237,20 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    const result = recoveryStatusFromOrder(order, retryAllowed);
+    const result = {
+      ...recoveryStatusFromOrder(
+        recoveredPaid
+          ? { ...order, paymentStatus: "PAID" }
+          : order,
+        recoveredPaid ? false : retryAllowed
+      ),
+      orderNumber: order.orderNumber,
+      items: order.items.map(item => ({
+        productId: item.productId,
+        variantId: item.variantId ?? null,
+        quantity: item.quantity,
+      })),
+    };
     return NextResponse.json(
       retryAllowed && interrupted
         ? { ...result, status: "INTERRUPTED", retryAllowed: true }

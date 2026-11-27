@@ -91,7 +91,26 @@ export default function CheckoutCustomerForm({
   const checkoutKeyRef = useRef("");
   const paymentLock = useRef(false);
   const reviewVersion = useRef(0);
-  const pendingStorageKey = "sk-pending-live-checkout-v1";
+  const legacyStorageKey = "sk-pending-live-checkout-v1";
+  const [accountEmail, setAccountEmail] = useState("");
+  const checkoutIdentity = JSON.stringify({
+    mode: buyNowOnly ? "buy-now" : "cart",
+    email: accountEmail.trim().toLowerCase(),
+    items: items.map(item => ({
+      productId: String(item.productId),
+      variantId: item.variantId || "",
+      quantity: item.quantity
+    })).sort((a, b) =>
+      JSON.stringify(a).localeCompare(JSON.stringify(b))
+    )
+  });
+  const scopedStorageKey =
+    "sk-pending-live-checkout-v2:" +
+    encodeURIComponent(checkoutIdentity);
+  const [legacyRecovery, setLegacyRecovery] = useState(false);
+  const pendingStorageKey = legacyRecovery
+    ? legacyStorageKey
+    : scopedStorageKey;
   const [recoveryChecked, setRecoveryChecked] = useState(false);
 
   useEffect(() => {
@@ -99,22 +118,33 @@ export default function CheckoutCustomerForm({
       const data = await response.json();
       if (response.ok && data.customer) {
         setCustomer(current => ({ ...current, name: data.customer.name || "", email: data.customer.email || "", phone: data.customer.phone || "" }));
+        setAccountEmail(data.customer.email || "");
         setAccountState(data.customer.emailVerifiedAt ? "verified" : "unverified");
       } else setAccountState("guest");
     }).catch(() => setAccountState("guest"));
-    const recover = () => {
-      try {
-        if (sessionStorage.getItem(pendingStorageKey)) {
-          setConfirmationPending(true);
-        }
-      } catch {
-        setConfirmationPending(true);
-      }
-      setRecoveryChecked(true);
-    };
-
-    queueMicrotask(recover);
   }, []);
+
+  useEffect(() => {
+    if (accountState !== "verified" || !accountEmail) return;
+
+    checkoutKeyRef.current = "";
+    setPreview(null);
+    setReviewedCartKey("");
+    setPaidOrder("");
+    setRecoveryMessage("");
+    setRecoveryChecked(false);
+
+    try {
+      const scoped = sessionStorage.getItem(scopedStorageKey);
+      const legacy = sessionStorage.getItem(legacyStorageKey);
+
+      setLegacyRecovery(!scoped && Boolean(legacy));
+      setConfirmationPending(Boolean(scoped || legacy));
+      setRecoveryChecked(true);
+    } catch {
+      setConfirmationPending(true);
+    }
+  }, [accountState, accountEmail, scopedStorageKey]);
 
 
 
@@ -131,7 +161,6 @@ export default function CheckoutCustomerForm({
     reviewVersion.current += 1;
     setCustomer(previous => ({ ...previous, [field]: value }));
     setPreview(null);
-    checkoutKeyRef.current = "";
     setError("");
   }
 
@@ -139,7 +168,6 @@ export default function CheckoutCustomerForm({
     reviewVersion.current += 1;
     setCouponCode(value.toUpperCase());
     setPreview(null);
-    checkoutKeyRef.current = "";
     setError("");
   }
 
@@ -197,8 +225,10 @@ export default function CheckoutCustomerForm({
               )
           : [];
 
-        if (response.status === 401) { router.push(`/login?returnTo=${encodeURIComponent("/checkout")}`); return; }
-        if (response.status === 403 && result.verificationRequired === true) { router.push("/resend-verification"); return; }
+        if (response.status === 401) { router.push(`/login?returnTo=${encodeURIComponent(
+      buyNowOnly ? "/checkout?buyNow=1" : "/checkout"
+    )}`); return; }
+        if (response.status === 403 && result.verificationRequired === true) { router.push(`/resend-verification?returnTo=${encodeURIComponent(buyNowOnly ? "/checkout?buyNow=1" : "/checkout")}`); return; }
         throw new Error(
           issues.length > 0
             ? issues.join(" | ")
@@ -240,6 +270,39 @@ export default function CheckoutCustomerForm({
   }
 
 
+  function clearResolvedRecovery(
+    resolvedCheckoutKey: string
+  ) {
+    if (!resolvedCheckoutKey) return;
+
+    const keys = Array.from(
+      { length: sessionStorage.length },
+      (_, index) => sessionStorage.key(index)
+    );
+
+    for (const key of keys) {
+      if (!key) continue;
+
+      if (
+        key !== "sk-pending-live-checkout-v1" &&
+        !key.startsWith("sk-pending-live-checkout-v2:")
+      ) continue;
+
+      try {
+        const raw = sessionStorage.getItem(key);
+        if (!raw) continue;
+
+        const record = JSON.parse(raw);
+
+        if (record.checkoutKey === resolvedCheckoutKey) {
+          sessionStorage.removeItem(key);
+        }
+      } catch {
+        // Preserve unreadable or unrelated recovery records.
+      }
+    }
+  }
+
   async function checkPaymentRecovery() {
     if (checkingRecovery || paying) return;
 
@@ -279,21 +342,195 @@ export default function CheckoutCustomerForm({
         throw new Error("Unable to confirm payment status.");
       }
 
+      if (result.status === "ORDER_NOT_FOUND") {
+        const sameAccount =
+          typeof stored.email === "string" &&
+          stored.email.trim().toLowerCase() ===
+            accountEmail.trim().toLowerCase();
+
+        // Never discard an uncertain provider payment.
+        // Only resume a scoped checkout that has no
+        // recorded server order reference.
+        if (
+          !sameAccount ||
+          stored.orderNumber !== null ||
+          !/^[A-Za-z0-9_-]{32,128}$/.test(stored.checkoutKey)
+        ) {
+          setRecoveryMessage(
+            "An earlier payment requires confirmation. " +
+            "Please contact support before paying again."
+          );
+          return;
+        }
+
+        if (legacyRecovery) {
+          const existing = sessionStorage.getItem(scopedStorageKey);
+
+          if (
+            existing &&
+            JSON.parse(existing).checkoutKey !== stored.checkoutKey
+          ) {
+            setRecoveryMessage(
+              "Multiple checkout records require confirmation."
+            );
+            return;
+          }
+
+          const archiveKey =
+            "sk-archived-live-checkout-v1:" +
+            encodeURIComponent(stored.checkoutKey);
+
+          // Preserve the original record before migration.
+          sessionStorage.setItem(archiveKey, raw);
+          sessionStorage.setItem(scopedStorageKey, raw);
+          sessionStorage.removeItem(legacyStorageKey);
+
+          setLegacyRecovery(false);
+        }
+
+        // Reuse the original idempotency key.
+        // Do not generate a fresh payment identity.
+        checkoutKeyRef.current = stored.checkoutKey;
+
+        setConfirmationPending(false);
+        setPreview(null);
+        setReviewedCartKey("");
+        setError("");
+        setRecoveryMessage(
+          "Your checkout can be resumed securely. " +
+          "Please review your order again."
+        );
+        return;
+      }
+
+      const normalizeRecoveryItems = (
+        lines: Array<{
+          productId: string;
+          variantId?: string | null;
+          quantity: number;
+        }>
+      ) => JSON.stringify(
+        lines.map(line => ({
+          productId: String(line.productId),
+          variantId: line.variantId || "",
+          quantity: line.quantity,
+        })).sort((a, b) =>
+          JSON.stringify(a).localeCompare(JSON.stringify(b))
+        )
+      );
+
+      if (legacyRecovery) {
+        if (
+          !Array.isArray(result.items) ||
+          result.items.length === 0 ||
+          !result.items.every((line: {
+            productId?: unknown;
+            quantity?: unknown;
+          }) =>
+            line &&
+            typeof line.productId === "string" &&
+            typeof line.quantity === "number" &&
+            Number.isSafeInteger(line.quantity) &&
+            line.quantity > 0
+          )
+        ) {
+          setRecoveryMessage(
+            "The earlier payment requires confirmation before continuing."
+          );
+          return;
+        }
+
+        const sameProducts =
+          normalizeRecoveryItems(result.items) ===
+          normalizeRecoveryItems(items);
+
+        if (!sameProducts) {
+          const originalItems = JSON.parse(
+            normalizeRecoveryItems(result.items)
+          );
+
+          // Legacy checkout mode is unknown.
+          // Preserve the original payment in both possible scopes.
+          const keys = ["buy-now", "cart"].map(mode =>
+            "sk-pending-live-checkout-v2:" +
+            encodeURIComponent(JSON.stringify({
+              mode,
+              email: accountEmail.trim().toLowerCase(),
+              items: originalItems
+            }))
+          );
+
+          for (const key of keys) {
+            const existing = sessionStorage.getItem(key);
+            if (
+              existing &&
+              JSON.parse(existing).checkoutKey !== stored.checkoutKey
+            ) {
+              setRecoveryMessage(
+                "Multiple earlier payments require confirmation."
+              );
+              return;
+            }
+          }
+
+          const archiveKey =
+            "sk-archived-live-checkout-v1:" +
+            encodeURIComponent(stored.checkoutKey);
+
+          sessionStorage.setItem(archiveKey, raw);
+
+          for (const key of keys) {
+            sessionStorage.setItem(key, raw);
+          }
+
+          sessionStorage.removeItem(legacyStorageKey);
+          checkoutKeyRef.current = "";
+          setLegacyRecovery(false);
+          setConfirmationPending(false);
+          setPreview(null);
+          setReviewedCartKey("");
+          setError("");
+          setRecoveryMessage("");
+          return;
+        }
+      }
+
       if (result.status === "PAID") {
         if (typeof result.orderNumber !== "string" || !result.orderNumber) {
           throw new Error("Payment is confirmed, but the order reference is unavailable. Contact support.");
         }
 
         setPaidOrder(result.orderNumber);
-        clearPurchasedItems(items, buyNowOnly);
+        if (!legacyRecovery) {
+          clearPurchasedItems(items, buyNowOnly);
+        }
         try {
-          sessionStorage.removeItem(pendingStorageKey);
+          clearResolvedRecovery(stored.checkoutKey);
         } catch {
           // The server confirmed payment; local cleanup can be retried later.
         }
         setConfirmationPending(false);
+        router.replace(
+          `/checkout/success?order=${encodeURIComponent(result.orderNumber)}`
+        );
+
         setError("");
+      } else if (result.status === "CANCELLED") {
+        clearResolvedRecovery(stored.checkoutKey);
+        setLegacyRecovery(false);
+        checkoutKeyRef.current = "";
+        setConfirmationPending(false);
+        setPreview(null);
+        setReviewedCartKey("");
+        setError("");
+        setRecoveryMessage("");
       } else if ((result.status === "FAILED" || result.status === "INTERRUPTED") && result.retryAllowed === true) {
+        if (legacyRecovery) {
+          setRecoveryMessage(
+            "An earlier checkout is unpaid. Please resolve that order before continuing."
+          );
+          return;
+        }
         checkoutKeyRef.current = stored.checkoutKey;
         setConfirmationPending(false);
         setRecoveryMessage("The existing Razorpay order is confirmed unpaid. Review your order and retry securely.");
@@ -312,23 +549,48 @@ export default function CheckoutCustomerForm({
       }
     } catch {
       setRecoveryMessage(
-        "Unable to verify payment. Do not pay again. Contact support."
+        "We could not confirm your payment yet. Please check again shortly or contact support before retrying."
       );
     } finally {
       setCheckingRecovery(false);
     }
   }
 
+  useEffect(() => {
+    if (
+      accountState !== "verified" ||
+      !recoveryChecked ||
+      !confirmationPending ||
+      paying ||
+      paidOrder
+    ) return;
+
+    const timer = window.setTimeout(() => {
+      void checkPaymentRecovery();
+    }, 800);
+
+    return () => window.clearTimeout(timer);
+  }, [
+    accountState,
+    recoveryChecked,
+    confirmationPending,
+    paying,
+    paidOrder
+  ]);
+
   async function paySecurely() {
     if (
       paymentLock.current ||
       confirmationPending ||
       !recoveryChecked ||
+      legacyRecovery ||
+      !accountEmail ||
       !verifiedPreview ||
       paidOrder
     ) return;
 
     paymentLock.current = true;
+    let activeCheckoutKey = "";
     setPaying(true);
     setError("");
 
@@ -336,6 +598,7 @@ export default function CheckoutCustomerForm({
       if (!checkoutKeyRef.current) {
         checkoutKeyRef.current = crypto.randomUUID();
       }
+      activeCheckoutKey = checkoutKeyRef.current;
 
       // Persist the attempt BEFORE contacting the payment server.
       // A lost network response must not allow a fresh checkout key.
@@ -459,11 +722,15 @@ export default function CheckoutCustomerForm({
             setPaidOrder(result.orderNumber);
             clearPurchasedItems(items, buyNowOnly);
             try {
-              sessionStorage.removeItem(pendingStorageKey);
+              clearResolvedRecovery(activeCheckoutKey);
             } catch {
               // Successful payment is already verified server-side.
             }
             setConfirmationPending(false);
+        router.replace(
+          `/checkout/success?order=${encodeURIComponent(result.orderNumber)}`
+        );
+
           } catch (error) {
             setError(
               error instanceof Error
@@ -485,7 +752,7 @@ export default function CheckoutCustomerForm({
 
       checkout.on("payment.failed", () => {
         setError(
-          "Razorpay reported that payment was not completed. Check its status before trying again."
+          "Payment was not completed. We are checking its status before allowing a secure retry."
         );
         paymentLock.current = false;
         setPaying(false);
@@ -503,9 +770,222 @@ export default function CheckoutCustomerForm({
     }
   }
 
+  if (paidOrder && accountState === "verified") {
+    return (
+      <section className="skcheckout">
+        <div className="skoc" role="status">
+          <div className="skoc-card">
+
+            <div className="skoc-icon" aria-hidden="true">
+              <svg width="42" height="42"
+                viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" strokeWidth="1.8"
+                strokeLinecap="round"
+                strokeLinejoin="round">
+                <circle cx="12" cy="12" r="10"/>
+                <path d="m7 12 3 3 7-7"/>
+              </svg>
+            </div>
+
+            <span className="skoc-eyebrow">
+              PAYMENT SUCCESSFUL
+            </span>
+
+            <h2>Thank you for your order!</h2>
+
+            <p className="skoc-description">
+              Thank you for choosing Srikalahasti Kalamkari.
+              Your payment has been securely verified.
+            </p>
+
+            <div className="skoc-details">
+              <div>
+                <span>Order Number</span>
+                <strong>{paidOrder}</strong>
+              </div>
+
+              <div>
+                <span>Payment Status</span>
+                <strong className="skoc-paid">
+                  Paid Successfully
+                </strong>
+              </div>
+
+              <div>
+                <span>Payment Gateway</span>
+                <strong>Razorpay</strong>
+              </div>
+            </div>
+
+            <div className="skoc-next">
+              <h3>What happens next?</h3>
+
+              <div className="skoc-step">
+                <span>01</span>
+                <div>
+                  <strong>Payment confirmed</strong>
+                  <p>Your payment has been verified.</p>
+                </div>
+              </div>
+
+              <div className="skoc-step">
+                <span>02</span>
+                <div>
+                  <strong>Order preparation</strong>
+                  <p>Our team will review and prepare your order.</p>
+                </div>
+              </div>
+
+              <div className="skoc-step">
+                <span>03</span>
+                <div>
+                  <strong>Shipping and delivery</strong>
+                  <p>Follow your order updates in your account.</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="skoc-actions">
+              <a href="/account" className="skoc-primary">
+                View My Orders
+                <span aria-hidden="true">→</span>
+              </a>
+
+              <a href="/shop" className="skoc-secondary">
+                Continue Shopping
+              </a>
+            </div>
+
+            <p className="skoc-secure">
+              Secure payment powered by Razorpay
+            </p>
+
+          </div>
+        </div>
+      </section>
+    );
+  }
+
   return (
     <section className="skcheckout">
-      {accountState === "loading" ? <p>Checking your account…</p> : accountState !== "verified" ? <><div className="skcheckout-heading"><h2>Sign in to checkout</h2><p>{accountState === "unverified" ? "Verify your email before placing an order." : "Your cart will stay on this device while you sign in or create an account."}</p></div><a href={accountState === "unverified" ? "/resend-verification" : `/login?returnTo=${encodeURIComponent("/checkout")}`} className="skcheckout-pay">{accountState === "unverified" ? "Resend verification email" : "Sign in or create an account"}</a></> : <>
+      {accountState === "loading" ? (
+        <div className="skca-loading" role="status">
+          <span className="skca-spinner" />
+          Checking your account…
+        </div>
+      ) : accountState !== "verified" ? (
+        <div className="skca">
+          <div className="skca-intro">
+            <span className="skca-eyebrow">
+              SECURE CHECKOUT
+            </span>
+            <h2>Your selection awaits</h2>
+            <p>One step closer to owning something handcrafted.</p>
+          </div>
+
+          <div className="skca-grid">
+            <div className="skca-card">
+              <div className="skca-icon" aria-hidden="true">
+                <svg width="29" height="29" viewBox="0 0 24 24"
+                  fill="none" stroke="currentColor" strokeWidth="1.5">
+                  <circle cx="12" cy="8" r="3.5"/>
+                  <path d="M4 21v-2a8 8 0 0 1 16 0v2"/>
+                </svg>
+              </div>
+
+              <h3>{accountState === "unverified"
+                ? "Verify your email"
+                : "Welcome back"}</h3>
+
+              <p className="skca-description">
+                {accountState === "unverified"
+                  ? "Verify your email address to continue securely."
+                  : "Sign in to continue with your selected products and complete your purchase."}
+              </p>
+
+              <div className="skca-actions">
+                {accountState === "unverified" ? (
+                  <a className="skca-primary"
+                    href={`/resend-verification?returnTo=${encodeURIComponent(buyNowOnly ? "/checkout?buyNow=1" : "/checkout")}`}>
+                    Resend Verification Email
+                  </a>
+                ) : (
+                  <>
+                    <a className="skca-primary"
+                      href={`/login?returnTo=${encodeURIComponent(buyNowOnly ? "/checkout?buyNow=1" : "/checkout")}`}>
+                      Sign In &amp; Continue
+                      <span aria-hidden="true">→</span>
+                    </a>
+
+                    <div className="skca-or">
+                      <span>New to Srikalahasti Kalamkari?</span>
+                    </div>
+
+                    <a className="skca-secondary"
+                      href={`/register?returnTo=${encodeURIComponent(buyNowOnly ? "/checkout?buyNow=1" : "/checkout")}`}>
+                      Create New Account
+                    </a>
+                  </>
+                )}
+              </div>
+
+              <div className="skca-trust">
+                <svg width="18" height="18" viewBox="0 0 24 24"
+                  fill="none" stroke="currentColor" strokeWidth="1.6"
+                  aria-hidden="true">
+                  <path d="M12 3l8 3v6c0 5-8 9-8 9s-8-4-8-9V6z"/>
+                  <path d="m8 12 3 3 5-6"/>
+                </svg>
+                Secure login · Protected payments
+              </div>
+            </div>
+
+            <aside className="skca-card skca-summary">
+              <div className="skca-summary-heading">
+                <h3>Your selection</h3>
+                <span>{items.reduce((sum, item) =>
+                  sum + item.quantity, 0)} item(s)</span>
+              </div>
+
+              <div className="skca-products">
+                {displayProducts.map(product => (
+                  <div className="skca-product"
+                    key={`${product.id}:${product.variantId || ""}`}>
+                    {product.image ? (
+                      <img src={product.image}
+                        alt={product.name} loading="lazy"/>
+                    ) : (
+                      <div className="skca-placeholder">Kalamkari</div>
+                    )}
+
+                    <div className="skca-product-info">
+                      <strong>{product.name}</strong>
+                      {product.variantLabel && (
+                        <span>{product.variantLabel}</span>
+                      )}
+                      <span>Qty: {product.quantity}</span>
+                      <b>{money(product.price * product.quantity)}</b>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="skca-total">
+                <span>Estimated subtotal</span>
+                <strong>{money(subtotal)}</strong>
+              </div>
+
+              <div className="skca-saved">
+                <span aria-hidden="true">✓</span>
+                <div>
+                  <strong>Your selection is saved</strong>
+                  <p>Continue with the same selection after signing in on this tab.</p>
+                </div>
+              </div>
+            </aside>
+          </div>
+        </div>
+      ) : <>
       <div className="skcheckout-heading">
         <h2>Delivery Information</h2>
         <p>Enter your details to review your order securely.</p>
@@ -753,7 +1233,7 @@ export default function CheckoutCustomerForm({
         {confirmationPending && !paidOrder && (
           <div role="status" className="skcheckout-error">
             <p>
-              Payment status needs confirmation. Do not pay again.
+              We are confirming your previous payment. Please wait before retrying.
             </p>
             <button
               type="button"

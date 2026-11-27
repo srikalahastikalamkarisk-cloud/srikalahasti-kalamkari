@@ -387,6 +387,7 @@ export async function POST(request: NextRequest) {
       notes: {
         internalOrderId: order.id,
         orderNumber: order.orderNumber,
+        checkoutKey: order.checkoutKey ?? "",
         environment: "LIVE",
       },
     });

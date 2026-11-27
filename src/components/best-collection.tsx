@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import {
   ArrowLeft,
   ArrowRight,
@@ -34,52 +35,191 @@ export default function BestCollection({ variant = "best", products }: Props) {
     ? [...catalog, ...catalog]
     : [...catalog.slice(0, 10), ...catalog.slice(0, 10)];
 
+  const manualPauseUntil = useRef(0);
+
   useEffect(() => {
-    // Best Collection only: discrete, full-card movement. Discover stays manual.
-    if (isDiscover) return;
+    if (isDiscover || catalog.length < 2) return;
+
     const track = trackRef.current;
     if (!track) return;
-    const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
-    let paused = false;
-    let resetTimer: ReturnType<typeof setTimeout> | undefined;
-    const pause = () => { paused = true; };
-    const resume = () => { paused = false; };
-    const advance = () => {
-      if (paused || reducedMotion.matches || document.hidden) return;
-      const first = track.querySelector<HTMLElement>(".skp-card");
-      if (!first) return;
-      const gap = parseFloat(getComputedStyle(track).columnGap) || 0;
-      const step = first.getBoundingClientRect().width + gap;
-      const midpoint = track.scrollWidth / 2;
-      if (track.scrollLeft >= midpoint - step * 1.5) {
-        track.scrollLeft = 0;
-      }
-      track.scrollBy({ left: step, behavior: "smooth" });
-    };
-    track.scrollLeft = 0;
-    const interval = window.setInterval(advance, 1500);
-    track.addEventListener("mouseenter", pause);
-    track.addEventListener("mouseleave", resume);
-    track.addEventListener("focusin", pause);
-    track.addEventListener("focusout", resume);
-    track.addEventListener("touchstart", pause, { passive: true });
-    track.addEventListener("touchend", resume);
-    return () => {
-      window.clearInterval(interval);
-      if (resetTimer) clearTimeout(resetTimer);
-      track.removeEventListener("mouseenter", pause);
-      track.removeEventListener("mouseleave", resume);
-      track.removeEventListener("focusin", pause);
-      track.removeEventListener("focusout", resume);
-      track.removeEventListener("touchstart", pause);
-      track.removeEventListener("touchend", resume);
-    };
-  }, [isDiscover]);
 
+    const reducedMotion = window.matchMedia(
+      "(prefers-reduced-motion: reduce)"
+    );
+
+    let frame = 0;
+    let previousTime = 0;
+    let remainder = 0;
+    let cycleWidth = 0;
+    let visible = false;
+    let hovered = false;
+    let focused = false;
+    let touching = false;
+
+    const measure = () => {
+      const first = track.children[0] as HTMLElement | undefined;
+      const duplicate = track.children[catalog.length] as HTMLElement | undefined;
+
+      cycleWidth = first && duplicate
+        ? duplicate.getBoundingClientRect().left -
+          first.getBoundingClientRect().left
+        : 0;
+    };
+
+    const stop = () => {
+      cancelAnimationFrame(frame);
+      frame = 0;
+      previousTime = 0;
+      remainder = 0;
+    };
+
+    const tick = (now: number) => {
+      frame = 0;
+
+      if (!visible || document.hidden || reducedMotion.matches) {
+        previousTime = 0;
+        return;
+      }
+
+      const elapsed = previousTime
+        ? Math.min(now - previousTime, 32)
+        : 0;
+
+      previousTime = now;
+
+      const canLoop =
+        cycleWidth > track.clientWidth &&
+        track.scrollWidth - track.clientWidth >= cycleWidth;
+
+      if (
+        canLoop &&
+        !hovered &&
+        !focused &&
+        !touching &&
+        now >= manualPauseUntil.current
+      ) {
+        remainder += elapsed * 0.028;
+
+        const distance = Math.floor(remainder);
+
+        if (distance > 0) {
+          remainder -= distance;
+
+          let next = track.scrollLeft + distance;
+
+          if (next >= cycleWidth) {
+            next %= cycleWidth;
+          }
+
+          track.scrollLeft = next;
+        }
+      } else {
+        remainder = 0;
+      }
+
+      frame = requestAnimationFrame(tick);
+    };
+
+    const sync = () => {
+      stop();
+
+      if (visible && !document.hidden && !reducedMotion.matches) {
+        frame = requestAnimationFrame(tick);
+      }
+    };
+
+    const pauseBriefly = () => {
+      manualPauseUntil.current = performance.now() + 2500;
+    };
+
+    const mouseEnter = () => { hovered = true; };
+    const mouseLeave = () => {
+      hovered = false;
+      pauseBriefly();
+    };
+
+    const focusIn = () => { focused = true; };
+    const focusOut = (event: FocusEvent) => {
+      focused = track.contains(event.relatedTarget as Node | null);
+      pauseBriefly();
+    };
+
+    const touchStart = () => { touching = true; };
+    const touchEnd = () => {
+      touching = false;
+      pauseBriefly();
+    };
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        visible = entry.isIntersecting;
+        sync();
+      },
+      { threshold: 0.1 }
+    );
+
+    const resize = new ResizeObserver(measure);
+
+    measure();
+    observer.observe(track);
+    resize.observe(track);
+
+    track.addEventListener("mouseenter", mouseEnter);
+    track.addEventListener("mouseleave", mouseLeave);
+    track.addEventListener("focusin", focusIn);
+    track.addEventListener("focusout", focusOut);
+    track.addEventListener("touchstart", touchStart, { passive: true });
+    track.addEventListener("touchend", touchEnd, { passive: true });
+    track.addEventListener("touchcancel", touchEnd, { passive: true });
+    track.addEventListener("wheel", pauseBriefly, { passive: true });
+
+    document.addEventListener("visibilitychange", sync);
+    reducedMotion.addEventListener("change", sync);
+
+    return () => {
+      stop();
+      observer.disconnect();
+      resize.disconnect();
+
+      track.removeEventListener("mouseenter", mouseEnter);
+      track.removeEventListener("mouseleave", mouseLeave);
+      track.removeEventListener("focusin", focusIn);
+      track.removeEventListener("focusout", focusOut);
+      track.removeEventListener("touchstart", touchStart);
+      track.removeEventListener("touchend", touchEnd);
+      track.removeEventListener("touchcancel", touchEnd);
+      track.removeEventListener("wheel", pauseBriefly);
+
+      document.removeEventListener("visibilitychange", sync);
+      reducedMotion.removeEventListener("change", sync);
+    };
+  }, [isDiscover, catalog.length]);
+
+  useEffect(() => {
+    if (!preview) return;
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setPreview(null);
+      }
+    };
+
+    window.addEventListener("keydown", closeOnEscape);
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", closeOnEscape);
+    };
+  }, [preview]);
 
   function move(direction: number) {
     const track = trackRef.current;
     if (!track) return;
+
+    manualPauseUntil.current = performance.now() + 2500;
 
     const card = track.querySelector<HTMLElement>(".skp-card");
     const width = card ? card.getBoundingClientRect().width : 240;
@@ -87,7 +227,9 @@ export default function BestCollection({ variant = "best", products }: Props) {
 
     track.scrollBy({
       left: direction * (width + gap) * (window.innerWidth <= 640 ? 2 : 1),
-      behavior: "smooth",
+      behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches
+        ? "auto"
+        : "smooth",
     });
   }
 
@@ -193,14 +335,13 @@ export default function BestCollection({ variant = "best", products }: Props) {
                   aria-label={`View ${product.name} details`}
                 >
                   {product.image ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
+                    <Image
                       src={product.image}
                       alt={product.name}
+                      fill
+                      sizes="(max-width: 640px) 75vw, (max-width: 1024px) 45vw, 25vw"
                       loading="lazy"
                       style={{
-                        width: "100%",
-                        height: "100%",
                         objectFit: "cover",
                       }}
                     />
@@ -300,8 +441,21 @@ export default function BestCollection({ variant = "best", products }: Props) {
             </button>
 
             <div className="skp-dialog-image">
-              <ImageIcon size={38} />
-              <span>Product image coming soon</span>
+              {preview.image ? (
+                <Image
+                  src={preview.image}
+                  alt={preview.name}
+                  width={720}
+                  height={720}
+                  decoding="async"
+                  className="skp-dialog-product-image"
+                />
+              ) : (
+                <>
+                  <ImageIcon size={38} />
+                  <span>Product image coming soon</span>
+                </>
+              )}
             </div>
 
             <h3>{preview.name}</h3>

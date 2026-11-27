@@ -1252,3 +1252,11 @@ html,
 body {
   background-color: #ffffff;
 }
+
+
+/* STEP 887B — ADMIN RECORD HEADING CONTRAST */
+.skorders-panel-heading .skad-eyebrow,
+.skcustomers-panel-heading .skad-eyebrow {
+  color: #80602d !important;
+  opacity: 1;
+}

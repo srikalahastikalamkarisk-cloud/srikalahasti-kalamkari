@@ -1181,3 +1181,113 @@ section.skp-section.skp-royal-best {
   background-image: none !important;
   color: #E8C99B !important;
 }
+
+
+/* CHANGE 28.4 - PRODUCT ZOOM PREVIEW */
+
+.skp-section .skp-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100000;
+  padding: 16px;
+  background: rgba(0, 0, 0, .78);
+  overscroll-behavior: contain;
+}
+
+.skp-section .skp-dialog {
+  box-sizing: border-box;
+  width: min(94vw, 560px);
+  max-height: 92vh;
+  max-height: 92dvh;
+  overflow-y: auto;
+  padding: 14px;
+  border-radius: 18px;
+  background: #ffffff;
+  color: #172333;
+  box-shadow: 0 24px 80px rgba(0, 0, 0, .28);
+}
+
+.skp-section .skp-dialog-image {
+  min-height: 0;
+  width: 100%;
+  overflow: hidden;
+  border-radius: 12px;
+  background: #f5f4f0;
+}
+
+.skp-section .skp-dialog-product-image {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 68vh;
+  max-height: 68dvh;
+  object-fit: contain;
+}
+
+.skp-section .skp-dialog h3 {
+  margin: 14px 6px 8px;
+  color: #172333;
+  font-size: 20px;
+  line-height: 1.35;
+}
+
+.skp-section .skp-dialog > strong {
+  display: block;
+  padding-bottom: 8px;
+  color: #172333;
+  font-size: 19px;
+  font-weight: 700;
+}
+
+.skp-section .skp-dialog .skp-close {
+  position: absolute;
+  z-index: 2;
+  top: 22px;
+  right: 22px;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border: 1px solid rgba(0, 0, 0, .12);
+  border-radius: 50%;
+  background: #ffffff;
+  color: #172333;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, .12);
+  cursor: pointer;
+}
+
+.skp-section .skp-dialog .skp-close:focus-visible {
+  outline: 2px solid #172333;
+  outline-offset: 3px;
+}
+
+@media (max-width: 640px) {
+  .skp-section .skp-overlay {
+    padding: 12px;
+  }
+
+  .skp-section .skp-dialog {
+    width: 100%;
+    max-width: 440px;
+    padding: 10px;
+    border-radius: 14px;
+  }
+
+  .skp-section .skp-dialog-product-image {
+    max-height: 65vh;
+    max-height: 65dvh;
+  }
+
+  .skp-section .skp-dialog h3 {
+    font-size: 17px;
+  }
+
+  .skp-section .skp-dialog > strong {
+    font-size: 18px;
+  }
+
+  .skp-section .skp-dialog .skp-close {
+    top: 16px;
+    right: 16px;
+  }
+}

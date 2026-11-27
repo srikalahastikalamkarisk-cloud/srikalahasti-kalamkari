@@ -4,7 +4,8 @@ import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { getCurrentAdmin } from "@/lib/admin-auth";
 import { readBoundedBody } from "@/lib/payments/request-guard-stream";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
+import { PUBLIC_STORE_SETTINGS_CACHE_TAG } from "@/lib/public-store-settings";
 import { assertManagedMediaAvailable, queueReleasedMedia } from "@/lib/admin/global-media-references";
 
 export const runtime = "nodejs";
@@ -174,6 +175,7 @@ export async function PUT(request: NextRequest) {
       return updated;
     });
 
+    revalidateTag(PUBLIC_STORE_SETTINGS_CACHE_TAG, { expire: 0 });
     revalidatePath("/", "layout");
 
     return NextResponse.json(

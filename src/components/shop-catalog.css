@@ -1817,3 +1817,4 @@ html[data-storefront-theme] .sk-store-theme
 .skshop p:empty {
   display: none;
 }
+.skshop-pagination-page{display:flex;align-items:center;gap:5px}

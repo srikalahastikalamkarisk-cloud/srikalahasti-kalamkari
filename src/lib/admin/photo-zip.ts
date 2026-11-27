@@ -6,9 +6,20 @@ const MAX_EXPANDED_BYTES = 30 * 1024 * 1024;
 const MAX_ENTRIES = 2000;
 const SUPPORTED = new Set(["jpg", "jpeg", "png", "webp"]);
 
+export class MissingZipPhotosError extends Error {
+  constructor(public readonly numbers: string[]) {
+    super(`Missing ZIP images for photo numbers: ${numbers.join(", ")}`);
+    this.name = "MissingZipPhotosError";
+  }
+}
+
+function normalizedPhotoNumber(value: string) {
+  return value.replace(/^0+(?=\d)/, "");
+}
+
 export type PhotoEntry = { number: string; filename: string; mime: string; bytes: Buffer };
 
-export function extractPhotoZip(archive: Uint8Array, requestedNumbers: string[]): Map<string, PhotoEntry> {
+export function extractPhotoZip(archive: Uint8Array, requestedNumbers: string[], allowMissing = false): Map<string, PhotoEntry> {
   if (archive.byteLength > MAX_ZIP_BYTES) throw new Error("ZIP must be 20 MB or smaller");
   const data = Buffer.from(archive.buffer, archive.byteOffset, archive.byteLength);
   const min = Math.max(0, data.length - 65557);
@@ -20,7 +31,13 @@ export function extractPhotoZip(archive: Uint8Array, requestedNumbers: string[])
   const centralSize = data.readUInt32LE(eocd + 12);
   let cursor = data.readUInt32LE(eocd + 16);
   if (count > MAX_ENTRIES || cursor + centralSize > eocd) throw new Error("ZIP directory is invalid or exceeds entry limits");
-  const wanted = new Set(requestedNumbers);
+  const wanted = new Set(
+    requestedNumbers.map(normalizedPhotoNumber)
+  );
+
+  if (wanted.size !== requestedNumbers.length) {
+    throw new Error("Ambiguous CSV photo numbers after normalization");
+  }
   const found = new Map<string, PhotoEntry>();
   const seenPhotoNumbers = new Set<string>();
   let expanded = 0;
@@ -43,6 +60,12 @@ export function extractPhotoZip(archive: Uint8Array, requestedNumbers: string[])
     cursor += 46 + nameLength + extraLength + commentLength;
     if (!filename || filename.includes("\\") || filename.startsWith("/") || /^[a-zA-Z]:/.test(filename) || filename.split("/").some(part => part === ".." || part === ".")) throw new Error(`Unsafe ZIP path: ${filename}`);
     if (filename.endsWith("/")) continue;
+
+    if (filename.split("/").some(part =>
+      part === "__MACOSX" ||
+      part === ".DS_Store" ||
+      part.startsWith("._")
+    )) continue;
     declaredExpanded += uncompressedSize;
     if (declaredExpanded > MAX_EXPANDED_BYTES) throw new Error("ZIP expands beyond the 30 MB safety limit");
     const unixMode = (madeBy >> 8) === 3 ? externalAttrs >>> 16 : 0;
@@ -52,9 +75,16 @@ export function extractPhotoZip(archive: Uint8Array, requestedNumbers: string[])
     if (!SUPPORTED.has(ext)) throw new Error(`Unsupported ZIP file format: ${filename}`);
     const stem = filename.split("/").pop()!.slice(0, -(ext.length + 1));
     if (!/^\d+$/.test(stem)) continue;
-    if (seenPhotoNumbers.has(stem)) throw new Error(`Ambiguous duplicate ZIP photo number: ${stem}`);
-    seenPhotoNumbers.add(stem);
-    if (!wanted.has(stem)) continue;
+
+    const normalized = normalizedPhotoNumber(stem);
+
+    if (seenPhotoNumbers.has(normalized)) {
+      throw new Error(`Ambiguous duplicate ZIP photo number: ${normalized}`);
+    }
+
+    seenPhotoNumbers.add(normalized);
+
+    if (!wanted.has(normalized)) continue;
     if (uncompressedSize > MAX_EXPANDED_BYTES || expanded + uncompressedSize > MAX_EXPANDED_BYTES) throw new Error("ZIP expands beyond the 30 MB safety limit");
     if (localOffset + 30 > data.length || data.readUInt32LE(localOffset) !== 0x04034b50) throw new Error(`Invalid local ZIP header: ${filename}`);
     const localNameLength = data.readUInt16LE(localOffset + 26);
@@ -73,10 +103,30 @@ export function extractPhotoZip(archive: Uint8Array, requestedNumbers: string[])
     const mime = imageMime(bytes);
     if (!mime) throw new Error(`Unsupported or invalid image content: ${filename}`);
     expanded += bytes.length;
-    found.set(stem, { number: stem, filename, mime, bytes });
+    found.set(normalized, {
+      number: normalized,
+      filename,
+      mime,
+      bytes
+    });
   }
-  for (const number of requestedNumbers) if (!found.has(number)) throw new Error(`Missing ZIP image for photo number ${number}`);
-  return found;
+  const missing = requestedNumbers.filter(
+    number => !found.has(normalizedPhotoNumber(number))
+  );
+
+  if (missing.length && !allowMissing) {
+    throw new MissingZipPhotosError(missing);
+  }
+
+  return new Map(requestedNumbers
+    .filter(number => found.has(normalizedPhotoNumber(number)))
+    .map(number => [
+    number,
+    {
+      ...found.get(normalizedPhotoNumber(number))!,
+      number
+    }
+  ]));
 }
 
 function imageMime(bytes: Buffer) {

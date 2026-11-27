@@ -4,8 +4,9 @@ import { notFound } from "next/navigation";
 import PremiumHeader from "@/components/storefront-header";
 import PremiumFooter from "@/components/premium-footer";
 import ShopCatalog from "@/components/shop-catalog";
+import { getPublicStoreSettings } from "@/lib/public-store-settings";
 import { prisma } from "@/lib/prisma";
-import { getStorefrontProducts } from "@/lib/storefront-products";
+import { getStorefrontCatalogPage, getStorefrontCategoryProducts } from "@/lib/storefront-products";
 import { BreadcrumbJsonLd } from "@/components/seo-jsonld";
 
 export const dynamic = "force-dynamic";
@@ -60,8 +61,8 @@ export async function generateMetadata({
   const query = await searchParams;
   const category = await getCategory(slug);
   if (!category) return { title: "Collection Not Found | Srikalahasti Kalamkari", robots: { index: false, follow: false } };
-  const products = await getStorefrontProducts();
-  const hasProducts = products.some(product => product.categorySlug === slug || product.categoryParentSlug === slug);
+  const products = await getStorefrontCategoryProducts(slug);
+  const hasProducts = products.length > 0;
   const canonical = `${siteUrl}/${encodeURIComponent(slug)}`;
   const description = `Explore ${category.name} from Srikalahasti Kalamkari. Browse currently available pieces and check each product page for materials, techniques and availability.`;
 
@@ -75,13 +76,25 @@ export async function generateMetadata({
   };
 }
 
-export default async function CategoryPage({ params }: Props) {
+export default async function CategoryPage({ params, searchParams }: Props) {
   const { category: slug } = await params;
+  const query = await searchParams;
+  const subcategorySlug = typeof query.subcategory === "string" ? query.subcategory : undefined;
+  const searchTerm = typeof query.q === "string" ? query.q : undefined;
   const category = await getCategory(slug);
 
   if (!category) notFound();
 
-  const products = await getStorefrontProducts();
+  const showSubcategoryBrowser = category.children.length > 0 && !subcategorySlug && !searchTerm;
+  const catalog = showSubcategoryBrowser
+    ? { products: [], total: 0 }
+    : await getStorefrontCatalogPage({
+        categorySlug: slug,
+        subcategorySlug,
+        query: searchTerm,
+        page: 1,
+        pageSize: 12,
+      });
 
   const categories = await prisma.category.findMany({
     where: { isActive: true, parentId: null },
@@ -113,8 +126,9 @@ export default async function CategoryPage({ params }: Props) {
             Loading collection…
           </div>
         }>
-          <ShopCatalog
-            products={products}
+          <ShopCatalog whatsappNumber={(await getPublicStoreSettings())?.whatsappNumber}
+            products={catalog.products}
+            totalProducts={catalog.total}
             categorySlug={category.slug}
             categoryName={category.name}
             subcategories={category.children}

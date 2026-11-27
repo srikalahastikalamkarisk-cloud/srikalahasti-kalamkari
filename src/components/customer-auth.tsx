@@ -19,6 +19,21 @@ export default function CustomerAuth({ mode }: { mode: Mode }) {
   const router = useRouter();
   const searchParams = useSearchParams();
 
+  const requestedReturn = searchParams.get("returnTo");
+
+  const checkoutReturn =
+    requestedReturn === "/checkout?buyNow=1" ||
+    requestedReturn === "/checkout"
+      ? requestedReturn
+      : null;
+
+  function authHref(path: string) {
+    return checkoutReturn
+      ? `${path}?returnTo=${encodeURIComponent(checkoutReturn)}`
+      : path;
+  }
+
+
   const isRegister = mode === "register";
   const isForgot = mode === "forgot";
 
@@ -172,7 +187,7 @@ export default function CustomerAuth({ mode }: { mode: Mode }) {
 
           {!isRegister && !isForgot && (
             <div className="skauth-forgot">
-              <Link href="/forgot-password">
+              <Link href={authHref("/forgot-password")}>
                 Forgot password?
               </Link>
             </div>
@@ -200,27 +215,27 @@ export default function CustomerAuth({ mode }: { mode: Mode }) {
           {message && (
             <div role="status" className="skauth-notice">
               <strong>{isRegister ? "Account created" : "Request received"}</strong>
-              <span>{message} {isRegister && <span className="skauth-confirm-actions"><Link href="/login">Go to sign in</Link><Link href="/resend-verification">Resend verification</Link></span>} {message.includes("verify your email") && <Link href="/resend-verification">Resend verification</Link>}</span>
+              <span>{message} {isRegister && <span className="skauth-confirm-actions"><Link href={authHref("/login")}>Go to sign in</Link><Link href={authHref("/resend-verification")}>Resend verification</Link></span>} {message.includes("verify your email") && <Link href={authHref("/resend-verification")}>Resend verification</Link>}</span>
             </div>
           )}
-          {!isRegister && !isForgot && <Link href="/resend-verification">Resend verification email</Link>}
+          {!isRegister && !isForgot && <Link href={authHref("/resend-verification")}>Resend verification email</Link>}
         </form>
 
         <div className="skauth-switch">
           {isRegister ? (
             <>
               Already have an account?{" "}
-              <Link href="/login">Sign in</Link>
+              <Link href={authHref("/login")}>Sign in</Link>
             </>
           ) : isForgot ? (
             <>
               Remembered your password?{" "}
-              <Link href="/login">Back to sign in</Link>
+              <Link href={authHref("/login")}>Back to sign in</Link>
             </>
           ) : (
             <>
               New to our atelier?{" "}
-              <Link href="/register">Create an account</Link>
+              <Link href={authHref("/register")}>Create an account</Link>
             </>
           )}
         </div>

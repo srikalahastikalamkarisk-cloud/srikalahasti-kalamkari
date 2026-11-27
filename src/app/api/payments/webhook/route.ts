@@ -326,7 +326,8 @@ export async function POST(request: NextRequest) {
 
       if (
         order.razorpayOrderId !== paymentOrderId ||
-        Number(order.totalAmount) * 100 !== attempt.amountPaise ||
+        !order.totalAmount.mul(100).isInteger() ||
+        !order.totalAmount.mul(100).equals(attempt.amountPaise) ||
         order.currency !== "INR" ||
         attempt.currency !== "INR" ||
         (eventType === "order.paid"

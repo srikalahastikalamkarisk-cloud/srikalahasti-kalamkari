@@ -8,10 +8,28 @@ export function storefrontImageList(value: unknown): string[] {
   return [...new Set(safe)].slice(0, 20);
 }
 
-export function selectRelatedProducts(product: StorefrontProduct, products: StorefrontProduct[], limit = 10) {
-  const unique = new Map<string, StorefrontProduct>();
+export function storefrontSearchTerms(value: string): string[] {
+  const normalized = value.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+  const aliases: Record<string, string[]> = {
+    "pure silk kanchipattu": ["pure silk kanchipattu", "pure silk kanchipuram", "pure silk kanchipattu pattu"],
+    "semi silk kanchipattu": ["semi silk kanchipattu", "semi silk kanchi", "semi silk kanchipuram"],
+    pochampally: ["pochampally", "pochampalli"],
+    cotton: ["cotton"], linen: ["linen"],
+  };
+  return aliases[normalized] || [normalized];
+}
+
+type RelatedProduct = {
+  id: string;
+  categoryId: string;
+  brand?: string | null;
+  fabricMaterial?: string | null;
+};
+
+export function selectRelatedProducts<T extends RelatedProduct>(product: RelatedProduct, products: T[], limit = 10): T[] {
+  const unique = new Map<string, T>();
   for (const candidate of products) if (candidate.id !== product.id) unique.set(candidate.id, candidate);
-  const relatedness = (candidate: StorefrontProduct) => {
+  const relatedness = (candidate: RelatedProduct) => {
     if (candidate.categoryId === product.categoryId) return 3;
     if (candidate.fabricMaterial && product.fabricMaterial && candidate.fabricMaterial.toLowerCase() === product.fabricMaterial.toLowerCase()) return 2;
     if (candidate.brand && product.brand && candidate.brand.toLowerCase() === product.brand.toLowerCase()) return 1;
@@ -27,7 +45,11 @@ export function belongsToCategory(product: Pick<StorefrontProduct, "categoryId" 
   return matchesId || matchesSlug;
 }
 
-export function hasPurchasableInventory(product: Pick<StorefrontProduct, "availabilityStatus" | "stock" | "price" | "pricingMode" | "pricePerMeter" | "variants">): boolean {
+type PurchasableProduct = Pick<StorefrontProduct, "availabilityStatus" | "stock" | "price" | "pricingMode" | "pricePerMeter"> & {
+  variants: readonly Pick<StorefrontProduct["variants"][number], "isActive" | "stock" | "price">[];
+};
+
+export function hasPurchasableInventory(product: PurchasableProduct): boolean {
   if (product.availabilityStatus !== "IN_STOCK") return false;
   if (product.variants.length > 0) {
     return product.variants.some(variant => variant.isActive && variant.stock > 0 && variant.price != null && variant.price > 0);
@@ -37,7 +59,7 @@ export function hasPurchasableInventory(product: Pick<StorefrontProduct, "availa
   return product.stock > 0 && price != null && price > 0;
 }
 
-export function productAvailabilityLabel(product: Parameters<typeof hasPurchasableInventory>[0]): "Coming Soon" | "In Stock" | "Out of Stock" {
+export function productAvailabilityLabel(product: PurchasableProduct): "Coming Soon" | "In Stock" | "Out of Stock" {
   if (product.availabilityStatus === "COMING_SOON") return "Coming Soon";
   return hasPurchasableInventory(product) ? "In Stock" : "Out of Stock";
 }

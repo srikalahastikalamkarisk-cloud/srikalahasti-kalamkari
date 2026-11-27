@@ -5,6 +5,8 @@ import { prisma } from "@/lib/prisma";
 import { getCurrentAdmin } from "@/lib/admin-auth";
 import { ORIGINAL_THEME_ID, STORE_THEME_BY_ID } from "@/lib/store-themes";
 import { readBoundedBody } from "@/lib/payments/request-guard-stream";
+import { revalidateTag } from "next/cache";
+import { PUBLIC_STORE_SETTINGS_CACHE_TAG } from "@/lib/public-store-settings";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -73,6 +75,7 @@ export async function PUT(request: NextRequest) {
         adminId: admin.id,
       } });
     });
+    revalidateTag(PUBLIC_STORE_SETTINGS_CACHE_TAG, { expire: 0 });
     const response = NextResponse.json({ success: true, themeId: result.themeId });
     response.cookies.set(previewCookie, "", { httpOnly: true, sameSite: "lax", secure: process.env.NODE_ENV === "production", path: "/", maxAge: 0 });
     return response;

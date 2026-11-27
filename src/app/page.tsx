@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 
 import PremiumFooter from "@/components/premium-footer";
-import HeritageIntro from "@/components/heritage-intro";
 import { getPublicStoreSettings } from "@/lib/public-store-settings";
 import CustomerLove from "@/components/customer-love";
 import { getHomepageCustomerLove } from "@/lib/customer-love";
@@ -16,7 +15,7 @@ import HeroSlider from "@/components/hero-slider";
 import { getHomepageHeroSlides } from "@/lib/hero-slides";
 import { getHomepageVideoStories } from "@/lib/video-stories";
 import ShopByCategory from "@/components/shop-by-category";
-import { getStorefrontProducts } from "@/lib/storefront-products";
+import { getHomepageStorefrontProducts } from "@/lib/storefront-products";
 import { HomeOrganizationJsonLd } from "@/components/seo-jsonld";
 
 export const dynamic = "force-dynamic";
@@ -36,7 +35,7 @@ export const metadata: Metadata = {
 export default async function Home() {
   const [aboutKalamkari, products, heroSlides, videoStories, storeSettings, customerLove] = await Promise.all([
     getHomepageAboutKalamkari(),
-    getStorefrontProducts(),
+    getHomepageStorefrontProducts(),
     getHomepageHeroSlides(),
     getHomepageVideoStories(),
     getPublicStoreSettings(),
@@ -45,10 +44,6 @@ export default async function Home() {
   const featuredProducts = products.filter(p => p.isFeatured).slice(0, 12);
   return (
     <>
-      <HeritageIntro
-        logoUrl={storeSettings?.logoUrl}
-        storeName={storeSettings?.storeName}
-      />
       <Header />
       <main id="main-content">
         <HeroSlider slides={heroSlides} />

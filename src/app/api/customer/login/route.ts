@@ -100,7 +100,10 @@ export async function POST(request: NextRequest) {
     const token = await createCustomerSession(customer.id, customer.sessionVersion);
     const response = reply(requestId, 200, "login_succeeded", {
       success: true,
-      returnTo: body.data.returnTo?.startsWith("/") && !body.data.returnTo.startsWith("//") ? body.data.returnTo : "/account",
+      returnTo: body.data.returnTo === "/checkout" ||
+        body.data.returnTo === "/checkout?buyNow=1"
+          ? body.data.returnTo
+          : "/account",
     });
     response.cookies.set(CUSTOMER_COOKIE, token, {
       httpOnly: true,

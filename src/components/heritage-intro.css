@@ -20,7 +20,6 @@
   inset: 0;
   pointer-events: none;
   background: radial-gradient(circle at 50% 49%, rgba(242,177,70,.10), transparent 32%);
-  animation: sk-light-breathe 3s ease-in-out infinite alternate;
 }
 
 .sk-heritage-corner {
@@ -30,7 +29,6 @@
   background: url("/welcome/kalamkari-pattern.svg") center / contain no-repeat;
   opacity: .13;
   pointer-events: none;
-  animation: sk-corner-appear 1.6s ease both;
 }
 
 .sk-heritage-corner-tl { top: 20px; left: 20px; }
@@ -73,12 +71,10 @@
   stroke-dasharray: 1100;
   stroke-dashoffset: 1100;
   filter: drop-shadow(0 0 3px rgba(255,222,130,.65));
-  animation: sk-ring-draw 1.8s .1s ease-out forwards;
 }
 
 .sk-ring-inner {
   stroke-width: 2.5;
-  animation-delay: .35s;
 }
 
 .sk-ring-detail {
@@ -88,7 +84,6 @@
   stroke-dasharray: 2 5;
   opacity: .9;
   transform-origin: 200px 200px;
-  animation: sk-detail-spin 18s linear infinite;
 }
 
 .sk-ring-diamonds {
@@ -98,7 +93,6 @@
   stroke-dasharray: 2 9;
   opacity: .8;
   transform-origin: 200px 200px;
-  animation: sk-detail-spin 24s linear infinite reverse;
 }
 
 .sk-ring-sparkles {
@@ -110,7 +104,6 @@
   opacity: .8;
   filter: drop-shadow(0 0 5px rgba(255,191,77,.8));
   transform-origin: 200px 200px;
-  animation: sk-detail-spin 10s linear infinite;
 }
 
 .sk-heritage-logo-wrap {
@@ -128,7 +121,6 @@
   height: 100%;
   object-fit: contain;
   filter: drop-shadow(0 0 17px rgba(241,175,68,.28));
-  animation: sk-logo-appear 1.15s .75s both;
 }
 
 .sk-heritage-subtitle {
@@ -141,54 +133,15 @@
   color: #d9b579;
   font-size: clamp(9px, 1vw, 12px);
   letter-spacing: .28em;
-  animation: sk-subtitle-appear .9s 1.5s both;
-}
-
-.sk-heritage-intro.is-closing {
-  pointer-events: none;
-  animation: sk-intro-disappear 1.1s ease-in forwards;
-}
-
-.sk-heritage-intro.is-closing .sk-heritage-medallion {
-  animation: sk-medallion-zoom 1.1s ease-in forwards;
 }
 
 @keyframes sk-ring-draw {
   to { stroke-dashoffset: 0; }
 }
 
-@keyframes sk-detail-spin {
-  to { transform: rotate(360deg); }
-}
-
 @keyframes sk-logo-appear {
   from { opacity: 0; transform: scale(.8); filter: blur(8px); }
   to { opacity: 1; transform: scale(1); filter: drop-shadow(0 0 17px rgba(241,175,68,.28)); }
-}
-
-@keyframes sk-subtitle-appear {
-  from { opacity: 0; transform: translateY(12px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-@keyframes sk-light-breathe {
-  from { opacity: .4; }
-  to { opacity: 1; }
-}
-
-@keyframes sk-corner-appear {
-  from { opacity: 0; }
-  to { opacity: .13; }
-}
-
-@keyframes sk-medallion-zoom {
-  to { transform: translate(-50%, -50%) scale(3.4); opacity: 0; }
-}
-
-@keyframes sk-intro-disappear {
-  0% { opacity: 1; }
-  65% { opacity: 1; }
-  100% { opacity: 0; visibility: hidden; }
 }
 
 @media (max-width: 600px) {
@@ -208,11 +161,6 @@
     height: 85px;
   }
 }
-
-@media (prefers-reduced-motion: reduce) {
-  .sk-heritage-intro { display: none; }
-}
-
 
 /* STEP 110: Heritage background and text alignment */
 
@@ -296,7 +244,6 @@
   letter-spacing: .11em;
   color: #f5cc75;
   text-shadow: 0 1px 0 #6e3c0e, 0 0 16px rgba(248,192,85,.28);
-  animation: sk-write-name 1.35s 1.35s steps(23, end) forwards;
 }
 
 .sk-heritage-writing-pen {
@@ -307,7 +254,6 @@
   height: 35px;
   opacity: 0;
   transform: rotate(-25deg);
-  animation: sk-pen-move 1.35s 1.35s linear forwards;
   filter: drop-shadow(0 0 7px rgba(250,192,75,.6));
 }
 
@@ -315,18 +261,6 @@
   display: block;
   width: 100%;
   height: 100%;
-}
-
-@keyframes sk-write-name {
-  from { width: 0; }
-  to { width: 100%; }
-}
-
-@keyframes sk-pen-move {
-  0% { left: 0; opacity: 0; }
-  4% { opacity: 1; }
-  92% { opacity: 1; }
-  100% { left: 100%; opacity: 0; }
 }
 
 @media (max-width: 600px) {
@@ -369,13 +303,11 @@
   white-space: nowrap;
   font-size: clamp(14px, 1.65vw, 22px);
   letter-spacing: .075em;
-  animation: sk-signature-reveal 1.35s 1.35s steps(23, end) both;
 }
 
 .sk-heritage-writing-pen {
   top: -20px;
   left: 0;
-  animation: sk-signature-pen 1.35s 1.35s linear both;
 }
 
 @keyframes sk-signature-reveal {
@@ -428,7 +360,6 @@
   letter-spacing: .055em;
   line-height: 1.5;
   clip-path: inset(0 100% 0 0);
-  animation: sk-signature-reveal 1.35s 1.35s steps(23, end) both;
 }
 
 .sk-heritage-writing-pen {
@@ -436,7 +367,6 @@
   left: 0;
   width: 30px;
   height: 30px;
-  animation: sk-signature-pen 1.35s 1.35s linear both;
 }
 
 @media (max-width: 600px) {
@@ -786,7 +716,6 @@
   width: clamp(160px, 21vw, 310px);
   height: clamp(160px, 21vw, 310px);
   opacity: .32;
-  animation: sk-royal-corner-reveal 1.6s ease both;
   filter: drop-shadow(0 0 12px rgba(175, 117, 39, .12));
 }
 
@@ -794,11 +723,6 @@
 .sk-heritage-corner-tr { top: 25px; right: 25px; }
 .sk-heritage-corner-bl { bottom: 25px; left: 25px; }
 .sk-heritage-corner-br { bottom: 25px; right: 25px; }
-
-@keyframes sk-royal-corner-reveal {
-  from { opacity: 0; }
-  to { opacity: .32; }
-}
 
 @media (max-width: 600px) {
   .sk-heritage-intro::before {
@@ -900,21 +824,7 @@
 }
 
 
-/* STEP 132: Cinematic homepage reveal */
-
-.sk-heritage-intro.is-closing {
-  animation: sk-premium-home-reveal 1.1s
-    cubic-bezier(.55, 0, .2, 1) forwards;
-}
-
-.sk-heritage-intro.is-closing .sk-heritage-medallion {
-  animation: sk-premium-logo-portal 1.1s
-    cubic-bezier(.45, 0, .2, 1) forwards;
-}
-
-.sk-heritage-intro.is-closing .sk-heritage-signature {
-  animation: sk-premium-text-exit .55s ease-in forwards;
-}
+/* STEP 132 portal keyframes are used by the single readiness-gated timeline below. */
 
 @keyframes sk-premium-home-reveal {
   0% { opacity: 1; }
@@ -1024,91 +934,177 @@
     );
 }
 
+/* STEP 891U — This pre-paint cover bridges the session check and owner setup. */
+html[data-sk-splash="eligible"]::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 2147483000;
+  pointer-events: none;
+  background: var(--sk-theme-loading,
+    radial-gradient(ellipse 42% 50% at 50% 46%, rgba(65,112,176,.22), transparent 100%),
+    radial-gradient(ellipse 95% 100% at 50% 48%, #173966 0%, #102b50 43%, #0b2040 75%, #08172e 100%));
+}
 
-/* STEP 805D — Stable initial heritage animation */
-
-.sk-heritage-intro:not(.is-ready) .sk-heritage-medallion,
-.sk-heritage-intro:not(.is-ready) .sk-heritage-signature {
+/* Don't expose a static emblem while the browser fetches and decodes it. */
+.sk-heritage-intro.is-loading .sk-heritage-medallion,
+.sk-heritage-intro.is-loading .sk-heritage-signature {
   visibility: hidden;
 }
 
-.sk-heritage-intro:not(.is-ready) * {
-  animation-play-state: paused !important;
-}
-
+.sk-heritage-intro:not(.is-ready) * { animation: none !important; }
 .sk-heritage-intro .sk-heritage-main-logo {
-  animation: none;
+  display: block !important;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  visibility: visible !important;
+  /* Loading hides the medallion; readiness starts the original reveal once. */
   opacity: 1;
   transform: none;
+  filter: none;
+  animation: none;
 }
-
+.sk-heritage-intro.is-ready .sk-heritage-main-logo {
+  animation: sk-logo-appear 1.15s .15s cubic-bezier(.2,.7,.25,1) both;
+}
+.sk-heritage-intro .sk-ring-outer,
+.sk-heritage-intro .sk-ring-inner {
+  stroke-dasharray: 1100;
+  stroke-dashoffset: 1100;
+  filter: drop-shadow(0 0 3px rgba(255,222,130,.65));
+  animation: none;
+}
+.sk-heritage-intro.is-ready .sk-ring-outer {
+  animation: sk-ring-draw 1.8s .1s ease-out forwards;
+}
+.sk-heritage-intro.is-ready .sk-ring-inner {
+  animation: sk-ring-draw 1.8s .35s ease-out forwards;
+}
+.sk-heritage-intro .sk-ring-detail,
+.sk-heritage-intro .sk-ring-diamonds,
+.sk-heritage-intro .sk-ring-sparkles { animation: none; }
 .sk-heritage-intro .sk-heritage-signature-text {
-  animation: sk-signature-reveal .65s .1s steps(23,end) both;
+  width: max-content;
+  max-width: none;
+  clip-path: inset(0 100% 0 0);
+  opacity: 1;
+  animation: none;
+}
+.sk-heritage-intro.is-ready .sk-heritage-signature-text {
+  animation: sk-signature-reveal 1.35s 1.65s steps(23, end) both;
+}
+.sk-heritage-intro .sk-heritage-writing-pen { opacity: 0; animation: none; }
+.sk-heritage-intro.is-ready .sk-heritage-writing-pen {
+  animation: sk-signature-pen 1.35s 1.65s linear both;
 }
 
-.sk-heritage-intro .sk-heritage-writing-pen {
-  animation: sk-signature-pen .65s .1s linear both;
+.sk-heritage-intro.is-failed .sk-heritage-main-logo {
+  display: none;
 }
 
-.sk-heritage-intro.is-closing {
-  animation: sk-fast-intro-exit .45s ease-out forwards;
+.sk-heritage-logo-fallback {
+  position: absolute;
+  inset: 15%;
+  display: grid;
+  place-items: center;
+  color: #f4c66a;
+  font: 600 clamp(16px, 2vw, 23px)/1.35 Georgia, "Times New Roman", serif;
+  letter-spacing: .06em;
+  text-align: center;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, .55);
 }
 
+.sk-heritage-intro.is-closing { pointer-events: none; animation: sk-premium-home-reveal 1.1s ease-in-out forwards; }
 .sk-heritage-intro.is-closing .sk-heritage-medallion {
-  animation: sk-fast-medallion-exit .45s ease-out forwards;
+  animation: sk-premium-logo-portal 1.1s cubic-bezier(.45,0,.2,1) forwards;
 }
-
 .sk-heritage-intro.is-closing .sk-heritage-signature {
-  animation: sk-premium-text-exit .3s ease-out forwards;
+  animation: sk-premium-text-exit .55s ease-in forwards;
 }
 
-@keyframes sk-fast-intro-exit {
-  from { opacity: 1; }
-  to { opacity: 0; visibility: hidden; }
-}
-
-@keyframes sk-fast-medallion-exit {
-  from {
-    transform: translate(-50%, -50%) scale(1);
-    opacity: 1;
+@media (max-width: 767px) {
+  .sk-heritage-intro .sk-heritage-light { animation: none; }
+  .sk-heritage-intro .sk-ring-detail,
+  .sk-heritage-intro .sk-ring-diamonds,
+  .sk-heritage-intro .sk-ring-sparkles {
+    animation: none !important;
+    filter: none;
   }
-  to {
-    transform: translate(-50%, -50%) scale(1.15);
-    opacity: 0;
+
+  .sk-heritage-rings {
+    filter: none;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .sk-heritage-intro {
-    display: none !important;
+  .sk-heritage-intro,
+  .sk-heritage-intro *,
+  .sk-heritage-intro.is-closing,
+  .sk-heritage-intro.is-closing .sk-heritage-medallion {
+    animation: none !important;
+    transition: none !important;
+  }
+
+  .sk-heritage-intro .sk-heritage-main-logo {
+    display: block;
+    visibility: visible !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+
+  .sk-heritage-intro .sk-heritage-signature-text {
+    clip-path: none !important;
   }
 }
 
-
-/* STEP 805E — Original cinematic animation restored */
-
-.sk-heritage-intro .sk-heritage-main-logo {
-  animation: sk-logo-appear 1.15s .75s both;
+@media (prefers-reduced-motion: reduce) {
+  .sk-heritage-intro.is-ready .sk-heritage-main-logo,
+  .sk-heritage-intro.is-ready .sk-ring-outer,
+  .sk-heritage-intro.is-ready .sk-ring-inner,
+  .sk-heritage-intro.is-ready .sk-heritage-signature-text { animation: none !important; }
+  .sk-heritage-intro .sk-heritage-main-logo,
+  .sk-heritage-intro .sk-heritage-signature-text { opacity: 1; transform: none; }
+  .sk-heritage-intro .sk-ring-outer,
+  .sk-heritage-intro .sk-ring-inner { stroke-dashoffset: 0; }
 }
 
-.sk-heritage-intro .sk-heritage-signature-text {
-  animation: sk-signature-reveal 1.35s 1.35s steps(23,end) both;
+@media (prefers-reduced-motion: reduce) {
+  .sk-heritage-intro.is-ready .sk-heritage-main-logo,
+  .sk-heritage-intro.is-ready .sk-ring-outer,
+  .sk-heritage-intro.is-ready .sk-ring-inner,
+  .sk-heritage-intro.is-ready .sk-heritage-signature-text,
+  .sk-heritage-intro.is-ready .sk-heritage-writing-pen,
+  .sk-heritage-intro.is-closing,
+  .sk-heritage-intro.is-closing .sk-heritage-medallion,
+  .sk-heritage-intro.is-closing .sk-heritage-signature { animation: none !important; }
+  .sk-heritage-intro.is-ready .sk-heritage-main-logo,
+  .sk-heritage-intro.is-ready .sk-heritage-signature-text { opacity: 1; transform: none; clip-path: none; }
+  .sk-heritage-intro.is-ready .sk-ring-outer,
+  .sk-heritage-intro.is-ready .sk-ring-inner { stroke-dashoffset: 0; }
 }
 
-.sk-heritage-intro .sk-heritage-writing-pen {
-  animation: sk-signature-pen 1.35s 1.35s linear both;
+
+/* STEP 891U — Root-owned splash node; hidden server markup cannot flash. */
+
+#sk-independent-intro[hidden] {
+  display: none !important;
 }
 
-.sk-heritage-intro.is-closing {
-  animation: sk-premium-home-reveal 1.1s
-    cubic-bezier(.55, 0, .2, 1) forwards;
+#sk-independent-intro:not([hidden]) {
+  position: fixed;
+  inset: 0;
+  z-index: 2147483001;
+  display: grid;
 }
 
-.sk-heritage-intro.is-closing .sk-heritage-medallion {
-  animation: sk-premium-logo-portal 1.1s
-    cubic-bezier(.45, 0, .2, 1) forwards;
+
+/* STEP 893C — Restore independent animation */
+#sk-independent-intro[hidden] {
+  display: none !important;
 }
 
-.sk-heritage-intro.is-closing .sk-heritage-signature {
-  animation: sk-premium-text-exit .55s ease-in forwards;
+#sk-independent-intro:not(.is-ready)
+.sk-heritage-main-logo {
+  opacity: 0 !important;
 }

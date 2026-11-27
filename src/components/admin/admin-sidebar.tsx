@@ -46,7 +46,6 @@ const sections = [
   {
     label: "ADMINISTRATION",
     items: [
-      { name: "Team Management", href: "/admin/team", icon: Users, ready: true },
       { name: "Store Settings", href: "/admin/settings", icon: Settings, ready: true },
       { name: "Appearance & Themes", href: "/admin/appearance", icon: Palette, ready: true },
     ],

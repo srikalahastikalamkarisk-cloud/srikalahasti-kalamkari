@@ -154,7 +154,7 @@ export default function PremiumHeader({
               <img src={storeSettings.logoUrl} alt={`${storeName} logo`} width={94} height={94} />
             ) : (
               <Image
-                src="/srikalahasti-logo.png"
+                src="/srikalahasti-logo-optimized.webp"
                 alt="Srikalahasti Kalamkari"
                 width={94}
                 height={94}

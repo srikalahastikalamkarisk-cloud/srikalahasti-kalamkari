@@ -121,7 +121,9 @@ export async function packageStandalone(options) {
     await mkdir(path.join(output, "prisma", "fresh-install"), { recursive: true });
     for (const name of ["README.md", "baseline.prisma", "baseline.sql"]) await cp(path.join(prismaRoot, "fresh-install", name), path.join(output, "prisma", "fresh-install", name));
 
-    await copyPublicAssets(options.publicRoot, path.join(output, "public"), options.trackedPublicFiles);
+    const requiredPublicFiles = ["public/srikalahasti-logo-optimized.webp"];
+    const publicFiles = [...new Set([...(options.trackedPublicFiles ?? []), ...requiredPublicFiles])];
+    await copyPublicAssets(options.publicRoot, path.join(output, "public"), publicFiles);
     await scanPackage(output);
     return output;
   } catch (error) {

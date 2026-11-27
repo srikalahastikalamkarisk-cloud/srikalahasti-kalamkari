@@ -1,24 +1,40 @@
 "use client";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { StorefrontProduct } from "@/lib/storefront-products";
-import { addToCart, readBuyNow, toggleWishlist, updateCart, useShopState } from "@/lib/shop-state";
+import { addToCart, reconcileCartProducts, reconcileWishlistProducts, readBuyNow, toggleWishlist, updateCart, useShopState } from "@/lib/shop-state";
 import CheckoutCustomerForm from "./checkout-customer-form";
 import "./shop-account-pages.css";
 const money=(n:number)=>new Intl.NumberFormat("en-IN",{style:"currency",currency:"INR",maximumFractionDigits:0}).format(n);
 export default function ShopAccountPages({
   mode,
-  products,
+  products: initialProducts,
 }:{
   mode:"cart"|"wishlist"|"checkout";
   products:StorefrontProduct[];
 }){
  const {cart,wishlist}=useShopState();const router=useRouter();
+  const [products, setProducts] = useState(initialProducts);
+  const [loadedProductsKey, setLoadedProductsKey] = useState("");
+  const [productsFailed, setProductsFailed] = useState(false);
+  const [removedCount, setRemovedCount] = useState(0);
+  const [wishlistRemovedCount, setWishlistRemovedCount] = useState(0);
+
   const searchParams = useSearchParams();
   const directCheckout = mode === "checkout" && searchParams.get("buyNow") === "1";
   const [directLine, setDirectLine] =
     useState<ReturnType<typeof readBuyNow>>(null);
+  const uniqueProductIds = useMemo(() => {
+    const ids = mode === "wishlist"
+      ? wishlist.map(String)
+      : directCheckout
+        ? directLine ? [String(directLine.id)] : []
+        : cart.map(line => String(line.id));
+    return [...new Set(ids)].slice(0, 200);
+  }, [mode, wishlist, directCheckout, directLine, cart]);
+  const productQueryKey = `${mode}:${uniqueProductIds.join(",")}:${directCheckout ? "buy" : "cart"}`;
+  const productsReady = loadedProductsKey === productQueryKey;
 
   useEffect(() => {
     if (directCheckout) {
@@ -26,6 +42,34 @@ export default function ShopAccountPages({
       return () => window.clearTimeout(timer);
     }
   }, [directCheckout]);
+  useEffect(() => {
+    if (directCheckout && !directLine) return;
+    if (!uniqueProductIds.length) {
+      Promise.resolve().then(() => {
+        setProducts([]);
+        setProductsFailed(false);
+        setLoadedProductsKey(productQueryKey);
+      });
+      return;
+    }
+    const controller = new AbortController();
+    fetch(`/api/storefront/products?ids=${encodeURIComponent(uniqueProductIds.join(","))}`, { signal: controller.signal })
+      .then(response => response.ok ? response.json() : Promise.reject(new Error("Unable to load selected products")))
+      .then((data: StorefrontProduct[]) => { setProducts(data); setProductsFailed(false); setLoadedProductsKey(productQueryKey); })
+      .catch(error => { if (error.name !== "AbortError") { setProductsFailed(true); setLoadedProductsKey(productQueryKey); } });
+    return () => controller.abort();
+  }, [mode, directCheckout, directLine, cart, wishlist, productQueryKey, uniqueProductIds, setProductsFailed]);
+  useEffect(() => {
+    if (!productsReady || productsFailed) return;
+    if (mode === "cart") {
+      const removed = reconcileCartProducts(products.map(product => product.id));
+      if (removed > 0) window.setTimeout(() => setRemovedCount(previous => previous + removed), 0);
+    }
+    if (mode === "wishlist") {
+      const removed = reconcileWishlistProducts(products.map(product => product.id));
+      if (removed > 0) window.setTimeout(() => setWishlistRemovedCount(previous => previous + removed), 0);
+    }
+  }, [mode, products, cart, wishlist, productsReady, productsFailed]);
  const entries: Array<{
    id: string | number;
    quantity: number;
@@ -37,7 +81,7 @@ export default function ShopAccountPages({
      : cart;
  const rows=entries
     .map(line=>{
-      const p=products.find(p=>p.id===line.id);
+      const p=products.find(p=>String(p.id)===String(line.id));
       const variant=p?.variants.find(v=>v.id===line.variantId);
       const requiresVariant=Boolean(
         p && (p.variants.length>0 || p.pricingMode==="LENGTH_OPTIONS")
@@ -74,6 +118,23 @@ export default function ShopAccountPages({
    0
  );
  return <main className={`skaccount ${mode==="cart"?"skaccount--cart":mode==="checkout"?"skaccount--checkout":"skaccount--wishlist"}`}><div className="skaccount-wrap"><Link href="/shop">← Continue shopping</Link><h1>{mode==="cart"?"Shopping Cart":mode==="wishlist"?"Your Wishlist":"Checkout"}</h1>
+ {mode==="wishlist"&&wishlistRemovedCount>0&&(
+    <p role="status">
+      Unavailable products or duplicate entries were removed from your wishlist.
+    </p>
+ )}
+ {mode==="cart"&&removedCount>0&&(
+    <p role="status">
+      Some products are no longer available and were removed from your cart.
+    </p>
+ )}
+ {mode==="cart"&&rows.length>0&&(
+    <p aria-live="polite">
+      {rows.length} product selection(s) · {rows.reduce(
+        (sum, row) => sum + row.line.quantity, 0
+      )} total quantity
+    </p>
+ )}
  {mode==="checkout"&&rows.length>0&&(
   <div className="skcheckout-intro">
     <span>SECURE CHECKOUT</span>
@@ -84,6 +145,14 @@ export default function ShopAccountPages({
   <div className="skcheckout-layout">
     <div className="skcheckout-delivery-panel">
       <CheckoutCustomerForm
+        key={JSON.stringify([
+          directCheckout,
+          rows.map(({line,p}) => [
+            String(p.id),
+            line.variantId || "",
+            line.quantity
+          ]).sort()
+        ])}
         subtotal={total}
         checkoutBlocked={hasInvalidSelection}
         buyNowOnly={directCheckout}
@@ -128,6 +197,14 @@ export default function ShopAccountPages({
   }}>Kalamkari</div>
 )}<div><h2>{p.name}</h2>{variant&&<p>{Object.entries(variant.attributes||{}).map(([name,value])=>`${name}: ${value}`).join(" · ") || (variant.lengthMeters != null ? `Length: ${variant.lengthMeters}m` : [variant.colorName,variant.size].filter(Boolean).join(" · "))}</p>}<p>{unitPrice(p,variant) > 0 ? `${money(unitPrice(p,variant))}${p.pricingMode==="PER_METER"&&!variant?" / meter":""}` : "Price on request"} each</p><p>Line total: {money(unitPrice(p,variant)*line.quantity)}</p>{mode==="cart"&&<div className="skaccount-quantity"><button type="button" onClick={()=>updateCart(p.id,line.quantity-1,line.variantId)} aria-label={`Decrease ${p.name} quantity`}>−</button><span>{line.quantity}{p.pricingMode==="PER_METER"&&!variant?" m":""}</span><button type="button" onClick={()=>updateCart(p.id,line.quantity+1,line.variantId)} aria-label={`Increase ${p.name} quantity`}>+</button></div>}{mode==="wishlist"&&<button type="button" onClick={()=>addToCart(p.id)}>Add to Cart</button>}</div><button type="button" className="skaccount-remove" onClick={()=>mode==="wishlist"?toggleWishlist(p.id):updateCart(p.id,0,line.variantId)}>Remove</button></article>)}</div>
  {mode!=="wishlist"&&<div className="skaccount-summary"><strong>{total > 0 ? `Subtotal: ${money(total)}` : "Product prices to be confirmed"}</strong><p>Subtotal is calculated from current product prices. Final availability and delivery charges will be confirmed at checkout.</p>{mode==="cart"?<button type="button" onClick={()=>router.push("/checkout")}>Continue to Checkout</button>:<CheckoutCustomerForm
+        key={JSON.stringify([
+          directCheckout,
+          rows.map(({line,p}) => [
+            String(p.id),
+            line.variantId || "",
+            line.quantity
+          ]).sort()
+        ])}
   subtotal={total}
   checkoutBlocked={hasInvalidSelection}
   buyNowOnly={directCheckout}

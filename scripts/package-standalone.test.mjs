@@ -42,6 +42,7 @@ test("standalone package includes runtime files and omits untracked development 
       [path.join(standalone, ".env.production"), "secret"],
       [path.join(project, ".next", "static", "app.js"), "chunk"],
       [path.join(publicRoot, "favicon.ico"), "favicon"],
+      [path.join(publicRoot, "srikalahasti-logo-optimized.webp"), "optimized logo"],
       [path.join(publicRoot, "uploads", "local.jpg"), "local media"],
       [path.join(prismaRoot, "schema.prisma"), "datasource db {}"],
       [path.join(prismaRoot, "migrations", "20261123020000_sample", "migration.sql"), "CREATE TABLE sample (id INT);"],
@@ -68,6 +69,7 @@ test("standalone package includes runtime files and omits untracked development 
     assert.equal(await readFile(path.join(output, "hostycare-preflight.mjs"), "utf8"), "preflight");
     assert.equal(await readFile(path.join(output, ".next", "static", "app.js"), "utf8"), "chunk");
     assert.equal(await readFile(path.join(output, "public", "favicon.ico"), "utf8"), "favicon");
+    assert.equal(await readFile(path.join(output, "public", "srikalahasti-logo-optimized.webp"), "utf8"), "optimized logo");
     assert.equal(await readFile(path.join(output, "src", "generated", "prisma", "client.ts"), "utf8"), "client");
     assert.equal(await readFile(path.join(output, "prisma", "migrations", "20261123020000_sample", "migration.sql"), "utf8"), "CREATE TABLE sample (id INT);");
     assert.deepEqual((await readdir(output)).sort(), [".next", "hostycare-preflight.mjs", "node_modules", "package.json", "prisma", "public", "server.js", "src", "start-cpanel.js"]);

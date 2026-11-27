@@ -5,6 +5,48 @@ export type CartLine = { id: ProductId; quantity: number; variantId?: string };
 const CART="sk-cart-v1", WISH="sk-wishlist-v1", BUY="sk-buy-now-v1", EVENT="sk-shop-state-change";
 function read<T>(key:string,fallback:T):T {if(typeof window==="undefined")return fallback;try {const v=JSON.parse(localStorage.getItem(key)||"null");return Array.isArray(v)?v as T:fallback;}catch{return fallback;}}
 function write<T>(key:string,value:T){localStorage.setItem(key,JSON.stringify(value));window.dispatchEvent(new Event(EVENT));}
+export function reconcileWishlistProducts(
+  visibleProductIds: readonly ProductId[]
+): number {
+  if (typeof window === "undefined") return 0;
+
+  const validIds = new Set(visibleProductIds.map(String));
+  const current = read<ProductId[]>(WISH, []);
+
+  const remaining = Array.from(
+    new Set(current.map(String))
+  ).filter(id => validIds.has(id));
+
+  const removed = current.length - remaining.length;
+
+  if (JSON.stringify(current) !== JSON.stringify(remaining)) {
+    write(WISH, remaining);
+  }
+
+  return removed;
+}
+
+export function reconcileCartProducts(
+  visibleProductIds: readonly ProductId[]
+): number {
+  if (typeof window === "undefined") return 0;
+
+  const validIds = new Set(visibleProductIds.map(String));
+  const current = read<CartLine[]>(CART, []);
+
+  const remaining = current.filter(
+    line => validIds.has(String(line.id))
+  );
+
+  const removed = current.length - remaining.length;
+
+  if (removed > 0) {
+    write(CART, remaining);
+  }
+
+  return removed;
+}
+
 export function addToCart(id:ProductId,variantId?:string){
   const list=read<CartLine[]>(CART,[]);
   const found=list.find(x=>String(x.id)===String(id)&&(x.variantId||"")===(variantId||""));
@@ -18,7 +60,19 @@ export function updateCart(id:ProductId,quantity:number,variantId?:string){
   if(quantity>0)remaining.push({id,quantity,...(variantId?{variantId}:{})});
   write(CART,remaining);
 }
-export function toggleWishlist(id:ProductId){const ids=read<ProductId[]>(WISH,[]);write(WISH,ids.includes(id)?ids.filter(x=>x!==id):[...ids,id]);}
+export function toggleWishlist(id: ProductId) {
+  const ids = Array.from(
+    new Set(read<ProductId[]>(WISH, []).map(String))
+  );
+  const key = String(id);
+
+  write(
+    WISH,
+    ids.includes(key)
+      ? ids.filter(value => value !== key)
+      : [...ids, key]
+  );
+}
 export function useShopState(){const [cart,setCart]=useState<CartLine[]>([]);const [wishlist,setWishlist]=useState<ProductId[]>([]);useEffect(()=>{const refresh=()=>{setCart(read(CART,[]));setWishlist(read(WISH,[]));};refresh();window.addEventListener(EVENT,refresh);window.addEventListener("storage",refresh);return()=>{window.removeEventListener(EVENT,refresh);window.removeEventListener("storage",refresh);};},[]);return {cart,wishlist};}
 
 
@@ -77,6 +131,16 @@ export function clearPurchasedItems(
   if (typeof window === "undefined") return;
 
   if (buyNowOnly) {
+    const current = readBuyNow();
+
+    if (
+      !current ||
+      purchased.length !== 1 ||
+      String(current.id) !== String(purchased[0].productId) ||
+      (current.variantId || "") !== (purchased[0].variantId || "") ||
+      current.quantity !== purchased[0].quantity
+    ) return;
+
     sessionStorage.removeItem(BUY);
     window.dispatchEvent(new Event(EVENT));
     return;

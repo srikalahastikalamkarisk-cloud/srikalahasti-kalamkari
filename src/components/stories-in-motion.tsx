@@ -98,7 +98,14 @@ export default function StoriesInMotion({ stories }: { stories: Story[] }) {
     const el = rail.current;
     if (!el) return;
     const nearObserver = new IntersectionObserver(([entry]) => setNearViewport(entry.isIntersecting), { rootMargin: "500px 0px" });
-    const visibleObserver = new IntersectionObserver(([entry]) => setVisible(entry.isIntersecting), { threshold: 0.08 });
+    const visibleObserver = new IntersectionObserver(([entry]) => {
+      const nextVisible = entry.isIntersecting;
+      setVisible(nextVisible);
+      if (!nextVisible) {
+        setSoundId(null);
+        setYoutubeSound(null);
+      }
+    }, { threshold: 0.08 });
     nearObserver.observe(el);
     visibleObserver.observe(el);
     return () => { nearObserver.disconnect(); visibleObserver.disconnect(); };
@@ -216,12 +223,31 @@ export default function StoriesInMotion({ stories }: { stories: Story[] }) {
     paused, soundId, youtubeSound, jumpTo
   ]);
 
+  useEffect(() => {
+    const el = rail.current;
+    if (!el) return;
+
+    el.querySelectorAll<HTMLVideoElement>("video[data-story]").forEach(video => {
+      const focused =
+        video.closest(".sim4-card")?.classList.contains("is-active") === true;
+
+      video.muted =
+        !visible || !focused || soundId !== video.dataset.story;
+
+      if (!visible || !focused) video.pause();
+    });
+  }, [active, activeCopy, soundId, visible]);
+
   if (!count) return null;
   return (
     <section className="sim4-section" id="stories-in-motion" aria-label="Kalamkari video stories">
       <div className="sim4-heading"><span className="sim4-eyebrow">✦ THE SRIKALAHASTI EDIT ✦</span><h2>Stories in <em>Motion.</em></h2><p>Crafted by hand. Told in motion.</p></div>
       <div className="sim4-stage" onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)} onFocusCapture={() => setHovered(true)} onBlurCapture={event => { if (!event.currentTarget.contains(event.relatedTarget)) setHovered(false); }}>
-        <div className="sim4-rail" ref={rail} onPointerDown={() => {
+        <div className="sim4-rail" ref={rail} onPointerDown={event => {
+            if (
+              event.target instanceof Element &&
+              event.target.closest("button, a")
+            ) return;
             manualPause.current = true;
             interactionUntil.current = Date.now() + 8000;
             setSoundId(null);
@@ -243,20 +269,18 @@ export default function StoriesInMotion({ stories }: { stories: Story[] }) {
                 : pinterest || undefined;
             const focused = index === active && copy === activeCopy;
             const nearby =
-              Math.abs(i - (activeCopy * count + active)) <= 1;
+              Math.abs(i - (activeCopy * count + active)) <= 4;
             const videoSource = isMobile && story.mobileMp4
               ? story.mobileMp4
               : story.mp4;
-            // STEP 864B: Keep existing stories visually available.
-            const needsVideoFrame = !story.poster;
-
             const shouldLoadVideo =
-              nearViewport &&
               !failed[story.id] &&
               (
                 focused ||
-                (nearby && !limitedConnection) ||
-                needsVideoFrame
+                (
+                  (nearViewport || visible) &&
+                  nearby
+                )
               );
             const source = videoSource && shouldLoadVideo;
             const retry = videoRetries[story.id] || 0;
@@ -286,11 +310,12 @@ export default function StoriesInMotion({ stories }: { stories: Story[] }) {
                     loop
                     muted={!focused || soundId !== story.id}
                     preload={
-                      focused || !story.poster
+                      visible && (focused || nearby)
                         ? "auto"
                         : "metadata"
                     }
                     onLoadedData={event => {
+                      event.currentTarget.dataset.ready = "true";
                       if (focused && visible && !reduced) {
                         const video = event.currentTarget;
                         video.muted = soundId !== story.id;
@@ -347,13 +372,35 @@ export default function StoriesInMotion({ stories }: { stories: Story[] }) {
                   const el = rail.current;
                   const target = el?.querySelectorAll(".sim4-card")[i]?.querySelector<HTMLVideoElement>("video[data-story]");
                   if (!target) return;
-                  const enable = target.muted;
+                  if (!focused) {
+                    setSoundId(null);
+                    el?.querySelectorAll<HTMLVideoElement>("video[data-story]").forEach(video => {
+                      video.muted = true;
+                    });
+                    jumpTo(index);
+                    return;
+                  }
+
+                  const enable = soundId !== story.id;
+
                   el?.querySelectorAll<HTMLVideoElement>("video[data-story]").forEach(video => {
                     video.muted = true;
                   });
+
                   target.muted = !enable;
                   setSoundId(enable ? story.id : null);
-                }} aria-label="Toggle video sound"
+
+                  if (enable) {
+                    void target.play().catch(() => {
+                      target.muted = true;
+                      setSoundId(null);
+                    });
+                  }
+                }} aria-label={
+          soundId === story.id && focused
+            ? "Mute video"
+            : "Unmute video"
+        }
         aria-pressed={soundId === story.id && focused}>{soundId === story.id && focused ? (
       <svg viewBox="0 0 24 24" width="20" height="20"
         fill="none" stroke="currentColor" strokeWidth="1.8"
