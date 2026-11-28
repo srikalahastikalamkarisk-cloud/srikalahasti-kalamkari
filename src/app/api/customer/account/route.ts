@@ -1,3 +1,4 @@
+import { resolveCustomerOrderImages } from "@/lib/orders/customer-order-images";
 import { NextRequest, NextResponse } from "next/server";
 import { isValidRequestOrigin } from "@/lib/request-origin";
 import { z } from "zod";
@@ -15,6 +16,7 @@ export async function GET() {
             select: {
               id: true,
               productName: true,
+              productId: true,
               productImage: true,
               quantity: true,
               totalPrice: true
@@ -22,7 +24,15 @@ export async function GET() {
           }
         } }),
   ]);
-  return NextResponse.json({ profile, addresses, orders }, { headers: { "Cache-Control": "no-store" } });
+  const resolved = await resolveCustomerOrderImages(
+    orders.flatMap(order => order.items)
+  );
+  const byId = new Map(resolved.map(item => [item.id, item]));
+  const enrichedOrders = orders.map(order => ({
+    ...order,
+    items: order.items.map(item => byId.get(item.id) ?? item),
+  }));
+  return NextResponse.json({ profile, addresses, orders: enrichedOrders }, { headers: { "Cache-Control": "no-store" } });
 }
 export async function PATCH(request: NextRequest) {
   if (!isValidRequestOrigin(request)) return NextResponse.json({ error: "Invalid request." }, { status: 400 });

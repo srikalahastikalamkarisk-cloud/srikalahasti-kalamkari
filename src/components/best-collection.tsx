@@ -1,4 +1,6 @@
 "use client";
+import { useStockLimitNotice } from "@/components/stock-limit-notice";
+import StockIndicator from "@/components/stock-indicator";
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
@@ -13,22 +15,24 @@ import {
   ZoomIn,
 } from "lucide-react";
 import type { StorefrontProduct } from "@/lib/storefront-products";
-import { addToCart as addCatalogItem, toggleWishlist as toggleSavedItem, useShopState } from "@/lib/shop-state";
+import { stockLimitMessage, addToCart as addCatalogItem, toggleWishlist as toggleSavedItem, useShopState } from "@/lib/shop-state";
 import "./best-collection.css";
 
 type DisplayProduct = StorefrontProduct;
 
 type Props = {
+  whatsappNumber?: string | null;
   variant?: "best" | "discover";
   products: StorefrontProduct[];
 };
 
-export default function BestCollection({ variant = "best", products }: Props) {
+export default function BestCollection({ variant = "best", products, whatsappNumber }: Props) {
   const catalog = products.slice(0, variant === "discover" ? 24 : 10);
   const trackRef = useRef<HTMLDivElement>(null);
   const { wishlist, cart } = useShopState();
   const [preview, setPreview] = useState<DisplayProduct | null>(null);
   const [message, setMessage] = useState("");
+  const stockNotice = useStockLimitNotice(whatsappNumber);
 
   const isDiscover = variant === "discover";
   const items = isDiscover
@@ -245,8 +249,19 @@ export default function BestCollection({ variant = "best", products }: Props) {
 
   function addToCart(product: DisplayProduct) {
     if (!canPurchase(product)) return;
-    addCatalogItem(product.id);
-    setMessage(product.name + " added to cart.");
+    if (product.variants.length > 0 ||
+        product.pricingMode !== "FIXED") {
+      window.location.assign(`/product/${product.id}`);
+      return;
+    }
+    const added = addCatalogItem(
+      product.id, undefined, product.stock
+    );
+    if (!added) stockNotice.show(product, product.stock);
+                else stockNotice.clear();
+                setMessage(added
+      ? product.name + " added to cart."
+      : stockLimitMessage(Math.min(20, product.stock)));
   }
 
   return (
@@ -379,6 +394,12 @@ export default function BestCollection({ variant = "best", products }: Props) {
                   </Link>
                 </h3>
 
+                <StockIndicator
+                  stock={product.stock}
+                  status={product.availabilityStatus}
+                  requiresOptions={product.variants.length > 0 || product.pricingMode === "LENGTH_OPTIONS"}
+                  perMeter={product.pricingMode === "PER_METER"}
+                />
                 <div className="skp-meta">
                   <div className="skp-prices">
                     <strong>{product.price > 0 ? `₹${product.price.toLocaleString("en-IN")}` : "Price on request"}</strong>
@@ -463,6 +484,6 @@ export default function BestCollection({ variant = "best", products }: Props) {
           </div>
         </div>
       )}
-    </section>
+    {stockNotice.element}</section>
   );
 }

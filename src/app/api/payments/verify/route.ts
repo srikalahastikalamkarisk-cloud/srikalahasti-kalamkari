@@ -133,8 +133,41 @@ export async function POST(request: NextRequest) {
       }
 
       if (lockedOrder.orderStatus === "CANCELLED") {
-        // Captured payment needs manual reconciliation, not stock deduction.
-        return "CONFLICT" as const;
+        if (
+          lockedAttempt.orderId !== lockedOrder.id ||
+          lockedOrder.razorpayOrderId !== razorpayOrderId ||
+          lockedAttempt.razorpayOrderId !== razorpayOrderId ||
+          lockedOrder.currency !== "INR" ||
+          lockedAttempt.currency !== "INR" ||
+          payment.currency !== "INR" ||
+          payment.captured !== true ||
+          lockedAttempt.amountPaise !== payment.amount ||
+          !lockedOrder.totalAmount.mul(100).equals(payment.amount) ||
+          (lockedOrder.paymentId &&
+            lockedOrder.paymentId !== razorpayPaymentId) ||
+          (lockedAttempt.razorpayPaymentId &&
+            lockedAttempt.razorpayPaymentId !== razorpayPaymentId)
+        ) return "CONFLICT" as const;
+
+        await tx.paymentAttempt.update({
+          where: { id: lockedAttempt.id },
+          data: {
+            status: "CAPTURED",
+            razorpayPaymentId,
+          },
+        });
+
+        await tx.order.update({
+          where: { id: lockedOrder.id },
+          data: {
+            paymentStatus: "PAID",
+            paymentId: razorpayPaymentId,
+            paidAt: lockedOrder.paidAt ?? new Date(),
+            inventoryStatus: "REVIEW_REQUIRED",
+          },
+        });
+
+        return "CANCELLED_PAID_REVIEW" as const;
       }
 
       if (lockedOrder.paymentStatus === "PAID") {
@@ -191,6 +224,18 @@ export async function POST(request: NextRequest) {
     ) {
       return NextResponse.json(
         { error: "Payment reconciliation requires review." },
+        { status: 409, headers: responseHeaders }
+      );
+    }
+
+    if (result === "CANCELLED_PAID_REVIEW") {
+      return NextResponse.json(
+        {
+          success: false,
+          status: "REVIEW_REQUIRED",
+          retryAllowed: false,
+          error: "Payment received for a cancelled order. Please contact support. Do not pay again.",
+        },
         { status: 409, headers: responseHeaders }
       );
     }

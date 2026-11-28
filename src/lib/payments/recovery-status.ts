@@ -14,6 +14,17 @@ export function recoveryStatusFromOrder(order: RecoveryOrder, retryAllowed = fal
     };
   }
 
+  if (
+    order.orderStatus === "CANCELLED" &&
+    order.paymentStatus === "PAID"
+  ) {
+    return {
+      success: false,
+      status: "REVIEW_REQUIRED",
+      retryAllowed: false,
+    };
+  }
+
   if (order.paymentStatus === "PAID") {
     return {
       success: true,

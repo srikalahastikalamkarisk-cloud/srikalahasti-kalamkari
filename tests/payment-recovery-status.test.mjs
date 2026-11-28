@@ -79,14 +79,17 @@ test("canceled unpaid orders never authorize payment retry", () => {
   assert.equal(result.retryAllowed, false);
 });
 
-test("a canceled order with confirmed payment remains reported as paid", () => {
-  const result = recoveryStatusFromOrder({
-    orderNumber: "SKK-123-ABCDEF",
-    orderStatus: "CANCELLED",
-    paymentStatus: "PAID",
-    paymentAttempts: [{ status: "CAPTURED" }],
-  });
+test("a cancelled paid order requires manual review and never permits retry", () => {
+  for (const retryAllowed of [true, false]) {
+    const result = recoveryStatusFromOrder({
+      orderNumber: "SKK-123-ABCDEF",
+      orderStatus: "CANCELLED",
+      paymentStatus: "PAID",
+      paymentAttempts: [{ status: "CAPTURED" }],
+    }, retryAllowed);
 
-  assert.equal(result.status, "PAID");
-  assert.equal(result.retryAllowed, false);
+    assert.equal(result.status, "REVIEW_REQUIRED");
+    assert.equal(result.retryAllowed, false);
+    assert.equal(result.success, false);
+  }
 });

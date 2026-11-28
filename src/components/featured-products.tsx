@@ -1,4 +1,6 @@
 "use client";
+import { useStockLimitNotice } from "@/components/stock-limit-notice";
+import StockIndicator from "@/components/stock-indicator";
 
 import { useState } from "react";
 import Link from "next/link";
@@ -7,12 +9,13 @@ import { useRouter } from "next/navigation";
 import { hasPurchasableInventory, productAvailabilityLabel } from "@/lib/storefront-product-policy";
 import { Heart, ImageIcon, ShoppingBag, Star, ZoomIn, X } from "lucide-react";
 import type { StorefrontProduct } from "@/lib/storefront-products";
-import { addToCart, buyNow, toggleWishlist, useShopState } from "@/lib/shop-state";
+import { stockLimitMessage, addToCart, buyNow, toggleWishlist, useShopState } from "@/lib/shop-state";
 import "./featured-products.css";
 
 type ProductWithImages = StorefrontProduct;
 
 type Props = {
+  whatsappNumber?: string | null;
   products: StorefrontProduct[];
 };
 
@@ -21,12 +24,13 @@ function imageFor(product: ProductWithImages) {
   return typeof candidate === "string" && /^(\/|https?:\/\/)/.test(candidate) ? candidate : null;
 }
 
-export default function FeaturedProducts({ products }: Props) {
+export default function FeaturedProducts({ products, whatsappNumber }: Props) {
   const router = useRouter();
   const featured = products;
   const { wishlist } = useShopState();
   const [preview, setPreview] = useState<ProductWithImages | null>(null);
   const [message, setMessage] = useState("");
+  const stockNotice = useStockLimitNotice(whatsappNumber);
 
   return (
     <section className="skfp-section" aria-labelledby="skfp-title">
@@ -79,7 +83,12 @@ export default function FeaturedProducts({ products }: Props) {
                     {hasOriginal && <del>₹{original.toLocaleString("en-IN")}</del>}
 
                   </div>
-                  <div className="skfp-purchase-actions">
+                  <StockIndicator
+                      stock={product.stock}
+                      status={product.availabilityStatus}
+                      requiresOptions={requiresOptions}
+                    />
+                    <div className="skfp-purchase-actions">
                     <button className="skfp-cart" type="button" disabled={!canPurchase} onClick={() => {
                       if (!canPurchase) return;
                       if (requiresOptions) {
@@ -95,8 +104,12 @@ export default function FeaturedProducts({ products }: Props) {
                         router.push(`/product/${product.id}`);
                         return;
                       }
-                      addToCart(product.id);
-                      setMessage(`${product.name} added to cart.`);
+                      const added = addToCart(product.id, undefined, product.stock);
+                      if (!added) stockNotice.show(product, product.stock);
+                else stockNotice.clear();
+                setMessage(added
+                        ? `${product.name} added to cart.`
+                        : stockLimitMessage(Math.min(20, product.stock)));
                     }}><ShoppingBag size={16} /></button>
                   </div>
                 </div>
@@ -108,6 +121,6 @@ export default function FeaturedProducts({ products }: Props) {
         {message && <p className="skfp-status" role="status">{message}</p>}
       </div>
       {preview && <div className="skfp-overlay" onClick={()=>setPreview(null)}><div className="skfp-modal" role="dialog" aria-modal="true" aria-label={preview.name} onClick={e=>e.stopPropagation()}><button className="skfp-close" aria-label="Close preview" onClick={()=>setPreview(null)}><X size={20}/></button><div className="skfp-modal-photo">{imageFor(preview) ? <Image src={imageFor(preview)!} alt={preview.name} fill sizes="(max-width: 640px) 90vw, 520px" style={{ objectFit: "contain" }} /> : <ImageIcon size={45}/>}</div><h3>{preview.name}</h3><p>{preview.price > 0 ? `₹${preview.price.toLocaleString("en-IN")}` : "Price on request · Preview listing"}</p></div></div>}
-    </section>
+    {stockNotice.element}</section>
   );
 }

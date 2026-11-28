@@ -48,10 +48,10 @@ export default async function Home() {
       <main id="main-content">
         <HeroSlider slides={heroSlides} />
         <ShopByCategory />
-          <BestCollection variant="discover" products={products} />
-        <BestCollection variant="best" products={products.filter(p => p.isFeatured)} />
+          <BestCollection whatsappNumber={storeSettings?.whatsappNumber} variant="discover" products={products} />
+        <BestCollection whatsappNumber={storeSettings?.whatsappNumber} variant="best" products={products.filter(p => p.isFeatured)} />
         {false && <CollectionsAndFabrics />}
-        <FeaturedProducts products={featuredProducts} />
+        <FeaturedProducts whatsappNumber={storeSettings?.whatsappNumber} products={featuredProducts} />
 
       <AboutKalamkari {...aboutKalamkari} />
         <StoriesInMotion stories={videoStories} />

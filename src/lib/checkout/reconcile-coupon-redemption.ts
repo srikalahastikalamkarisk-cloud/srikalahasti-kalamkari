@@ -17,10 +17,14 @@ export async function reconcileCouponRedemption(
 
       const order = await tx.order.findUnique({
         where: { id: orderId },
-        select: { paymentStatus: true, couponCode: true },
+        select: { orderStatus: true, paymentStatus: true, couponCode: true },
       });
       if (!order || order.paymentStatus !== "PAID") {
         return "ORDER_NOT_PAID" as const;
+      }
+
+      if (order.orderStatus === "CANCELLED") {
+        return "REVIEW_REQUIRED" as const;
       }
 
       return redeemCoupon(tx, {

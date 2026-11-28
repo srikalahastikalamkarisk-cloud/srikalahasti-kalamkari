@@ -1,4 +1,6 @@
 "use client";
+import { useStockLimitNotice } from "@/components/stock-limit-notice";
+import StockIndicator from "@/components/stock-indicator";
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
@@ -6,7 +8,7 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { ArrowLeft, Check, ChevronLeft, ChevronRight, Heart, MessageCircle, Minus, Plus, ShoppingBag, Video, X, ZoomIn } from "lucide-react";
 import type { StorefrontCatalogProduct, StorefrontProduct as Product } from "@/lib/storefront-products";
-import { addToCart, buyNow, toggleWishlist, useShopState } from "@/lib/shop-state";
+import { stockLimitMessage, addToCart, buyNow, toggleWishlist, useShopState } from "@/lib/shop-state";
 import { productWhatsApp } from "@/lib/product-whatsapp";
 import "./product-detail.css";
 
@@ -36,6 +38,7 @@ export default function ProductDetail({product:p,relatedProducts,whatsappNumber}
   const router=useRouter();const {wishlist}=useShopState();const rail=useRef<HTMLDivElement>(null);const relatedPause=useRef(false);
   const [relatedPosition,setRelatedPosition]=useState(1);const [expanded,setExpanded]=useState(false);const [quantity,setQuantity]=useState(1);const [selectedVariantId,setSelectedVariantId]=useState("");
   const [variantChoices,setVariantChoices]=useState<Record<string,string>>({});
+  const stockNotice = useStockLimitNotice();
   const [message,setMessage]=useState("");const [zoom,setZoom]=useState(false);const [selectedImageIndex,setSelectedImageIndex]=useState(0);
   const galleryImages=useMemo(()=>p.images.filter(Boolean),[p.images]);
   const related=useMemo(()=>[...new Map(relatedProducts.filter(x=>x.id!==p.id).map(x=>[x.id,x])).values()].slice(0,16),[p.id,relatedProducts]);
@@ -102,7 +105,17 @@ export default function ProductDetail({product:p,relatedProducts,whatsappNumber}
     return undefined;
   }
 
-  function add(quantityToAdd:number){if(!canPurchase||quantityToAdd<1||quantityToAdd>activeStock)return false;for(let i=0;i<quantityToAdd;i++)addToCart(p.id,selectedVariant?.id);setMessage(`${quantityToAdd} ${quantityToAdd===1?"item":"items"} added to your cart.`);return true;}
+  function add(quantityToAdd:number){if(!canPurchase||quantityToAdd<1||quantityToAdd>activeStock)return false;if(!addToCart(p.id,selectedVariant?.id,activeStock,quantityToAdd)){
+      stockNotice.show(
+        p,activeStock,undefined,
+        selectedVariant ? selection : undefined,
+        whatsappNumber,
+        selectedVariant?.id,
+        quantityToAdd
+      );
+      setMessage("");
+      return false;
+    }stockNotice.clear();setMessage(`${quantityToAdd} ${quantityToAdd===1?"item":"items"} added to your cart.`);return true;}
   useEffect(()=>{if(!zoom)return;const key=(e:KeyboardEvent)=>{if(e.key==="Escape")setZoom(false)};window.addEventListener("keydown",key);return()=>window.removeEventListener("keydown",key)},[zoom]);
   useEffect(()=>{
     const el=rail.current;
@@ -170,7 +183,14 @@ export default function ProductDetail({product:p,relatedProducts,whatsappNumber}
       </div>
       <section className="skpd-info"><span className="skpd-eyebrow">{p.category.toUpperCase()}</span><h1>{p.name}</h1>
         <div className="skpd-price"><strong>{activePrice!=null&&activePrice>0?`${money(activePrice)}${perMeter?" / meter":""}`:"Price on request"}</strong>{(selectedVariant?.originalPrice??(!selectedVariant?p.originalPrice:undefined))!=null&&validDiscount(activePrice||0,selectedVariant?.originalPrice??p.originalPrice)>0&&<><del>{money((selectedVariant?.originalPrice??p.originalPrice)!)}</del><span>{validDiscount(activePrice||0,selectedVariant?.originalPrice??p.originalPrice)}% OFF</span></>}</div>
-        <p className={`skpd-availability skpd-availability--${availabilityLabel.toLowerCase().replaceAll(" ","-")}`}><span aria-hidden="true"/> {selectedVariant?(selectedVariant.stock>0?`${selectedVariant.stock} available` : "Out of stock"):availabilityLabel}{(!variantCheckoutBlocked||selectedVariant)&&activeStock>0&&activeStock<=5&&p.availabilityStatus==="IN_STOCK"?` · ${activeStock} available`:""}</p>
+        <StockIndicator
+          stock={activeStock}
+          status={p.availabilityStatus==="IN_STOCK" &&
+            selectedVariant && !validVariant(selectedVariant)
+              ? "OUT_OF_STOCK" : p.availabilityStatus}
+          requiresOptions={variantCheckoutBlocked && !selectedVariant}
+          perMeter={perMeter && !selectedVariant}
+        />
         <div className="skpd-service-flags">{p.freeShipping&&<span>Free shipping</span>}{p.allowCOD&&(p.allowEnquiry?<a href={whatsapp(`Hello, is cash on delivery available for ${p.name}?`)} target="_blank" rel="noopener noreferrer">Ask about cash on delivery</a>:<span>Cash on delivery offered</span>)}</div>
         
         {selected.length>0&&<section className="skpd-detail-panel" aria-labelledby="product-variants"><h2 id="product-variants">Choose available options</h2><p>Select each configured option. Price and stock are verified again at checkout.</p>{variantAttributes.length>0 ? variantAttributes.map(name=>{const options=valuesFor(name);if(!options.length)return null;const selectedValue=variantChoices[name]||"";if(colorAttribute(name))return <fieldset className="skpd-choice-group skpd-color-group" key={name}><legend>{name}: <strong>{selectedValue||"Select a color"}</strong></legend><div className="skpd-color-options">{options.map(value=>{const available=optionAvailable(name,value);const chosen=selectedValue===value;const hex=savedColorHex(value);return <label key={value} className={`skpd-color-option${chosen?" is-selected":""}${available?"":" is-unavailable"}`}><input type="radio" name={`variant-${p.id}-${name}`} value={value} checked={chosen} disabled={!available} onChange={()=>chooseOption(name,value)} aria-label={`${value}${available?"":" unavailable"}`}/><span className="skpd-color-swatch" style={hex?{backgroundColor:hex}:undefined} aria-hidden="true">{chosen?<Check size={15}/>:!hex?value.slice(0,1).toUpperCase():null}</span><span className="skpd-color-name">{value}</span></label>})}</div></fieldset>;
@@ -184,7 +204,7 @@ export default function ProductDetail({product:p,relatedProducts,whatsappNumber}
         {variantCheckoutBlocked&&!selectedVariant&&<p className="skpd-hint" role="status">Choose an available option to continue.</p>}
         <div className="skpd-actions"><button type="button" className="skpd-buy" disabled={!canPurchase||quantity>activeStock} onClick={()=>{if(!canPurchase||quantity>activeStock)return;buyNow(p.id,quantity,selectedVariant?.id);router.push("/checkout?buyNow=1")}}>Buy Now <ChevronRight size={19}/></button><button type="button" className="skpd-add" disabled={!canPurchase||quantity>activeStock} onClick={()=>add(quantity)}><ShoppingBag size={18}/> Add to Cart</button></div>
         {p.allowEnquiry&&<div className="skpd-contact"><a className="skpd-whatsapp" href={whatsapp(`Hello, I would like to enquire about ${selection}. Please confirm current price and availability.`)} target="_blank" rel="noopener noreferrer"><svg width="19" height="19" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M20.52 3.48A11.86 11.86 0 0 0 12.06 0C5.48 0 .12 5.35.12 11.94c0 2.1.55 4.15 1.6 5.96L0 24l6.26-1.64a11.95 11.95 0 0 0 5.8 1.48h.01c6.58 0 11.93-5.35 11.93-11.94 0-3.19-1.24-6.19-3.48-8.42ZM12.07 21.82a9.9 9.9 0 0 1-5.04-1.38l-.36-.21-3.73.98.99-3.63-.24-.38a9.9 9.9 0 0 1-1.52-5.26c0-5.47 4.45-9.92 9.92-9.92a9.86 9.86 0 0 1 7.02 2.91 9.85 9.85 0 0 1 2.9 7.02c0 5.47-4.45 9.92-9.94 9.92Zm5.44-7.43c-.3-.15-1.77-.87-2.04-.97-.27-.1-.47-.15-.67.15-.2.3-.77.97-.94 1.17-.17.2-.35.22-.65.07-.3-.15-1.26-.46-2.4-1.48-.89-.8-1.49-1.78-1.66-2.08-.17-.3-.02-.46.13-.61.14-.13.3-.35.45-.52.15-.17.2-.3.3-.5.1-.2.05-.37-.02-.52-.08-.15-.67-1.62-.92-2.22-.24-.58-.48-.5-.67-.51h-.57c-.2 0-.52.08-.79.37-.27.3-1.04 1.02-1.04 2.49s1.07 2.89 1.22 3.09c.15.2 2.1 3.2 5.09 4.49.71.31 1.27.49 1.71.63.72.23 1.38.2 1.9.12.58-.09 1.77-.72 2.02-1.42.25-.7.25-1.3.17-1.42-.07-.12-.27-.2-.57-.35Z"/></svg> WhatsApp enquiry <ChevronRight size={17}/></a><a className="skpd-video" href={whatsapp(`Hello, can I request a video verification for ${selection}?`)} target="_blank" rel="noopener noreferrer"><Video size={19}/> Request video</a></div>}
-        {message&&<p className="skpd-success" role="status"><Check size={16}/>{message} <Link href="/cart">View cart</Link></p>}
+        {stockNotice.element}{message&&<p className="skpd-success" role="status"><Check size={16}/>{message} <Link href="/cart">View cart</Link></p>}
         {rows.length>0&&<details className="skpd-accordion" open><summary>Specifications <Plus size={18}/></summary><div className="skpd-accordion-content"><dl>{rows.map(([label,value],index)=><div key={`${label}-${index}`}><dt>{label}</dt><dd>{value}</dd></div>)}</dl></div></details>}
         {p.shortDescription&&<details className="skpd-accordion" open><summary>Description <Plus size={18}/></summary><div className="skpd-accordion-content"><p>{p.shortDescription}</p></div></details>}
         
@@ -192,7 +212,21 @@ export default function ProductDetail({product:p,relatedProducts,whatsappNumber}
     </div>
     {related.length>0&&<section className="skpd-related skpd-v5-related" aria-labelledby="skpd-related-title"><div className="skpd-related-head"><div><span className="skpd-eyebrow">DISCOVER MORE</span><h2 id="skpd-related-title">Related products</h2></div><div className="skpd-rail-controls"><button type="button" aria-label="Previous related products" onClick={()=>moveRelated(-1)}><ChevronLeft size={21}/></button><button type="button" aria-label="Next related products" onClick={()=>moveRelated(1)}><ChevronRight size={21}/></button></div></div>
       <div ref={rail} className="skpd-related-rail skpd-v5-rail" aria-label="Related products" onMouseEnter={()=>{relatedPause.current=true}} onMouseLeave={()=>{relatedPause.current=false}} onTouchStart={()=>{relatedPause.current=true}} onTouchEnd={()=>{relatedPause.current=false}} onFocusCapture={()=>{relatedPause.current=true}} onBlurCapture={e=>{if(!e.currentTarget.contains(e.relatedTarget))relatedPause.current=false}} onScroll={e=>{const el=e.currentTarget;const card=el.querySelector<HTMLElement>(".skpd-v5-card");if(card)setRelatedPosition(Math.min(related.length,Math.round(el.scrollLeft/(card.getBoundingClientRect().width+16))+1))}}>
-        {related.map(item=>{const itemSaved=wishlist.includes(item.id);const itemDiscount=validDiscount(item.price,item.originalPrice);const itemAvailable=item.availabilityStatus==="IN_STOCK"&&item.stock>0&&!requiresVariantCheckout(item);return <article className="skpd-v5-card" key={item.id}><div className="skpd-v5-photo"><Link href={`/product/${item.id}`} aria-label={`View ${item.name}`}>{item.image?<Image src={item.image} alt={item.name} fill sizes="(max-width: 640px) 65vw, 260px" loading="lazy" style={{ objectFit: "cover" }}/>:<div className="skpd-image-fallback"><ShoppingBag size={24}/><span>Image unavailable</span></div>}</Link>{itemDiscount>0&&<span className="skpd-v5-discount">{itemDiscount}% OFF</span>}<div className="skpd-v5-icons"><button type="button" aria-label={itemSaved?`Remove ${item.name} from wishlist`:`Add ${item.name} to wishlist`} aria-pressed={itemSaved} onClick={()=>toggleWishlist(item.id)}><Heart size={17} fill={itemSaved?"currentColor":"none"}/></button><Link href={`/product/${item.id}`} aria-label={`Open ${item.name}`}><ZoomIn size={17}/></Link></div></div><div className="skpd-v5-actions"><button type="button" disabled={!itemAvailable} onClick={()=>addToCart(item.id)}><ShoppingBag size={15}/><span>Add to Cart</span></button></div><div className="skpd-v5-body"><Link href={`/product/${item.id}`} className="skpd-v5-name">{item.name}</Link><div className="skpd-v5-price"><strong>{item.price>0?money(item.price):"Price on request"}</strong>{itemDiscount>0&&<del>{money(item.originalPrice!)}</del>}</div></div></article>})}
+        {related.map(item=>{const itemSaved=wishlist.includes(item.id);const itemDiscount=validDiscount(item.price,item.originalPrice);const itemAvailable=item.availabilityStatus==="IN_STOCK"&&item.stock>0&&!requiresVariantCheckout(item);return <article className="skpd-v5-card" key={item.id}><div className="skpd-v5-photo"><Link href={`/product/${item.id}`} aria-label={`View ${item.name}`}>{item.image?<Image src={item.image} alt={item.name} fill sizes="(max-width: 640px) 65vw, 260px" loading="lazy" style={{ objectFit: "cover" }}/>:<div className="skpd-image-fallback"><ShoppingBag size={24}/><span>Image unavailable</span></div>}</Link>{itemDiscount>0&&<span className="skpd-v5-discount">{itemDiscount}% OFF</span>}<div className="skpd-v5-icons"><button type="button" aria-label={itemSaved?`Remove ${item.name} from wishlist`:`Add ${item.name} to wishlist`} aria-pressed={itemSaved} onClick={()=>toggleWishlist(item.id)}><Heart size={17} fill={itemSaved?"currentColor":"none"}/></button><Link href={`/product/${item.id}`} aria-label={`Open ${item.name}`}><ZoomIn size={17}/></Link></div></div><div className="skpd-v5-actions"><button type="button" disabled={!itemAvailable} onClick={()=>{
+          const added=addToCart(item.id,undefined,item.stock);
+          if(!added) stockNotice.show(
+                  item,item.stock,undefined,undefined,whatsappNumber
+                );
+                else stockNotice.clear();
+                setMessage(added
+            ? `${item.name} added to cart.`
+            : stockLimitMessage(Math.min(20,item.stock)));
+        }}><ShoppingBag size={15}/><span>Add to Cart</span></button></div><div className="skpd-v5-body"><Link href={`/product/${item.id}`} className="skpd-v5-name">{item.name}</Link><StockIndicator
+          stock={item.stock}
+          status={item.availabilityStatus}
+          requiresOptions={requiresVariantCheckout(item)}
+          perMeter={item.pricingMode==="PER_METER"}
+        /><div className="skpd-v5-price"><strong>{item.price>0?money(item.price):"Price on request"}</strong>{itemDiscount>0&&<del>{money(item.originalPrice!)}</del>}</div></div></article>})}
       </div><div className="skpd-v5-foot"><span>{related.length} related products</span><span>{relatedPosition} / {related.length}</span></div></section>}
   </div>{zoom&&selectedImage&&<div className="skpd-lightbox" role="dialog" aria-modal="true" aria-label={`Enlarged image of ${p.name}`} onClick={()=>setZoom(false)}><button type="button" className="skpd-lightbox-close" aria-label="Close zoom" onClick={()=>setZoom(false)}><X size={25}/></button><Image src={selectedImage} alt={`Enlarged ${p.name}`} width={1400} height={1400} style={{ width: "auto", height: "auto", maxWidth: "94vw", maxHeight: "84vh" }} onClick={e=>e.stopPropagation()}/><span>Click outside image or press Escape to close</span></div>}</main>;
 }

@@ -6,6 +6,7 @@ import {
   CreditCard, Truck
 } from "lucide-react";
 import { prisma } from "@/lib/prisma";
+import { resolveCustomerOrderImages } from "@/lib/orders/customer-order-images";
 import OrderFulfilmentPanel from "@/components/admin/order-fulfilment-panel";
 import "../orders.css";
 
@@ -33,6 +34,7 @@ export default async function OrderDetailsPage({
         orderBy: { createdAt: "asc" },
         select: {
           id: true,
+          productId: true,
           productName: true,
           productImage: true,
           productSku: true,
@@ -58,6 +60,8 @@ export default async function OrderDetailsPage({
   });
 
   if (!order) notFound();
+
+  const orderItems = await resolveCustomerOrderImages(order.items);
 
   const webhookReviews = order.paymentAttempts.length
     ? await prisma.paymentWebhookEvent.findMany({
@@ -125,6 +129,17 @@ export default async function OrderDetailsPage({
             </article>
           </div>
 
+          {order.orderStatus === "CANCELLED" &&
+            order.paymentStatus === "PAID" && (
+              <div role="alert" className="skorders-status">
+                <strong>Payment reconciliation required</strong>
+                <p>
+                  Payment was confirmed for a cancelled order.
+                  Do not fulfil this order until manually reviewed.
+                </p>
+              </div>
+            )}
+
           <div className="skorder-layout">
             <div className="skorder-main-column">
               <section className="skorders-panel skorder-section">
@@ -132,11 +147,12 @@ export default async function OrderDetailsPage({
                   <h2>Ordered Products</h2>
                 </div>
 
-                {order.items.map(item => (
+                {orderItems.map(item => (
                   <article className="skorder-product" key={item.id}>
                     <div className="skorder-product-image">
                       {item.productImage?.startsWith("/uploads/products/") ||
-                      item.productImage?.startsWith("/images/") ? (
+                      item.productImage?.startsWith("/images/") ||
+                      item.productImage?.startsWith("/api/media/products/") ? (
                         <Image
                           src={item.productImage}
                           alt={item.productName}

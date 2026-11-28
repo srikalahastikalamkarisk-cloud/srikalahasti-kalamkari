@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getCurrentAdmin } from "@/lib/admin-auth";
 import { validOrigin } from "@/lib/admin/origin";
+import { cancellationEligibility } from "@/lib/payments/cancellation-eligibility";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -60,7 +61,9 @@ export async function POST(req: NextRequest, context: Context) {
       if (order.paymentAttempts.some(a =>
         a.status === "CAPTURED" ||
         Boolean(a.razorpayPaymentId) ||
-        (a.status === "CREATED" && !a.razorpayOrderId)
+        a.status === "CREATING" ||
+        !["CREATED", "FAILED"].includes(a.status) ||
+        !a.razorpayOrderId
       )) {
         return "BLOCKED" as const;
       }
@@ -77,6 +80,37 @@ export async function POST(req: NextRequest, context: Context) {
         Buffer.from(`${keyId}:${secret}`).toString("base64");
 
       for (const razorpayId of ids) {
+        const expectedAmount = Number(order.totalAmount.mul(100));
+
+        if (
+          !Number.isSafeInteger(expectedAmount) ||
+          expectedAmount <= 0 ||
+          order.currency !== "INR"
+        ) return "VERIFY_FAILED" as const;
+
+        const providerResponse = await fetch(
+          `https://api.razorpay.com/v1/orders/${encodeURIComponent(razorpayId)}`,
+          {
+            headers: { Authorization: auth },
+            cache: "no-store",
+            signal: AbortSignal.timeout(12000),
+          }
+        );
+
+        if (!providerResponse.ok) {
+          return "VERIFY_FAILED" as const;
+        }
+
+        const provider = await providerResponse.json();
+
+        if (
+          provider.id !== razorpayId ||
+          provider.currency !== "INR" ||
+          provider.amount !== expectedAmount ||
+          provider.amount_paid !== 0 ||
+          !["created", "attempted"].includes(provider.status)
+        ) return "PAYMENT_FOUND" as const;
+
         const response = await fetch(
           `https://api.razorpay.com/v1/orders/${encodeURIComponent(razorpayId)}/payments?count=100&skip=0`,
           {
@@ -88,23 +122,17 @@ export async function POST(req: NextRequest, context: Context) {
 
         if (!response.ok) return "VERIFY_FAILED" as const;
 
-        const data: {
-          count?: number;
-          items?: Array<{ status?: string }>;
-        } = await response.json();
+        const data = await response.json();
 
-        if (
-          !Array.isArray(data.items) ||
-          typeof data.count !== "number"
-        ) {
-          return "VERIFY_FAILED" as const;
-        }
+        const eligibility = cancellationEligibility(
+          razorpayId,
+          expectedAmount,
+          provider,
+          data
+        );
 
-        // Any payment activity, even a failed attempt, needs review.
-        // Do not rely on only the first page of payment results.
-        if (data.count > 0 || data.items.length > 0) {
-          return "PAYMENT_FOUND" as const;
-        }
+        if (eligibility !== "ELIGIBLE") return eligibility;
+
       }
 
       await tx.order.update({

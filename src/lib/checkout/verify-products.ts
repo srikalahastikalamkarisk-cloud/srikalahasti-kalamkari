@@ -32,6 +32,7 @@ function firstImage(value: unknown): string | null {
       item.length > 0 &&
       item.length <= 191 &&
       (item.startsWith("/uploads/products/") ||
+        item.startsWith("/api/media/products/") ||
         item.startsWith("/images/"))
   );
 

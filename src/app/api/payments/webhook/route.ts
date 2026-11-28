@@ -343,7 +343,48 @@ export async function POST(request: NextRequest) {
       }
 
       if (order.orderStatus === "CANCELLED") {
-        // Never auto-fulfil a cancelled order. Preserve the event for review.
+        // A cancelled order must never be automatically fulfilled.
+        // Preserve confirmed payment evidence for manual reconciliation.
+        if (
+          eventType === "payment.captured" ||
+          eventType === "order.paid"
+        ) {
+          const capturedId =
+            eventType === "payment.captured" ? paymentId : undefined;
+
+          if (
+            capturedId &&
+            (
+              (order.paymentId && order.paymentId !== capturedId) ||
+              (attempt.razorpayPaymentId &&
+               attempt.razorpayPaymentId !== capturedId)
+            )
+          ) {
+            await finishEvent("REVIEW");
+            return "REVIEW" as const;
+          }
+
+          await tx.paymentAttempt.update({
+            where: { id: attempt.id },
+            data: {
+              status: "CAPTURED",
+              ...(capturedId
+                ? { razorpayPaymentId: capturedId }
+                : {}),
+            },
+          });
+
+          await tx.order.update({
+            where: { id: order.id },
+            data: {
+              paymentStatus: "PAID",
+              paidAt: order.paidAt ?? new Date(),
+              inventoryStatus: "REVIEW_REQUIRED",
+              ...(capturedId ? { paymentId: capturedId } : {}),
+            },
+          });
+        }
+
         await finishEvent("REVIEW");
         return "REVIEW" as const;
       }

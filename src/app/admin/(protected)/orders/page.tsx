@@ -43,7 +43,14 @@ export default async function OrdersPage({
       { customerEmail: { contains: q } },
       { customerPhone: { contains: q } },
     ] } : {}),
-    ...(orderStatus !== "all" ? { orderStatus } : (!showCancelled ? { orderStatus: { not: "CANCELLED" } } : {})),
+    ...(orderStatus !== "all" ? { orderStatus } : (!showCancelled ? {
+      AND: [{
+        OR: [
+          { orderStatus: { not: "CANCELLED" } },
+          { orderStatus: "CANCELLED", paymentStatus: "PAID" },
+        ],
+      }],
+    } : {})),
     ...(paymentStatus !== "all" ? { paymentStatus } : {}),
     ...(Object.keys(createdAt).length ? { createdAt } : {}),
   };
@@ -97,11 +104,36 @@ export default async function OrdersPage({
           <div className="skorders-heading"><div><span className="skad-eyebrow">STORE OPERATIONS</span><h1>Order Management</h1><p>Search, filter, and track customer order fulfilment.</p></div></div>
           <div className="skorders-stats">
             <article><span>Matching Orders</span><strong>{total}</strong></article>
-            <article><span>Pending Orders</span><strong>{pendingOrders}</strong></article>
+            <article><span>Pending Order Records</span><strong>{pendingOrders}</strong></article>
             <article><span>Paid Orders</span><strong>{paidOrders}</strong></article>
           </div>
           <section className="skorders-panel">
             <div className="skorders-panel-heading"><div><span className="skad-eyebrow">ORDER RECORDS</span><h2>Orders</h2></div><span className="skorders-count">{total} matching</span></div>
+            <nav aria-label="Quick order filters"
+              style={{
+                display: "flex",
+                flexWrap: "wrap",
+                gap: 10,
+                margin: "12px 0 18px",
+              }}>
+              {[
+                ["All Orders", "/admin/orders"],
+                ["Paid Orders", "/admin/orders?payment=PAID"],
+                ["Incomplete Checkouts", "/admin/orders?status=PENDING&payment=UNPAID"],
+                ["Cancelled Orders", "/admin/orders?status=CANCELLED&cancelled=show"],
+                ["Payment Review", "/admin/orders?status=CANCELLED&payment=PAID&cancelled=show"],
+              ].map(([label, href]) => (
+                <Link key={href} href={href}
+                  className="skorders-view"
+                  style={{
+                    padding: "9px 13px",
+                    border: "1px solid var(--skad-border)",
+                    borderRadius: 8,
+                  }}>
+                  {label}
+                </Link>
+              ))}
+            </nav>
             <form className="skorders-filters" method="get">
               <label className="skorders-search"><Search size={16}/><input name="q" defaultValue={q} placeholder="Order number, customer, email or phone" /></label>
               <select name="status" defaultValue={orderStatus} aria-label="Filter order status"><option value="all">All order statuses</option>{orderStatuses.map(status => <option key={status}>{status}</option>)}</select>
@@ -123,7 +155,15 @@ export default async function OrdersPage({
                     <td data-label="Customer"><strong>{order.customerName}</strong><small>{order.customerPhone}</small></td>
                     <td data-label="Items">{order._count.items}</td>
                     <td data-label="Total">{money(Number(order.totalAmount))}</td>
-                    <td data-label="Order status"><span className="skorders-status">{order.orderStatus}</span></td>
+                    <td data-label="Order status"><span className="skorders-status">{
+                      order.orderStatus === "CANCELLED" &&
+                      order.paymentStatus === "PAID"
+                        ? "PAYMENT REVIEW"
+                        : order.orderStatus === "PENDING" &&
+                          order.paymentStatus === "UNPAID"
+                          ? "INCOMPLETE CHECKOUT"
+                          : order.orderStatus
+                    }</span></td>
                     <td data-label="Payment"><span className="skorders-status">{order.paymentStatus}</span></td>
                     <td data-label="Inventory"><span className="skorders-status">{order.inventoryStatus}</span></td>
                     <td data-label="Details"><Link href={`/admin/orders/${order.id}`} className="skorders-view">View <ArrowRight size={15}/></Link></td>

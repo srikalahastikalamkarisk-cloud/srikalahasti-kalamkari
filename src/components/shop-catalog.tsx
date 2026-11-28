@@ -1,4 +1,6 @@
 "use client";
+import { useStockLimitNotice } from "@/components/stock-limit-notice";
+import StockIndicator from "@/components/stock-indicator";
 
 import { productWhatsApp } from "@/lib/product-whatsapp";
 import { useEffect, useRef, useState } from "react";
@@ -147,6 +149,7 @@ export default function ShopCatalog({
   const [quickView, setQuickView] = useState<string|null>(null);
   const [failedImages, setFailedImages] = useState<string[]>([]);
   const [cartMessage,setCartMessage] = useState("");
+  const stockNotice = useStockLimitNotice();
   const filterTriggerRef = useRef<HTMLButtonElement | null>(null);
   const filterCloseRef = useRef<HTMLButtonElement | null>(null);
   const perPage = 12;
@@ -313,7 +316,11 @@ export default function ShopCatalog({
       <button type="button" onClick={()=>setQuickView(p.id)} aria-label={`Zoom ${p.name}`} className="skshop-ref-zoom"><ZoomIn size={18}/></button>
     </div>
   </div>
-  <div className="skshop-product-details"><h3><Link href={`/product/${p.id}`} className="skshop-product-title-link">{p.name}</Link></h3><div className="skshop-ref-price"><strong>{currency(p.price)}</strong>{p.originalPrice && p.originalPrice > p.price && <del className="skshop-original-price">{currency(p.originalPrice)}</del>}<a className="skshop-whatsapp-enquiry" href={productWhatsApp(p, "I would like to enquire about this product. Please confirm current price and availability.", p.pricingMode === "PER_METER" ? (p.pricePerMeter != null && p.pricePerMeter > 0 ? `${currency(p.pricePerMeter)} / meter` : "Price on request") : p.variants.length > 0 || p.pricingMode === "LENGTH_OPTIONS" ? "Depends on selected option" : p.price > 0 ? currency(p.price) : "Price on request", whatsappNumber)} target="_blank" rel="noopener noreferrer" aria-label={`Enquire on WhatsApp about ${p.name}`}><svg
+  <div className="skshop-product-details"><h3><Link href={`/product/${p.id}`} className="skshop-product-title-link">{p.name}</Link></h3><StockIndicator stock={p.stock}
+          status={p.availabilityStatus}
+          requiresOptions={p.variants.length>0||p.pricingMode==="LENGTH_OPTIONS"}
+          perMeter={p.pricingMode==="PER_METER"}/>
+          <div className="skshop-ref-price"><strong>{currency(p.price)}</strong>{p.originalPrice && p.originalPrice > p.price && <del className="skshop-original-price">{currency(p.originalPrice)}</del>}<a className="skshop-whatsapp-enquiry" href={productWhatsApp(p, "I would like to enquire about this product. Please confirm current price and availability.", p.pricingMode === "PER_METER" ? (p.pricePerMeter != null && p.pricePerMeter > 0 ? `${currency(p.pricePerMeter)} / meter` : "Price on request") : p.variants.length > 0 || p.pricingMode === "LENGTH_OPTIONS" ? "Depends on selected option" : p.price > 0 ? currency(p.price) : "Price on request", whatsappNumber)} target="_blank" rel="noopener noreferrer" aria-label={`Enquire on WhatsApp about ${p.name}`}><svg
   xmlns="http://www.w3.org/2000/svg"
   viewBox="0 0 32 32"
   width="19"
@@ -324,13 +331,30 @@ export default function ShopCatalog({
   <path d="M16 .8A15.1 15.1 0 0 0 3 23.6L.8 31.2l7.8-2A15.2 15.2 0 1 0 16 .8Zm0 27.6a12.4 12.4 0 0 1-6.3-1.7l-.5-.3-4.6 1.2 1.2-4.5-.3-.5A12.5 12.5 0 1 1 16 28.4Zm6.9-9.4c-.4-.2-2.2-1.1-2.6-1.2-.3-.1-.6-.2-.8.2-.3.4-1 1.2-1.2 1.4-.2.2-.4.3-.8.1-.4-.2-1.6-.6-3-1.9-1.1-1-1.9-2.2-2.1-2.6-.2-.4 0-.6.2-.8l.6-.7.4-.6c.1-.2 0-.5 0-.7l-1.2-2.8c-.3-.7-.6-.6-.8-.6h-.7c-.3 0-.7.1-1 .5c-.4.5-1.3 1.3-1.3 3.1s1.3 3.5 1.5 3.9c.2.2 2.5 3.8 6.1 5.2.9.4 1.6.6 2.1.8.9.3 1.7.2 2.3.1.7-.1 2.2-.9 2.5-1.8.3-.9.3-1.7.2-1.8-.1-.2-.3-.3-.7-.5Z"/>
 </svg><span>WhatsApp</span></a></div><p className="skshop-demo">Handcrafted Kalamkari · Explore product details</p></div>
     <div className="skshop-ref-actions">
-      <button type="button" disabled={!hasPurchasableInventory(p)} onClick={()=>{if(p.variants.length>0||p.pricingMode!=="FIXED"){router.push(`/product/${p.id}`);return;}addToCart(p.id);setCartMessage(`${p.name} added to cart`);}} className="skshop-ref-cart" aria-label={`Add ${p.name} to cart`}><ShoppingBag size={16}/><span className="skshop-cart-button-label">{productAvailabilityLabel(p) !== "In Stock" ? productAvailabilityLabel(p) : p.variants.length>0||p.pricingMode!=="FIXED" ? "Choose Length" : "Add to Cart"}</span></button>
+      <button type="button" disabled={!hasPurchasableInventory(p)} onClick={()=>{if(p.variants.length>0||p.pricingMode!=="FIXED"){router.push(`/product/${p.id}`);return;}const added=addToCart(p.id,undefined,p.stock);
+                if(!added){
+                  stockNotice.show(p,p.stock,undefined,undefined,whatsappNumber);
+                  setCartMessage("");
+                }else{
+                  stockNotice.clear();
+                  setCartMessage(`${p.name} added to cart`);
+                }}} className="skshop-ref-cart" aria-label={`Add ${p.name} to cart`}><ShoppingBag size={16}/><span className="skshop-cart-button-label">{productAvailabilityLabel(p) !== "In Stock" ? productAvailabilityLabel(p) : p.variants.length>0||p.pricingMode!=="FIXED" ? "Choose Length" : "Add to Cart"}</span></button>
       <button type="button" disabled={!hasPurchasableInventory(p)} onClick={()=>{if(p.variants.length>0||p.pricingMode!=="FIXED"){router.push(`/product/${p.id}`);return;}buyNow(p.id);router.push("/checkout?buyNow=1");}} className="skshop-ref-buy"><Zap size={16}/> {productAvailabilityLabel(p) !== "In Stock" ? productAvailabilityLabel(p) : p.variants.length>0||p.pricingMode!=="FIXED" ? "Choose Length" : "Buy Now"}</button>
     </div>
  </article>)}</div><div className="skshop-pagination"><span>Showing {totalItems === 0 ? 0 : (page - 1) * perPage + 1}–{Math.min(page * perPage,totalItems)} of {totalItems} pieces</span><div><button type="button" disabled={page<=1} onClick={()=>setPage(v=>Math.max(1,v-1))}>Previous</button>{pageNumbers.map((number,index)=><span key={number} className="skshop-pagination-page">{index>0&&number-pageNumbers[index-1]>1?<span aria-hidden="true">…</span>:null}<button type="button" className={page===number?"active":""} aria-current={page===number?"page":undefined} onClick={()=>setPage(number)}>{number}</button></span>)}<button type="button" disabled={page>=pages} onClick={()=>setPage(v=>Math.min(pages,v+1))}>Next</button></div></div></>:<div className="skshop-empty" role="status" aria-live="polite"><Sparkles size={27}/><h3>No matching pieces yet</h3><p>Try another collection or clear the filters. More handcrafted pieces will be added as the catalog grows.</p><button type="button" onClick={()=>{setBand(0);setAvailability("all");setSearch("");selectCategory("all")}}>View all pieces</button></div>}
       </section>)}</div></div>
-      {cartMessage && <div className="skshop-cart-toast" role="status">{cartMessage} <Link href="/cart">View Cart</Link><button type="button" onClick={()=>setCartMessage("")} aria-label="Dismiss">×</button></div>}
-      {quickView!==null && (()=>{const p=items.find(x=>x.id===quickView);return p?<div className="skshop-quick-overlay" onClick={()=>setQuickView(null)} role="presentation"><div className="skshop-quick-dialog" role="dialog" aria-modal="true" aria-label={`Quick view ${p.name}`} onClick={e=>e.stopPropagation()}><button type="button" className="skshop-quick-close" onClick={()=>setQuickView(null)} aria-label="Close zoom"><X/></button><Image src={p.image} alt={p.name} width={720} height={720} style={{ width: "100%", height: "auto" }}/><div><h2>{p.name}</h2><p>{p.price > 0 ? currency(p.price) : "Price on request"}</p><p className="skshop-quick-availability">Availability: <strong>{productAvailabilityLabel(p)}</strong></p><button type="button" disabled={!hasPurchasableInventory(p)} onClick={()=>{setQuickView(null);if(p.variants.length>0||p.pricingMode!=="FIXED"){router.push(`/product/${p.id}`);return;}addToCart(p.id);setCartMessage(`${p.name} added to cart`);}}>{productAvailabilityLabel(p) !== "In Stock" ? productAvailabilityLabel(p) : p.variants.length>0||p.pricingMode!=="FIXED"?"Choose Length":"Add to Cart"}</button></div></div></div>:null;})()}
+      {stockNotice.element}{cartMessage && <div className="skshop-cart-toast" role="status">{cartMessage} <Link href="/cart">View Cart</Link><button type="button" onClick={()=>setCartMessage("")} aria-label="Dismiss">×</button></div>}
+      {quickView!==null && (()=>{const p=items.find(x=>x.id===quickView);return p?<div className="skshop-quick-overlay" onClick={()=>setQuickView(null)} role="presentation"><div className="skshop-quick-dialog" role="dialog" aria-modal="true" aria-label={`Quick view ${p.name}`} onClick={e=>e.stopPropagation()}><button type="button" className="skshop-quick-close" onClick={()=>setQuickView(null)} aria-label="Close zoom"><X/></button><Image src={p.image} alt={p.name} width={720} height={720} style={{ width: "100%", height: "auto" }}/><div><h2>{p.name}</h2><p>{p.price > 0 ? currency(p.price) : "Price on request"}</p><StockIndicator stock={p.stock}
+          status={p.availabilityStatus}
+          requiresOptions={p.variants.length>0||p.pricingMode==="LENGTH_OPTIONS"}
+          perMeter={p.pricingMode==="PER_METER"}/><button type="button" disabled={!hasPurchasableInventory(p)} onClick={()=>{setQuickView(null);if(p.variants.length>0||p.pricingMode!=="FIXED"){router.push(`/product/${p.id}`);return;}const added=addToCart(p.id,undefined,p.stock);
+                if(!added){
+                  stockNotice.show(p,p.stock,undefined,undefined,whatsappNumber);
+                  setCartMessage("");
+                }else{
+                  stockNotice.clear();
+                  setCartMessage(`${p.name} added to cart`);
+                }}}>{productAvailabilityLabel(p) !== "In Stock" ? productAvailabilityLabel(p) : p.variants.length>0||p.pricingMode!=="FIXED"?"Choose Length":"Add to Cart"}</button></div></div></div>:null;})()}
       {filtersOpen&&<button className="skshop-backdrop" type="button" onClick={()=>setFiltersOpen(false)} aria-label="Close filters"/>}
   </div>;
 }

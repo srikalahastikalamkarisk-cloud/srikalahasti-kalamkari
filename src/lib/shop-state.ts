@@ -47,19 +47,74 @@ export function reconcileCartProducts(
   return removed;
 }
 
-export function addToCart(id:ProductId,variantId?:string){
-  const list=read<CartLine[]>(CART,[]);
-  const found=list.find(x=>String(x.id)===String(id)&&(x.variantId||"")===(variantId||""));
-  if(found)found.quantity+=1;
-  else list.push({id,quantity:1,...(variantId?{variantId}:{})});
-  write(CART,list);
+export function stockLimitMessage(stock: number) {
+  return stock <= 0
+    ? "This product is currently out of stock."
+    : `Only ${stock} ${stock === 1 ? "unit is" : "units are"} available. Need more? Please contact us on WhatsApp.`;
 }
-export function updateCart(id:ProductId,quantity:number,variantId?:string){
-  const list=read<CartLine[]>(CART,[]);
-  const remaining=list.filter(x=>!(String(x.id)===String(id)&&(x.variantId||"")===(variantId||"")));
-  if(quantity>0)remaining.push({id,quantity,...(variantId?{variantId}:{})});
-  write(CART,remaining);
+
+export function addToCart(
+  id: ProductId,
+  variantId: string | undefined,
+  stock: number,
+  quantity = 1
+): boolean {
+  if (!Number.isFinite(stock) ||
+      !Number.isInteger(quantity) ||
+      quantity < 1) return false;
+
+  const list = read<CartLine[]>(CART, []);
+  const matches = list.filter(x =>
+    String(x.id) === String(id) &&
+    (x.variantId || "") === (variantId || "")
+  );
+  const current = matches.reduce(
+    (sum, line) => sum + line.quantity, 0
+  );
+  const next = current + quantity;
+
+  if (next > Math.floor(stock) || next > 20) return false;
+
+  return updateCart(id, next, variantId, stock);
 }
+
+export function updateCart(
+  id: ProductId,
+  quantity: number,
+  variantId?: string,
+  stock?: number
+): boolean {
+  if (!Number.isInteger(quantity)) return false;
+
+  const list = read<CartLine[]>(CART, []);
+  const matches = (x: CartLine) =>
+    String(x.id) === String(id) &&
+    (x.variantId || "") === (variantId || "");
+
+  const current = list.filter(matches)
+    .reduce((sum, line) => sum + line.quantity, 0);
+
+  if (quantity > current &&
+      (stock === undefined ||
+       !Number.isFinite(stock) ||
+       quantity > Math.floor(stock) ||
+       quantity > 20)) return false;
+
+  const remaining = list.filter(x => !matches(x));
+
+  if (quantity > 0) {
+    const index = list.findIndex(matches);
+    remaining.splice(
+      index < 0 ? remaining.length : index,
+      0,
+      { id, quantity, ...(variantId ? { variantId } : {}) }
+    );
+  }
+
+  write(CART, remaining);
+  return true;
+}
+
 export function toggleWishlist(id: ProductId) {
   const ids = Array.from(
     new Set(read<ProductId[]>(WISH, []).map(String))

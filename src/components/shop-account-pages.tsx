@@ -1,16 +1,19 @@
 "use client";
+import { useStockLimitNotice } from "@/components/stock-limit-notice";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import type { StorefrontProduct } from "@/lib/storefront-products";
-import { addToCart, reconcileCartProducts, reconcileWishlistProducts, readBuyNow, toggleWishlist, updateCart, useShopState } from "@/lib/shop-state";
+import { stockLimitMessage, addToCart, reconcileCartProducts, reconcileWishlistProducts, readBuyNow, toggleWishlist, updateCart, useShopState } from "@/lib/shop-state";
 import CheckoutCustomerForm from "./checkout-customer-form";
 import "./shop-account-pages.css";
 const money=(n:number)=>new Intl.NumberFormat("en-IN",{style:"currency",currency:"INR",maximumFractionDigits:0}).format(n);
 export default function ShopAccountPages({
+  whatsappNumber,
   mode,
   products: initialProducts,
-}:{
+}: {
+  whatsappNumber?: string | null;
   mode:"cart"|"wishlist"|"checkout";
   products:StorefrontProduct[];
 }){
@@ -19,6 +22,8 @@ export default function ShopAccountPages({
   const [loadedProductsKey, setLoadedProductsKey] = useState("");
   const [productsFailed, setProductsFailed] = useState(false);
   const [removedCount, setRemovedCount] = useState(0);
+  const [stockMessage, setStockMessage] = useState("");
+  const stockNotice = useStockLimitNotice(whatsappNumber);
   const [wishlistRemovedCount, setWishlistRemovedCount] = useState(0);
 
   const searchParams = useSearchParams();
@@ -118,6 +123,15 @@ export default function ShopAccountPages({
    0
  );
  return <main className={`skaccount ${mode==="cart"?"skaccount--cart":mode==="checkout"?"skaccount--checkout":"skaccount--wishlist"}`}><div className="skaccount-wrap"><Link href="/shop">← Continue shopping</Link><h1>{mode==="cart"?"Shopping Cart":mode==="wishlist"?"Your Wishlist":"Checkout"}</h1>
+ {stockNotice.element}{stockMessage && <p role="status">{stockMessage}</p>}
+ {mode!=="wishlist" && hasInvalidSelection && (
+   <p role="alert">
+     Some selected quantities or options are no longer available.
+     Please review your cart and reduce the quantity or remove
+     unavailable products before continuing.
+     {mode==="checkout" && <Link href="/cart"> Review cart</Link>}
+   </p>
+ )}
  {mode==="wishlist"&&wishlistRemovedCount>0&&(
     <p role="status">
       Unavailable products or duplicate entries were removed from your wishlist.
@@ -195,8 +209,34 @@ export default function ShopAccountPages({
     color:"#76583e",
     textAlign:"center"
   }}>Kalamkari</div>
-)}<div><h2>{p.name}</h2>{variant&&<p>{Object.entries(variant.attributes||{}).map(([name,value])=>`${name}: ${value}`).join(" · ") || (variant.lengthMeters != null ? `Length: ${variant.lengthMeters}m` : [variant.colorName,variant.size].filter(Boolean).join(" · "))}</p>}<p>{unitPrice(p,variant) > 0 ? `${money(unitPrice(p,variant))}${p.pricingMode==="PER_METER"&&!variant?" / meter":""}` : "Price on request"} each</p><p>Line total: {money(unitPrice(p,variant)*line.quantity)}</p>{mode==="cart"&&<div className="skaccount-quantity"><button type="button" onClick={()=>updateCart(p.id,line.quantity-1,line.variantId)} aria-label={`Decrease ${p.name} quantity`}>−</button><span>{line.quantity}{p.pricingMode==="PER_METER"&&!variant?" m":""}</span><button type="button" onClick={()=>updateCart(p.id,line.quantity+1,line.variantId)} aria-label={`Increase ${p.name} quantity`}>+</button></div>}{mode==="wishlist"&&<button type="button" onClick={()=>addToCart(p.id)}>Add to Cart</button>}</div><button type="button" className="skaccount-remove" onClick={()=>mode==="wishlist"?toggleWishlist(p.id):updateCart(p.id,0,line.variantId)}>Remove</button></article>)}</div>
- {mode!=="wishlist"&&<div className="skaccount-summary"><strong>{total > 0 ? `Subtotal: ${money(total)}` : "Product prices to be confirmed"}</strong><p>Subtotal is calculated from current product prices. Final availability and delivery charges will be confirmed at checkout.</p>{mode==="cart"?<button type="button" onClick={()=>router.push("/checkout")}>Continue to Checkout</button>:<CheckoutCustomerForm
+)}<div><h2>{p.name}</h2>{variant&&<p>{Object.entries(variant.attributes||{}).map(([name,value])=>`${name}: ${value}`).join(" · ") || (variant.lengthMeters != null ? `Length: ${variant.lengthMeters}m` : [variant.colorName,variant.size].filter(Boolean).join(" · "))}</p>}<p>{unitPrice(p,variant) > 0 ? `${money(unitPrice(p,variant))}${p.pricingMode==="PER_METER"&&!variant?" / meter":""}` : "Price on request"} each</p><p>Line total: {money(unitPrice(p,variant)*line.quantity)}</p>{mode==="cart"&&<div className="skaccount-quantity"><button type="button" onClick={()=>updateCart(p.id,line.quantity-1,line.variantId)} aria-label={`Decrease ${p.name} quantity`}>−</button><span>{line.quantity}{p.pricingMode==="PER_METER"&&!variant?" m":""}</span><button type="button" onClick={()=>{
+          const stock = p.availabilityStatus !== "IN_STOCK"
+            ? 0 : variant ? (variant.isActive ? variant.stock : 0)
+            : p.variants.length > 0 || p.pricingMode === "LENGTH_OPTIONS"
+              ? 0 : p.stock;
+          const updated = updateCart(p.id,line.quantity+1,line.variantId,stock);
+          if(!updated) stockNotice.show(
+                  p,stock,line.quantity+1,
+                  variant ? Object.entries(variant.attributes||{})
+                    .map(([name,value])=>`${name}: ${value}`)
+                    .join(" · ") || variant.id : undefined
+                );
+                else stockNotice.clear();
+                setStockMessage("");
+        }} aria-label={`Increase ${p.name} quantity`}>+</button></div>}{mode==="wishlist"&&<button type="button" onClick={()=>{
+          if(p.variants.length>0 || p.pricingMode!=="FIXED"){
+            router.push(`/product/${p.id}`);
+            return;
+          }
+          const stock=p.availabilityStatus==="IN_STOCK"?p.stock:0;
+          const added=addToCart(p.id,undefined,stock);
+          if(!added) stockNotice.show(p,stock);
+                else stockNotice.clear();
+                setStockMessage(added
+            ? `${p.name} added to cart.`
+            : stockLimitMessage(Math.min(20,stock)));
+        }}>Add to Cart</button>}</div><button type="button" className="skaccount-remove" onClick={()=>mode==="wishlist"?toggleWishlist(p.id):updateCart(p.id,0,line.variantId)}>Remove</button></article>)}</div>
+ {mode!=="wishlist"&&<div className="skaccount-summary"><strong>{total > 0 ? `Subtotal: ${money(total)}` : "Product prices to be confirmed"}</strong><p>Subtotal is calculated from current product prices. Final availability and delivery charges will be confirmed at checkout.</p>{mode==="cart"?<button type="button" disabled={hasInvalidSelection || !productsReady || productsFailed} onClick={()=>router.push("/checkout")}>Continue to Checkout</button>:<CheckoutCustomerForm
         key={JSON.stringify([
           directCheckout,
           rows.map(({line,p}) => [

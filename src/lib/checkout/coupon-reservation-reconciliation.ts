@@ -130,6 +130,9 @@ async function markCapturedPayment(
         paymentId: captured.id,
         paymentStatus: "PAID",
         paidAt: order.paidAt ?? new Date(),
+        ...(order.orderStatus === "CANCELLED"
+          ? { inventoryStatus: "REVIEW_REQUIRED" }
+          : {}),
       },
     });
     return true;
@@ -216,6 +219,7 @@ export async function reconcileCouponReservation(input: {
   const order = await prisma.order.findUnique({
     where: { id: input.orderId },
     select: {
+      orderStatus: true,
       paymentStatus: true,
       paymentId: true,
       razorpayOrderId: true,
@@ -237,6 +241,10 @@ export async function reconcileCouponReservation(input: {
   // A prior verified callback may have committed payment but failed during
   // coupon/inventory reconciliation. Recover from local captured evidence.
   if (order.paymentStatus === "PAID" && order.paymentId && attempt.status === "CAPTURED" && attempt.razorpayPaymentId === order.paymentId) {
+    if (order.orderStatus === "CANCELLED") {
+      if (!dryRun) await setReservationForReview(input.orderId);
+      return needsReview(input.orderId, "Cancelled paid order requires manual reconciliation.");
+    }
     if (dryRun) {
       return { orderId: input.orderId, status: "REDEEMED", action: "WOULD_REDEEM" };
     }
@@ -292,6 +300,16 @@ export async function reconcileCouponReservation(input: {
       await setReservationForReview(input.orderId);
       return needsReview(input.orderId, "Captured payment conflicts with local order state.");
     }
+    const latestOrder = await prisma.order.findUnique({
+      where: { id: input.orderId },
+      select: { orderStatus: true },
+    });
+
+    if (!latestOrder || latestOrder.orderStatus === "CANCELLED") {
+      await setReservationForReview(input.orderId);
+      return needsReview(input.orderId, "Cancelled order payment recorded; manual reconciliation required.");
+    }
+
     const coupon = await reconcileCouponRedemption(input.orderId);
     const inventoryStatus = await reconcilePaidInventory(input.orderId);
     if (coupon === "REDEEMED" || coupon === "ALREADY_REDEEMED" || coupon === "NOT_APPLICABLE") {

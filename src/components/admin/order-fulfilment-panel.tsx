@@ -136,7 +136,7 @@ export default function OrderFulfilmentPanel(props: Props) {
   async function cancelOrder() {
     if (saving || cancelling || cancelled) return;
     if (!window.confirm(
-      "Cancel this unpaid order? Razorpay will be checked for payment activity. Any activity or failed verification blocks cancellation. A payment captured but not yet visible to Razorpay's payment listing may still require manual review. The order history will be preserved. This action cannot be undone."
+      "Cancel this unpaid order? Razorpay will be checked for payment activity. Only verified unpaid orders with no payments or exclusively failed payments are eligible. Active, successful or unknown payments block cancellation. A payment captured but not yet visible to Razorpay's payment listing may still require manual review. The order history will be preserved. This action cannot be undone."
     )) return;
 
     setCancelling(true);
@@ -280,7 +280,7 @@ export default function OrderFulfilmentPanel(props: Props) {
           !cancelled && (
           <div style={{ marginTop: 18, paddingTop: 16, borderTop: "1px solid var(--skad-border)" }}>
             <p style={{ marginBottom: 10 }}>
-              Unpaid order? Cancellation requires a fresh Razorpay LIVE check. If verification fails or any payment activity exists, cancellation is blocked for manual review.
+              Unpaid order? Cancellation requires a fresh Razorpay LIVE check. Failed payment attempts may be cancelled after verification. Active, successful or uncertain payments require manual review.
             </p>
             <button
               type="button"

@@ -123,7 +123,6 @@ export async function POST(request: NextRequest) {
     let retryAllowed = false;
     let interrupted = false;
     if (
-      order.orderStatus !== "CANCELLED" &&
       order.paymentStatus !== "PAID" &&
       latestAttempt?.razorpayOrderId &&
       (latestAttempt.status === "FAILED" || latestAttempt.status === "CREATED")
@@ -172,7 +171,6 @@ export async function POST(request: NextRequest) {
               !lockedOrder ||
               !lockedAttempt ||
               lockedOrder.customerEmail !== customer.email ||
-              lockedOrder.orderStatus === "CANCELLED" ||
               lockedAttempt.orderId !== lockedOrder.id ||
               lockedOrder.razorpayOrderId !== payment.order_id ||
               lockedAttempt.razorpayOrderId !== payment.order_id ||
@@ -199,7 +197,10 @@ export async function POST(request: NextRequest) {
               data: {
                 paymentStatus: "PAID",
                 paymentId: payment.id,
-                paidAt: lockedOrder.paidAt ?? new Date()
+                paidAt: lockedOrder.paidAt ?? new Date(),
+                ...(lockedOrder.orderStatus === "CANCELLED"
+                  ? { inventoryStatus: "REVIEW_REQUIRED" }
+                  : {})
               }
             });
 
@@ -210,7 +211,18 @@ export async function POST(request: NextRequest) {
             timeout: 20000
           });
 
-          if (recoveredPaid) {
+          const recoveredOrder = recoveredPaid
+            ? await prisma.order.findUnique({
+                where: { id: order.id },
+                select: { orderStatus: true },
+              })
+            : null;
+
+          if (
+            recoveredPaid &&
+            recoveredOrder &&
+            recoveredOrder.orderStatus !== "CANCELLED"
+          ) {
             try {
               await reconcileCouponRedemption(order.id);
             } catch {
@@ -237,13 +249,42 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    const currentOrder = await prisma.order.findUnique({
+      where: { id: order.id },
+      select: {
+        customerEmail: true,
+        orderStatus: true,
+        paymentStatus: true,
+        orderNumber: true,
+        paymentAttempts: {
+          select: { id: true, status: true, razorpayOrderId: true },
+          orderBy: { createdAt: "desc" },
+          take: 1,
+        },
+      },
+    });
+
+    if (!currentOrder || currentOrder.customerEmail !== customer.email) {
+      return NextResponse.json({
+        success: false,
+        status: "REVIEW_REQUIRED",
+        retryAllowed: false,
+      }, { status: 409, headers });
+    }
+
+    const currentAttempt = currentOrder.paymentAttempts[0];
+
+    retryAllowed =
+      retryAllowed &&
+      currentOrder.orderStatus === "PENDING" &&
+      currentOrder.paymentStatus === "UNPAID" &&
+      Boolean(currentAttempt && latestAttempt &&
+        currentAttempt.id === latestAttempt.id &&
+        currentAttempt.status === latestAttempt.status &&
+        currentAttempt.razorpayOrderId === latestAttempt.razorpayOrderId);
+
     const result = {
-      ...recoveryStatusFromOrder(
-        recoveredPaid
-          ? { ...order, paymentStatus: "PAID" }
-          : order,
-        recoveredPaid ? false : retryAllowed
-      ),
+      ...recoveryStatusFromOrder(currentOrder, retryAllowed),
       orderNumber: order.orderNumber,
       items: order.items.map(item => ({
         productId: item.productId,
@@ -252,7 +293,7 @@ export async function POST(request: NextRequest) {
       })),
     };
     return NextResponse.json(
-      retryAllowed && interrupted
+      result.retryAllowed && retryAllowed && interrupted
         ? { ...result, status: "INTERRUPTED", retryAllowed: true }
         : result,
       { headers }
