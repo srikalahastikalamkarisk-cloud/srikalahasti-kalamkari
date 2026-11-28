@@ -32,7 +32,6 @@ export async function POST(request: NextRequest) {
   if (!pendingRequest || pendingRequest.expiresAt <= new Date()) return NextResponse.json({ error: "This verification attempt expired. Request a new code." }, { status: 401 });
   const current = await getCurrentCustomer();
   const ip = trustedClientIp(request);
-  if (process.env.NODE_ENV === "production" && !ip) return NextResponse.json({ error: "Mobile verification is temporarily unavailable." }, { status: 503 });
   const [phoneAllowed, ipAllowed] = await Promise.all([
     customerRateAllowed("otp-verify-phone", phone, 10, 15 * 60_000),
     ip ? customerRateAllowed("otp-verify-ip", ip, 30, 15 * 60_000) : Promise.resolve(true),

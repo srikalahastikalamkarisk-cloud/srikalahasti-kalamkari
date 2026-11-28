@@ -26,7 +26,6 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "This verification attempt expired. Request a new code." }, { status: 401 });
   }
   const ip = trustedClientIp(request);
-  if (process.env.NODE_ENV === "production" && !ip) return NextResponse.json({ error: "Mobile verification is temporarily unavailable." }, { status: 503 });
   const [phoneAllowed, ipAllowed, dailyAllowed] = await Promise.all([
     customerRateAllowed(`otp-${action}-phone`, phone, action === "resend" ? 2 : 3, 15 * 60_000),
     ip ? customerRateAllowed(`otp-${action}-ip`, ip, action === "resend" ? 10 : 15, 15 * 60_000) : Promise.resolve(true),

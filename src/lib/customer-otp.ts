@@ -18,7 +18,7 @@ export async function recordOtpActivity(phone: string | null, outcome: "success"
 }
 
 export async function customerOtpEnabled() {
-  if (process.env.CUSTOMER_OTP_ENABLED !== "true" || !process.env.MSG91_AUTH_KEY?.trim() || !process.env.MSG91_WIDGET_ID?.trim() || (process.env.NODE_ENV === "production" && !trustedProxyConfigured())) return false;
+  if (process.env.CUSTOMER_OTP_ENABLED !== "true" || !process.env.MSG91_AUTH_KEY?.trim() || !process.env.MSG91_WIDGET_ID?.trim()) return false;
   try {
     const settings = await prisma.storeSettings.findUnique({ where: { id: "primary" }, select: { customerOtpEnabled: true } });
     return settings?.customerOtpEnabled === true;
@@ -29,7 +29,7 @@ export async function customerAuthMethods() {
   try {
     const settings = await prisma.storeSettings.findUnique({ where: { id: "primary" }, select: { customerOtpEnabled: true, customerEmailLoginEnabled: true } });
     return {
-      mobileOtp: settings?.customerOtpEnabled === true && process.env.CUSTOMER_OTP_ENABLED === "true" && Boolean(process.env.MSG91_AUTH_KEY?.trim() && process.env.MSG91_WIDGET_ID?.trim()) && !(process.env.NODE_ENV === "production" && !trustedProxyConfigured()),
+      mobileOtp: settings?.customerOtpEnabled === true && process.env.CUSTOMER_OTP_ENABLED === "true" && Boolean(process.env.MSG91_AUTH_KEY?.trim() && process.env.MSG91_WIDGET_ID?.trim()),
       emailPassword: settings?.customerEmailLoginEnabled !== false,
     };
   } catch {
