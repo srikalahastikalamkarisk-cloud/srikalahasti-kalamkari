@@ -24,7 +24,7 @@ export async function getCurrentCustomer() {
     if (payload.role !== "customer" || !payload.sub || !Number.isSafeInteger(payload.sv)) return null;
     const customer = await prisma.customer.findUnique({
       where: { id: payload.sub },
-      select: { id: true, name: true, email: true, phone: true, emailVerifiedAt: true, sessionVersion: true },
+      select: { id: true, name: true, email: true, phone: true, normalizedPhone: true, mobileVerifiedAt: true, emailVerifiedAt: true, sessionVersion: true },
     });
     if (!customer || customer.sessionVersion !== payload.sv) return null;
     return customer;

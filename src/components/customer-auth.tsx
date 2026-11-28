@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useState, useEffect, type FormEvent } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
@@ -16,6 +16,21 @@ export default function CustomerAuth({ mode }: { mode: Mode }) {
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+  const [otpOpen, setOtpOpen] = useState(false);
+  const [otpStage, setOtpStage] = useState<"phone" | "code">("phone");
+  const [otpPhone, setOtpPhone] = useState("");
+  const [otpCode, setOtpCode] = useState("");
+  const [otpRequestId, setOtpRequestId] = useState("");
+  const [otpBusy, setOtpBusy] = useState(false);
+  const [otpMessage, setOtpMessage] = useState("");
+  const [otpError, setOtpError] = useState("");
+  const [otpLinkRequired, setOtpLinkRequired] = useState(false);
+  const [resendSeconds, setResendSeconds] = useState(0);
+  const [otpEnabled, setOtpEnabled] = useState(false);
+  const [emailLoginEnabled, setEmailLoginEnabled] = useState(true);
+  const [otpName, setOtpName] = useState("");
+  const [otpEmail, setOtpEmail] = useState("");
+  const [otpTerms, setOtpTerms] = useState(false);
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -37,8 +52,58 @@ export default function CustomerAuth({ mode }: { mode: Mode }) {
   const isRegister = mode === "register";
   const isForgot = mode === "forgot";
 
+  useEffect(() => {
+    if (resendSeconds < 1) return;
+    const timer = window.setTimeout(() => setResendSeconds(value => value - 1), 1000);
+    return () => window.clearTimeout(timer);
+  }, [resendSeconds]);
+
+  useEffect(() => {
+    if (mode !== "login" && mode !== "register") return;
+    let active = true;
+    void fetch("/api/customer/otp/status", { cache: "no-store" }).then(response => response.json()).then(data => { if (active) { setOtpEnabled(data.mobileOtp === true); setEmailLoginEnabled(data.emailPassword !== false); } }).catch(() => { if (active) { setOtpEnabled(false); setEmailLoginEnabled(true); } });
+    return () => { active = false; };
+  }, [mode]);
+
+  async function sendOtp() {
+    const digits = otpPhone.replace(/\D/g, "").replace(/^91(?=\d{10}$)/, "");
+    if (!/^[6-9]\d{9}$/.test(digits)) { setOtpError("Enter a valid 10-digit Indian mobile number."); return; }
+    setOtpBusy(true); setOtpError(""); setOtpMessage("");
+    try {
+      const gate = await fetch("/api/customer/otp/request", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ phone: `91${digits}`, action: "send" }) });
+      const payload = await gate.json();
+      if (!gate.ok || typeof payload.requestId !== "string") throw new Error(payload.error || "Too many requests. Please wait before trying again.");
+      setOtpRequestId(payload.requestId);
+      setOtpPhone(digits); setOtpStage("code"); setResendSeconds(60); setOtpMessage(`Enter the code sent to +91 ${digits}.`);
+    } catch (cause) { setOtpError(cause instanceof Error ? cause.message : "Unable to send a code. Please try again."); }
+    finally { setOtpBusy(false); }
+  }
+
+  async function verifyOtp() {
+    if (!/^\d{6}$/.test(otpCode)) { setOtpError("Enter the 6-digit code."); return; }
+    if (mode === "register" && (!otpTerms || otpName.trim().length < 2 || (otpEmail.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(otpEmail.trim())))) { setOtpError("Enter your name, a valid optional email, and accept the Terms and Privacy Policy."); return; }
+    setOtpBusy(true); setOtpError("");
+    try {
+      const response = await fetch("/api/customer/otp/verify", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ phone: `+91${otpPhone}`, otp: otpCode, requestId: otpRequestId, ...(mode === "register" ? { flow: "register", name: otpName, email: otpEmail } : {}) }) });
+      const payload = await response.json();
+      if (!response.ok) {
+        if (payload.code === "ACCOUNT_LINK_REQUIRED") {
+          setOtpLinkRequired(true);
+          setOtpCode("");
+          setOtpRequestId("");
+          setOtpMessage("");
+          return;
+        }
+        throw new Error(payload.error || "Unable to sign in with that number.");
+      }
+      router.replace(checkoutReturn || "/account"); router.refresh();
+    } catch (cause) { setOtpError(cause instanceof Error ? cause.message : "The code could not be verified."); }
+    finally { setOtpBusy(false); }
+  }
+
   async function submit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    if (otpOpen) return;
     setBusy(true); setError(""); setMessage("");
     const data = new FormData(e.currentTarget);
     const payload = Object.fromEntries(data.entries());
@@ -106,8 +171,22 @@ export default function CustomerAuth({ mode }: { mode: Mode }) {
         </div>
 
         <form onSubmit={submit} className="skauth-form">
+          {(mode === "login" || mode === "register") && otpOpen ? <section className="skauth-otp" aria-label={mode === "register" ? "Create an account with mobile OTP" : "Mobile OTP sign in"}>
+            {mode === "register" && <><label>Full name<input value={otpName} onChange={event => setOtpName(event.target.value)} autoComplete="name" maxLength={120} /></label><label>Email address (optional)<input value={otpEmail} onChange={event => setOtpEmail(event.target.value)} type="email" autoComplete="email" maxLength={191} /></label><label className="skauth-consent skauth-otp-terms"><input type="checkbox" checked={otpTerms} onChange={event => setOtpTerms(event.target.checked)} /><span>I agree to the <Link href="/terms">Terms of Service</Link> and <Link href="/privacy-policy">Privacy Policy</Link>.</span></label></>}
+            <label>Indian mobile number<div className="skauth-otp-phone"><span>+91</span><input value={otpPhone} onChange={event => setOtpPhone(event.target.value)} type="tel" inputMode="numeric" autoComplete="tel-national" placeholder="Enter mobile number" disabled={otpStage === "code"} /></div></label>
+            {otpStage === "code" && <label>6-digit verification code<input value={otpCode} onChange={event => setOtpCode(event.target.value.replace(/\D/g, "").slice(0, 6))} inputMode="numeric" autoComplete="one-time-code" placeholder="••••••" /></label>}
+            {otpMessage && !otpLinkRequired && <p role="status">{otpMessage}</p>}{otpError && <p role="alert">{otpError}</p>}
+            {otpLinkRequired ? <div className="skauth-notice skauth-link-notice" role="alert">
+              <strong>Already have an account?</strong>
+              <span>If you registered using email, sign in with your email and password first. Open My Profile and verify your mobile number. Once linked, you can sign in using mobile OTP.</span>
+              {emailLoginEnabled && <Link href={authHref("/login")} onClick={() => { setOtpOpen(false); setOtpLinkRequired(false); setOtpStage("phone"); setOtpError(""); }}>Sign in with Email</Link>}
+              <Link href="/contact">Need help? Contact support</Link>
+              <button type="button" onClick={() => { setOtpLinkRequired(false); setOtpStage("phone"); setOtpPhone(""); setOtpError(""); }}>Use another mobile number</button>
+            </div> : otpStage === "phone" ? <button type="button" disabled={otpBusy} onClick={sendOtp}>{otpBusy ? "Sending…" : "Send OTP"}</button> : <><button type="button" disabled={otpBusy} onClick={verifyOtp}>{otpBusy ? "Verifying…" : mode === "register" ? "Verify and create account" : "Verify and sign in"}</button><button type="button" disabled={otpBusy || resendSeconds > 0} onClick={async () => { setOtpBusy(true); setOtpError(""); try { const gate = await fetch("/api/customer/otp/request", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ phone: `91${otpPhone}`, action: "resend", requestId: otpRequestId }) }); const payload = await gate.json(); if (!gate.ok) throw new Error(payload.error || "Unable to resend the code."); if (typeof payload.requestId === "string") setOtpRequestId(payload.requestId); setResendSeconds(60); } catch (cause) { setOtpError(cause instanceof Error ? cause.message : "Unable to resend the code. Please try again."); } finally { setOtpBusy(false); } }}>{resendSeconds ? `Resend in ${resendSeconds}s` : "Resend code"}</button><button type="button" disabled={otpBusy} onClick={() => { setOtpStage("phone"); setOtpCode(""); setOtpRequestId(""); setOtpError(""); }}>Change number</button></>}
+          </section> : null}
+          {(!otpOpen && (emailLoginEnabled || isForgot)) && <>
           {isRegister && (
-            <div className="skauth-name-row">
+            <div className="skauth-name-row" hidden={!emailLoginEnabled}>
               <label>
               Full name
                 <input
@@ -122,7 +201,7 @@ export default function CustomerAuth({ mode }: { mode: Mode }) {
             </div>
           )}
 
-          <label>
+          <label hidden={!emailLoginEnabled}>
             Email address
             <div className="skauth-input-wrap">
               <Mail size={17} aria-hidden="true" />
@@ -136,10 +215,10 @@ export default function CustomerAuth({ mode }: { mode: Mode }) {
             </div>
           </label>
 
-          {isRegister && <label>Mobile number (optional)<input name="phone" type="tel" autoComplete="tel" inputMode="tel" placeholder="+91 98765 43210" pattern="[+0-9 ()-]{10,18}" title="Enter a valid mobile number" /></label>}
+          {isRegister && <label hidden={!emailLoginEnabled}>Mobile number (optional)<input name="phone" type="tel" autoComplete="tel" inputMode="tel" placeholder="+91 98765 43210" pattern="[+0-9 ()-]{10,18}" title="Enter a valid mobile number" /></label>}
 
           {!isForgot && (
-            <label>
+            <label hidden={!emailLoginEnabled}>
               Password
               <div className="skauth-input-wrap">
                 <LockKeyhole size={17} aria-hidden="true" />
@@ -171,7 +250,7 @@ export default function CustomerAuth({ mode }: { mode: Mode }) {
           )}
 
           {isRegister && (
-            <label>
+            <label hidden={!emailLoginEnabled}>
               Confirm password
               <input
                 name="confirmPassword"
@@ -202,7 +281,7 @@ export default function CustomerAuth({ mode }: { mode: Mode }) {
             </div>
           )}
 
-          <button className="skauth-submit" type="submit">
+          <button className="skauth-submit" type="submit" hidden={!emailLoginEnabled}>
             {busy ? "Please wait…" : isRegister
               ? "Create account"
               : isForgot
@@ -219,7 +298,10 @@ export default function CustomerAuth({ mode }: { mode: Mode }) {
             </div>
           )}
           {!isRegister && !isForgot && <Link href={authHref("/resend-verification")}>Resend verification email</Link>}
+          </>}
         </form>
+        {otpOpen && emailLoginEnabled && <button type="button" className="skauth-otp-toggle" onClick={() => { setOtpOpen(false); setOtpLinkRequired(false); setOtpError(""); setOtpMessage(""); setOtpStage("phone"); setOtpCode(""); setOtpRequestId(""); }}>Use email and password instead</button>}
+        {(mode === "login" || mode === "register") && otpEnabled && !otpOpen && <button type="button" className="skauth-otp-toggle" onClick={() => { setOtpOpen(true); setOtpError(""); setOtpLinkRequired(false); }}> {mode === "register" ? "Create account with mobile OTP" : "Sign in with mobile OTP"}</button>}
 
         <div className="skauth-switch">
           {isRegister ? (

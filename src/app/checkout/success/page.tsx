@@ -39,7 +39,7 @@ export default async function OrderSuccess({
   const order = await prisma.order.findFirst({
     where: {
       orderNumber: reference,
-      customerEmail: customer.email,
+      OR: [{ customerId: customer.id }, ...(customer.emailVerifiedAt && customer.email ? [{ customerEmail: customer.email, customerId: null }] : [])],
       paymentStatus: "PAID",
       orderStatus: { not: "CANCELLED" },
     },

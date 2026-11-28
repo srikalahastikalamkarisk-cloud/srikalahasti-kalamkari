@@ -240,8 +240,12 @@ model AdminPasswordResetToken {
 model Customer {
   id                    String   @id @default(cuid())
   name                  String
-  email                 String   @unique
+  email                 String?  @unique
   phone                 String?
+  normalizedPhone       String?  @unique @db.VarChar(16)
+  mobileVerifiedAt      DateTime?
+  lastLoginAt           DateTime?
+  lastLoginMethod       String?  @db.VarChar(24)
   passwordHash          String
   emailVerifiedAt       DateTime?
   sessionVersion        Int      @default(0)
@@ -252,6 +256,24 @@ model Customer {
   updatedAt             DateTime @updatedAt
 
   @@index([emailVerifiedAt])
+}
+
+model CustomerOtpAccessToken {
+  id        String   @id @default(cuid())
+  tokenHash String   @unique @db.Char(64)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  @@index([createdAt])
+  @@index([expiresAt])
+}
+
+model CustomerOtpActivity {
+  id          String   @id @default(cuid())
+  maskedPhone String?  @db.VarChar(24)
+  outcome     String   @db.VarChar(24)
+  category    String?  @db.VarChar(40)
+  createdAt   DateTime @default(now())
+  @@index([createdAt, outcome])
 }
 
 model CustomerVerificationToken {
@@ -305,6 +327,7 @@ model Order {
 
   customerName  String
   customerEmail String
+  customerId    String? @db.VarChar(191)
   customerPhone String
 
   address  String  @db.Text
@@ -346,6 +369,7 @@ model Order {
   updatedAt DateTime @updatedAt
 
   @@index([customerEmail])
+  @@index([customerId])
   @@index([customerPhone])
   @@index([orderStatus])
   @@index([createdAt])
@@ -479,6 +503,8 @@ model StoreSettings {
   mediaEpoch        Int      @default(0)
   themeId           String   @default("royal-navy-gold-01") @db.VarChar(100)
   maintenanceMode   Boolean  @default(false)
+  customerOtpEnabled Boolean @default(false)
+  customerEmailLoginEnabled Boolean @default(true)
   id                String   @id @default("primary")
   storeName         String   @default("Srikalahasti Kalamkari")
   description       String?  @db.Text

@@ -11,7 +11,7 @@ export async function resolveCustomerOrderImages<T extends OrderImageItem>(
   items: T[]
 ): Promise<T[]> {
   const ids = [...new Set(
-    items.filter(item => !item.productImage)
+    items.filter(item => !storefrontImageList([item.productImage]).length)
       .map(item => item.productId)
   )];
 
@@ -31,7 +31,7 @@ export async function resolveCustomerOrderImages<T extends OrderImageItem>(
 
   return items.map(item => ({
     ...item,
-    productImage: item.productImage ||
+    productImage: storefrontImageList([item.productImage])[0] ||
       images.get(item.productId) || null,
   }));
 }

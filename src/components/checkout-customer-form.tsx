@@ -119,7 +119,7 @@ export default function CheckoutCustomerForm({
       if (response.ok && data.customer) {
         setCustomer(current => ({ ...current, name: data.customer.name || "", email: data.customer.email || "", phone: data.customer.phone || "" }));
         setAccountEmail(data.customer.email || "");
-        setAccountState(data.customer.emailVerifiedAt ? "verified" : "unverified");
+        setAccountState(data.customer.mobileVerifiedAt || data.customer.emailVerifiedAt ? "verified" : "unverified");
       } else setAccountState("guest");
     }).catch(() => setAccountState("guest"));
   }, []);
@@ -160,6 +160,7 @@ export default function CheckoutCustomerForm({
   function update(field: keyof Customer, value: string) {
     reviewVersion.current += 1;
     setCustomer(previous => ({ ...previous, [field]: value }));
+    if (field === "email") setAccountEmail(value);
     setPreview(null);
     setError("");
   }

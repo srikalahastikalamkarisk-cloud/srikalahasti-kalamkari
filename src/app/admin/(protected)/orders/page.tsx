@@ -1,4 +1,6 @@
 import Link from "next/link";
+import Image from "next/image";
+import { resolveCustomerOrderImages } from "@/lib/orders/customer-order-images";
 import { ShoppingBag, ArrowRight, Search } from "lucide-react";
 import type { Prisma } from "@/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
@@ -71,6 +73,16 @@ export default async function OrdersPage({
         paymentStatus: true,
         inventoryStatus: true,
         createdAt: true,
+        items: {
+          take: 1,
+          orderBy: { id: "asc" },
+          select: {
+            id: true,
+            productId: true,
+            productName: true,
+            productImage: true,
+          },
+        },
         _count: { select: { items: true } },
       },
     }),
@@ -78,6 +90,14 @@ export default async function OrdersPage({
     prisma.order.count({ where: { orderStatus: "PENDING" } }),
     prisma.order.count({ where: { paymentStatus: "PAID" } }),
   ]);
+  const previewItems = await resolveCustomerOrderImages(
+    orders.flatMap(order => order.items)
+  );
+
+  const previewById = new Map(
+    previewItems.map(item => [item.id, item])
+  );
+
   const pageCount = Math.max(1, Math.ceil(total / PAGE_SIZE));
 
   function pageHref(nextPage: number) {
@@ -149,11 +169,30 @@ export default async function OrdersPage({
             ) : (
               <div className="skorders-table-wrap">
                 <table className="skorders-table">
-                  <thead><tr><th>ORDER</th><th>CUSTOMER</th><th>ITEMS</th><th>TOTAL</th><th>ORDER STATUS</th><th>PAYMENT</th><th>INVENTORY</th><th>DETAILS</th></tr></thead>
+                  <thead><tr><th>ORDER</th><th>CUSTOMER</th><th>PRODUCTS</th><th>TOTAL</th><th>ORDER STATUS</th><th>PAYMENT</th><th>INVENTORY</th><th>DETAILS</th></tr></thead>
                   <tbody>{orders.map(order => <tr key={order.id}>
                     <td data-label="Order"><strong>{order.orderNumber}</strong><small>{order.createdAt.toLocaleDateString("en-IN", { timeZone: "Asia/Kolkata" })}</small></td>
                     <td data-label="Customer"><strong>{order.customerName}</strong><small>{order.customerPhone}</small></td>
-                    <td data-label="Items">{order._count.items}</td>
+                    <td data-label="Products">
+                      <Link href={`/admin/orders/${order.id}`} className="skorders-product-preview">
+                        <div className="skorders-product-thumb">
+                          {order.items[0] && previewById.get(order.items[0].id)?.productImage ? (
+                            <Image
+                              src={previewById.get(order.items[0].id)!.productImage!}
+                              alt={order.items[0].productName}
+                              width={56}
+                              height={70}
+                              loading="lazy"
+                              unoptimized
+                            />
+                          ) : <ShoppingBag size={22} />}
+                        </div>
+                        <div className="skorders-product-caption">
+                          <strong>{order.items[0]?.productName || "Order items"}</strong>
+                          <small>{order._count.items} {order._count.items === 1 ? "item" : "items"}</small>
+                        </div>
+                      </Link>
+                    </td>
                     <td data-label="Total">{money(Number(order.totalAmount))}</td>
                     <td data-label="Order status"><span className="skorders-status">{
                       order.orderStatus === "CANCELLED" &&

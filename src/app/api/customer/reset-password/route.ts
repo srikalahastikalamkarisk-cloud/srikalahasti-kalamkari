@@ -1,5 +1,6 @@
 import { hash } from "bcryptjs";
 import { isValidRequestOrigin } from "@/lib/request-origin";
+import { customerAuthMethods } from "@/lib/customer-otp";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
@@ -9,6 +10,7 @@ import { customerRateAllowed } from "@/lib/customer-rate-limit";
 export const runtime = "nodejs";
 const schema = z.object({ token: z.string().max(64), password: z.string().max(128) });
 export async function POST(request: NextRequest) {
+  if (!(await customerAuthMethods()).emailPassword) return NextResponse.json({ error: "Email and password sign-in is disabled." }, { status: 503 });
   try {
     if (!isValidRequestOrigin(request)) return NextResponse.json({ error: "Invalid request." }, { status: 400 });
     const parsed = schema.safeParse(await request.json()); if (!parsed.success || !validCustomerToken(parsed.data.token)) return NextResponse.json({ error: "Invalid reset link." , code: "invalid" }, { status: 400 }); if (!strongCustomerPassword(parsed.data.password)) return NextResponse.json({ error: "Use a password with 6 to 128 characters.", code: "invalid_password" }, { status: 400 });

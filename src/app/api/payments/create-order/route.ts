@@ -40,7 +40,7 @@ export async function POST(request: NextRequest) {
 
   const customer = await getCurrentCustomer();
   if (!customer) return NextResponse.json({ error: "Sign in to continue to checkout.", loginRequired: true }, { status: 401 });
-  if (!customer.emailVerifiedAt) return NextResponse.json({ error: "Verify your email to continue to checkout.", verificationRequired: true }, { status: 403 });
+  if (!customer.mobileVerifiedAt && !customer.emailVerifiedAt) return NextResponse.json({ error: "Verify your email to continue to checkout.", verificationRequired: true }, { status: 403 });
 
   let createdAttemptId: string | null = null;
 
@@ -71,7 +71,7 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
-    if (parsed.data.customer.email.trim().toLowerCase() !== customer.email) return NextResponse.json({ error: "Checkout email must match your signed-in account." }, { status: 403 });
+    if (customer.emailVerifiedAt && parsed.data.customer.email.trim().toLowerCase() !== customer.email) return NextResponse.json({ error: "Checkout email must match your signed-in account." }, { status: 403 });
     parsed.data.customer.name = customer.name;
 
     // Never trust an amount supplied by the browser.
@@ -141,7 +141,7 @@ export async function POST(request: NextRequest) {
         );
 
       if (
-        order.customerEmail !== parsed.data.customer.email ||
+        (order.customerId ? order.customerId !== customer.id : !(customer.emailVerifiedAt && customer.email && order.customerEmail === customer.email && order.customerEmail === parsed.data.customer.email)) ||
         Number(order.totalAmount) !== totalPaise / 100 ||
         order.couponCode !== coupon.couponCode ||
         Number(order.discountAmount) !== coupon.discountPaise / 100 ||
@@ -163,6 +163,7 @@ export async function POST(request: NextRequest) {
             checkoutKey: body.checkoutKey,
             customerName: parsed.data.customer.name,
             customerEmail: parsed.data.customer.email,
+            customerId: customer.id,
             customerPhone: parsed.data.customer.phone,
             address: parsed.data.customer.address,
             landmark: parsed.data.customer.landmark || null,

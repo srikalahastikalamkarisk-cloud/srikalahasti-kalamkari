@@ -928,3 +928,77 @@ html[data-storefront-theme] .sk-store-theme
   font-weight: 500;
   text-decoration: underline;
 }
+.skauth-otp-toggle { width: 100%; margin: 14px 0 0; padding: 12px; border: 1px solid var(--sk-theme-color-primary, #8b1e32); border-radius: 8px; background: transparent; color: var(--sk-theme-color-primary, #8b1e32); font: inherit; font-weight: 600; cursor: pointer; }
+.skauth-otp { display: grid; gap: 12px; margin: 0 0 18px; padding: 16px; border: 1px solid color-mix(in srgb, var(--sk-theme-color-primary, #8b1e32) 25%, transparent); border-radius: 12px; background: color-mix(in srgb, var(--sk-theme-color-primary, #8b1e32) 4%, transparent); }
+.skauth-otp label { display: grid; gap: 7px; font-size: 13px; font-weight: 600; }
+.skauth-otp label span { color: var(--sk-theme-color-primary, #8b1e32); }
+.skauth-otp input { width: 100%; min-height: 44px; padding: 10px 12px; border: 1px solid #d7d0c8; border-radius: 7px; background: white; color: #201a18; font: inherit; }
+.skauth-otp button { min-height: 42px; padding: 9px 12px; border: 0; border-radius: 7px; background: var(--sk-theme-color-primary, #8b1e32); color: white; font: inherit; font-weight: 600; cursor: pointer; }
+.skauth-otp button:disabled { opacity: .55; cursor: wait; }
+.skauth-otp p { margin: 0; font-size: 13px; }
+.skauth-otp [role="alert"] { color: #a21d28; }
+
+
+/* STEP 907-908 — Compact mobile OTP authentication */
+.skauth-form .skauth-otp .skauth-otp-terms {
+  display: flex !important;
+  align-items: flex-start;
+  gap: 9px !important;
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1.6;
+}
+
+.skauth-form .skauth-otp .skauth-otp-terms input[type="checkbox"] {
+  width: 16px !important;
+  height: 16px !important;
+  min-height: 16px !important;
+  min-width: 16px !important;
+  padding: 0 !important;
+  margin: 2px 0 0 !important;
+  flex: 0 0 16px !important;
+}
+
+.skauth-otp-terms > span {
+  display: inline !important;
+  min-width: 0;
+}
+
+.skauth-otp-phone {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.skauth-otp-phone > span {
+  flex: 0 0 auto;
+  padding: 0 8px;
+}
+
+.skauth-otp-phone > input {
+  flex: 1;
+  min-width: 0;
+}
+
+.skauth-form .skauth-otp {
+  gap: 10px;
+  margin-bottom: 0;
+  padding: 14px;
+}
+
+.skauth-form .skauth-otp button {
+  min-height: 40px;
+  font-size: 13px;
+  background: var(--sk-theme-primaryButton, #10243e);
+  color: var(--sk-theme-buttonText, #fff);
+}
+
+.skauth-link-notice {
+  gap: 10px;
+  line-height: 1.65;
+}
+
+.skauth-link-notice a {
+  font-weight: 600;
+  text-decoration: underline;
+}

@@ -334,3 +334,66 @@
   .skorders-table td:first-child strong,.skorders-table td:first-child small,.skorders-table td:nth-child(2) strong,.skorders-table td:nth-child(2) small{display:block}
   .skorders-pagination{gap:10px}
 }
+
+
+/* STEP 910C — Order product thumbnails */
+
+.skorders-product-preview {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  text-decoration: none;
+  color: inherit;
+}
+
+.skorders-product-thumb {
+  display: grid;
+  place-items: center;
+  flex: 0 0 48px;
+  width: 48px;
+  height: 60px;
+  overflow: hidden;
+  border: 1px solid var(--skad-border, #dedede);
+  border-radius: 8px;
+  background: var(--sk-theme-color-surface, #fff);
+}
+
+.skorders-product-thumb img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.skorders-product-caption {
+  display: grid;
+  gap: 5px;
+  min-width: 0;
+  max-width: 160px;
+}
+
+.skorders-product-caption strong {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.skorders-product-caption small {
+  font-size: 11px;
+  opacity: .75;
+}
+
+@media (max-width: 767px) {
+  .skorders-product-preview {
+    max-width: 100%;
+  }
+
+  .skorders-product-caption {
+    max-width: 200px;
+    text-align: left;
+  }
+}

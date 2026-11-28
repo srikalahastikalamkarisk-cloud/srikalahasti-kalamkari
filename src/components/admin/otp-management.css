@@ -1,0 +1,295 @@
+
+.skotp-page {
+  width: min(1100px, 100%);
+  margin: 0 auto;
+  padding: 24px 16px;
+}
+.skotp-heading { margin-bottom: 24px; }
+.skotp-heading h1 {
+  font-size: clamp(25px, 4vw, 34px);
+  font-weight: 600;
+  color: var(--sk-theme-color-heading, #10243e);
+}
+.skotp-heading p, .skotp-muted {
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--sk-theme-color-muted, #69758a);
+}
+.skotp-section { margin: 26px 0; }
+.skotp-dashboard h3 {
+  font-size: 17px;
+  font-weight: 600;
+  margin-bottom: 14px;
+}
+.skotp-metrics {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+.skotp-metrics > div {
+  display: grid;
+  gap: 12px;
+  padding: 22px;
+  border-radius: 12px;
+  border: 1px solid var(--sk-theme-color-border, #ddd);
+  background: var(--sk-theme-color-surface, #fff);
+}
+.skotp-metrics span { font-size: 13px; }
+.skotp-metrics strong {
+  font-size: 27px;
+  font-weight: 600;
+  color: var(--sk-theme-color-heading, #10243e);
+}
+.skotp-muted { margin-top: 12px; }
+.skotp-recharge {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 20px;
+  margin: 20px 0;
+  border: 1px solid var(--sk-theme-color-border, #ddd);
+  border-radius: 12px;
+}
+.skotp-recharge p { font-size: 13px; }
+.skotp-activity {
+  margin-top: 24px;
+  padding: 16px;
+  border: 1px solid var(--sk-theme-color-border, #ddd);
+  border-radius: 12px;
+}
+.skotp-activity summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+.skotp-activity table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 16px;
+  font-size: 12px;
+}
+.skotp-activity th, .skotp-activity td {
+  text-align: left;
+  padding: 12px;
+  border-bottom: 1px solid var(--sk-theme-color-border, #ddd);
+  white-space: nowrap;
+}
+@media (max-width: 600px) {
+  .skotp-page { padding: 14px 8px; }
+  .skotp-metrics { gap: 9px; }
+  .skotp-metrics > div { padding: 14px; }
+  .skotp-metrics strong { font-size: 22px; }
+}
+
+
+/* STEP 909B — Independent OTP dashboard */
+
+.skotp-page {
+  --otp-border: var(--sk-theme-color-border, #d9dfe5);
+  --otp-surface: var(--sk-theme-color-surface, #ffffff);
+  --otp-heading: var(--sk-theme-color-heading, #10243e);
+  --otp-muted: var(--sk-theme-color-muted, #69758a);
+  max-width: 1100px;
+  padding: 28px 20px 40px;
+}
+
+.skotp-page .skotp-dashboard {
+  display: block;
+  padding: 26px;
+  border: 1px solid var(--otp-border);
+  border-radius: 18px;
+  background: var(--otp-surface);
+  box-shadow: 0 6px 24px rgba(0,0,0,.035);
+  color: var(--otp-heading);
+}
+
+.skotp-dashboard .sk-settings-card-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 0 20px;
+  margin-bottom: 20px;
+  background: transparent;
+  border-bottom: 1px solid var(--otp-border);
+}
+
+.skotp-dashboard .sk-settings-card-heading h2 {
+  margin: 0 0 7px;
+  font-size: 20px;
+  font-weight: 600;
+}
+
+.skotp-dashboard .sk-settings-card-heading p {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--otp-muted);
+}
+
+.skotp-dashboard .sk-settings-status-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0,1fr));
+  gap: 12px;
+}
+
+.skotp-dashboard .sk-settings-status-grid > div {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 9px;
+  min-height: 86px;
+  padding: 16px;
+  border: 1px solid var(--otp-border);
+  border-radius: 10px;
+  background: var(--otp-surface);
+}
+
+.skotp-dashboard .sk-settings-status-grid > div:last-child {
+  grid-column: 1 / -1;
+  min-height: 70px;
+}
+
+.skotp-dashboard .sk-settings-status-grid span {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--otp-muted);
+}
+
+.skotp-dashboard .sk-settings-status-grid strong {
+  font-size: 14px;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.skotp-dashboard .is-ready {
+  color: #16834e;
+}
+
+.skotp-dashboard .is-review {
+  color: #b7791f;
+}
+
+.skotp-dashboard .sk-settings-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 18px 0 0;
+}
+
+.skotp-dashboard .sk-settings-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 42px;
+  padding: 10px 18px;
+  border: 1px solid var(--otp-border);
+  border-radius: 8px;
+  background: var(--otp-surface);
+  color: var(--otp-heading);
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  transition: opacity .15s ease;
+}
+
+.skotp-dashboard .sk-settings-secondary:hover {
+  opacity: .8;
+}
+
+.skotp-dashboard .sk-settings-secondary:disabled {
+  opacity: .45;
+  cursor: not-allowed;
+}
+
+.skotp-dashboard .sk-settings-secondary:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 3px;
+}
+
+.skotp-dashboard .skotp-section {
+  margin: 26px 0;
+  padding-top: 24px;
+  border-top: 1px solid var(--otp-border);
+}
+
+.skotp-dashboard .skotp-metrics > div {
+  min-height: 115px;
+  padding: 20px;
+  box-shadow: 0 3px 12px rgba(0,0,0,.025);
+}
+
+.skotp-dashboard .skotp-recharge {
+  padding: 22px;
+  background: var(--otp-surface);
+}
+
+.skotp-dashboard .skotp-recharge a {
+  background: var(--sk-theme-primaryButton, #10243e);
+  color: var(--sk-theme-buttonText, #ffffff);
+}
+
+.skotp-dashboard .skotp-activity {
+  background: var(--otp-surface);
+}
+
+.skotp-dashboard .skotp-activity summary {
+  padding: 3px 0;
+  font-size: 14px;
+}
+
+.skotp-dashboard .skotp-activity th {
+  font-weight: 600;
+  color: var(--otp-muted);
+}
+
+.skotp-dashboard .sk-settings-feedback.is-error {
+  margin-top: 16px;
+  padding: 12px 16px;
+  border: 1px solid #e4b4b4;
+  border-radius: 8px;
+  color: #b42318;
+  background: #fff5f5;
+}
+
+@media (max-width: 900px) {
+  .skotp-dashboard .sk-settings-status-grid {
+    grid-template-columns: repeat(2, minmax(0,1fr));
+  }
+}
+
+@media (max-width: 600px) {
+  .skotp-page {
+    padding: 14px 10px 24px;
+  }
+
+  .skotp-page .skotp-dashboard {
+    padding: 14px;
+    border-radius: 12px;
+  }
+
+  .skotp-dashboard .sk-settings-status-grid {
+    gap: 8px;
+  }
+
+  .skotp-dashboard .sk-settings-status-grid > div {
+    padding: 12px;
+  }
+
+  .skotp-dashboard .sk-settings-actions {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .skotp-dashboard .skotp-metrics > div {
+    min-height: 100px;
+    padding: 14px;
+  }
+
+  .skotp-dashboard .skotp-recharge a {
+    width: 100%;
+  }
+}

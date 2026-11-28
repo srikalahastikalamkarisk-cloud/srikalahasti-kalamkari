@@ -17,11 +17,26 @@ export async function checkCustomerRateLimit(scope: string, key: string, max: nu
       allowed: result.count <= max,
       retryAfterSeconds: Math.max(1, Math.ceil((result.expiresAt.getTime() - now.getTime()) / 1000)),
     };
-  } catch {
+  } catch (error) {
     return { allowed: false, retryAfterSeconds: 60 };
   }
 }
 
 export async function customerRateAllowed(scope: string, key: string, max: number, windowMs: number) {
   return (await checkCustomerRateLimit(scope, key, max, windowMs)).allowed;
+}
+
+export async function customerRateCooldownAllowed(scope: string, key: string, cooldownMs: number, windowMs: number) {
+  const now = new Date(); const expiresAt = new Date(now.getTime() + windowMs); const initialWindowStart = new Date(now.getTime() - cooldownMs);
+  const bucket = `customer:${scope}:${createHash("sha256").update(key).digest("hex")}`;
+  try {
+    return await prisma.$transaction(async tx => {
+      await tx.$executeRaw`INSERT INTO PaymentRateLimit (\`key\`, count, windowStart, expiresAt, updatedAt) VALUES (${bucket}, 1, ${initialWindowStart}, ${expiresAt}, ${now}) ON DUPLICATE KEY UPDATE count = IF(expiresAt <= ${now}, 1, count), windowStart = IF(expiresAt <= ${now}, ${initialWindowStart}, windowStart), expiresAt = IF(expiresAt <= ${now}, ${expiresAt}, expiresAt), updatedAt = ${now}`;
+      const rows = await tx.$queryRaw<Array<{ windowStart: Date }>>`SELECT windowStart FROM PaymentRateLimit WHERE \`key\` = ${bucket} FOR UPDATE`;
+      const last = rows[0]?.windowStart;
+      if (!last || now.getTime() - last.getTime() < cooldownMs) return false;
+      await tx.$executeRaw`UPDATE PaymentRateLimit SET windowStart = ${now}, updatedAt = ${now} WHERE \`key\` = ${bucket}`;
+      return true;
+    });
+  } catch { return false; }
 }

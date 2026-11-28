@@ -7,6 +7,7 @@ import { createCustomerSession } from "@/lib/customer-auth";
 import { CUSTOMER_COOKIE, CUSTOMER_SESSION_TTL_SECONDS } from "@/lib/customer-auth-core";
 import { customerLoginSchema } from "@/lib/customer-login-input";
 import { customerRateAllowed } from "@/lib/customer-rate-limit";
+import { customerAuthMethods } from "@/lib/customer-otp";
 
 export const runtime = "nodejs";
 
@@ -27,6 +28,7 @@ function reply(requestId: string, status: number, branch: string, body: Record<s
 export async function POST(request: NextRequest) {
   const requestId = randomUUID();
   try {
+    if (!(await customerAuthMethods()).emailPassword) return reply(requestId, 503, "email_login_disabled", { error: "Email and password sign-in is disabled. Use mobile OTP if available." });
     if (!isValidRequestOrigin(request)) {
       diagnostic(requestId, { stage: "request", bodyParsed: false, emailPresent: false, emailType: "unavailable", passwordPresent: false, passwordType: "unavailable" });
       return reply(requestId, 400, "invalid_origin", { error: "Invalid request." });
@@ -95,6 +97,8 @@ export async function POST(request: NextRequest) {
       diagnostic(requestId, { stage: "verification_gate", verified: false, sessionCreationReached: false });
       return reply(requestId, 403, "email_unverified", { error: "Please verify your email before signing in.", verificationRequired: true });
     }
+
+    await prisma.customer.update({ where: { id: customer.id }, data: { lastLoginAt: new Date(), lastLoginMethod: "password" } });
 
     diagnostic(requestId, { stage: "session_creation", sessionCreationReached: true });
     const token = await createCustomerSession(customer.id, customer.sessionVersion);

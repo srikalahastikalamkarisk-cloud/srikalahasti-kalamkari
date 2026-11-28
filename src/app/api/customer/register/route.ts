@@ -7,12 +7,14 @@ import { prisma } from "@/lib/prisma";
 import { createCustomerToken, CUSTOMER_VERIFICATION_TTL_MS, strongCustomerPassword } from "@/lib/customer-auth-core";
 import { sendVerificationEmail } from "@/lib/customer-email";
 import { checkCustomerRateLimit } from "@/lib/customer-rate-limit";
+import { customerAuthMethods } from "@/lib/customer-otp";
 
 export const runtime = "nodejs";
 const schema = z.object({ name: z.string().trim().min(2).max(120), email: z.string().trim().email().max(191), phone: z.string().trim().max(24).optional(), password: z.string().max(128), confirmPassword: z.string().max(128), termsAccepted: z.literal(true) }).refine(v => v.password === v.confirmPassword, { path: ["confirmPassword"], message: "Passwords do not match." });
 const generic = () => NextResponse.json({ success: true, message: "If registration can be completed, an email will be sent with next steps." }, { headers: { "Cache-Control": "no-store" } });
 
 export async function POST(request: NextRequest) {
+  if (!(await customerAuthMethods()).emailPassword) return NextResponse.json({ error: "Email and password registration is disabled. Use mobile OTP if available." }, { status: 503 });
   const requestId = randomUUID();
   const address = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim().slice(0, 128) || "unknown";
   if (!isValidRequestOrigin(request)) {

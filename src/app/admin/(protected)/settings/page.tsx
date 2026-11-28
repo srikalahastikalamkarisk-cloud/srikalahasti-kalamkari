@@ -5,6 +5,7 @@ import { prepareImageUpload, isSupportedImageFile } from "@/lib/admin/browser-im
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import WebsiteStatusControl from "@/components/admin/website-status-control";
+
 import "./settings.css";
 
 type Settings = {
@@ -354,6 +355,7 @@ export default function StoreSettingsPage() {
             <a href="#favicon">Browser favicon</a>
             {sections.map(section => <a key={section.id} href={`#${section.id}`}>{section.title}</a>)}
             <a href="#checkout-safety">Checkout & payments</a>
+            <a href="#customer-authentication">Customer authentication</a>
           </nav>
 
           <form onSubmit={save} noValidate>
@@ -447,6 +449,18 @@ export default function StoreSettingsPage() {
                 </div>
               </section>
             ))}
+
+            <section className="sk-settings-card">
+      <div className="sk-settings-card-heading">
+        <div>
+          <h2>Customer authentication</h2>
+          <p>Manage mobile OTP, email login and SMS usage in OTP Management.</p>
+        </div>
+      </div>
+      <a className="sk-settings-secondary" href="/admin/otp-management">
+        Open OTP Management
+      </a>
+    </section>
 
             <section className="sk-settings-card" id="checkout-safety" aria-labelledby="checkout-safety-title">
               <div className="sk-settings-card-heading">

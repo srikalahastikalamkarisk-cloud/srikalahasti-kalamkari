@@ -9,9 +9,9 @@ const addressSchema = z.object({ name: z.string().trim().min(2).max(120), phone:
 export async function GET() {
   const customer = await getCurrentCustomer(); if (!customer) return NextResponse.json({ error: "Sign in required." }, { status: 401 });
   const [profile, addresses, orders] = await Promise.all([
-    prisma.customer.findUnique({ where: { id: customer.id }, select: { id: true, name: true, email: true, phone: true, emailVerifiedAt: true, createdAt: true } }),
+    prisma.customer.findUnique({ where: { id: customer.id }, select: { id: true, name: true, email: true, phone: true, normalizedPhone: true, mobileVerifiedAt: true, emailVerifiedAt: true, createdAt: true } }),
     prisma.customerAddress.findMany({ where: { customerId: customer.id }, orderBy: [{ isDefault: "desc" }, { createdAt: "desc" }] }),
-    prisma.order.findMany({ where: { customerEmail: customer.email }, orderBy: { createdAt: "desc" }, select: { id: true, orderNumber: true, totalAmount: true, orderStatus: true, paymentStatus: true, createdAt: true,
+    prisma.order.findMany({ where: { OR: [{ customerId: customer.id }, ...(customer.emailVerifiedAt && customer.email ? [{ customerEmail: customer.email, customerId: null }] : [])] }, orderBy: { createdAt: "desc" }, select: { id: true, orderNumber: true, totalAmount: true, orderStatus: true, paymentStatus: true, createdAt: true,
           items: {
             select: {
               id: true,
@@ -39,7 +39,8 @@ export async function PATCH(request: NextRequest) {
   const customer = await getCurrentCustomer(); if (!customer) return NextResponse.json({ error: "Sign in required." }, { status: 401 });
   const parsed = z.object({ name: z.string().trim().min(2).max(120), phone: z.string().trim().max(24).optional().nullable() }).safeParse(await request.json());
   if (!parsed.success) return NextResponse.json({ error: "Enter a valid name and phone number." }, { status: 400 });
-  const profile = await prisma.customer.update({ where: { id: customer.id }, data: { name: parsed.data.name, phone: parsed.data.phone || null }, select: { id: true, name: true, email: true, phone: true, emailVerifiedAt: true } });
+  const stored = await prisma.customer.findUnique({ where: { id: customer.id }, select: { mobileVerifiedAt: true, phone: true } });
+  const profile = await prisma.customer.update({ where: { id: customer.id }, data: { name: parsed.data.name, phone: stored?.mobileVerifiedAt ? stored.phone : parsed.data.phone || null }, select: { id: true, name: true, email: true, phone: true, emailVerifiedAt: true } });
   return NextResponse.json({ profile });
 }
 export async function POST(request: NextRequest) {

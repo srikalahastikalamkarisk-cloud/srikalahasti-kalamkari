@@ -27,6 +27,30 @@ export default async function CustomersPage({
     ? Math.max(1, Math.min(100000, rawPage))
     : 1;
 
+  const accountPageValue = typeof params.accountsPage === "string" ? Number(params.accountsPage) : 1;
+  const accountsPage = Number.isSafeInteger(accountPageValue) ? Math.max(1, Math.min(100000, accountPageValue)) : 1;
+  const mobileFilter = params.mobile === "verified" || params.mobile === "unverified" ? params.mobile : "all";
+  const qMobileDigits = q.replace(/\D/g, "");
+  const accountWhere = {
+    ...(q ? { OR: [
+      { name: { contains: q } }, { email: { contains: q } },
+      { phone: { contains: q } }, ...(qMobileDigits ? [{ normalizedPhone: { contains: qMobileDigits } }] : []),
+    ] } : {}),
+    ...(mobileFilter === "verified" ? { mobileVerifiedAt: { not: null } } : mobileFilter === "unverified" ? { mobileVerifiedAt: null } : {}),
+  };
+  const [registeredTotal, registeredAccounts] = await Promise.all([
+    prisma.customer.count({ where: accountWhere }),
+    prisma.customer.findMany({ where: accountWhere, orderBy: [{ createdAt: "desc" }, { id: "asc" }], skip: (accountsPage - 1) * PAGE_SIZE, take: PAGE_SIZE, select: { id: true, name: true, email: true, phone: true, normalizedPhone: true, mobileVerifiedAt: true, lastLoginAt: true, lastLoginMethod: true, createdAt: true } }),
+  ]);
+  const accountEmails = registeredAccounts.flatMap(row => row.email ? [row.email] : []);
+  const accountOrderCounts = accountEmails.length ? await prisma.$queryRaw<Array<{ email: string; total: bigint | number }>>`
+    SELECT LOWER(TRIM(customerEmail)) AS email, COUNT(*) AS total FROM \`Order\`
+    WHERE LOWER(TRIM(customerEmail)) IN (${Prisma.join(accountEmails.map(email => email.toLowerCase()))})
+    GROUP BY LOWER(TRIM(customerEmail))
+  ` : [];
+  const accountOrderMap = new Map(accountOrderCounts.map(row => [row.email, Number(row.total)]));
+  const accountPages = Math.max(1, Math.ceil(registeredTotal / PAGE_SIZE));
+
   // Customer identities are normalized email addresses.
   // All grouping, search, totals and pagination execute in MySQL.
   // Only the current page and its recent order history reach Node.js.
@@ -190,6 +214,14 @@ export default async function CustomersPage({
     return `/admin/customers?${search.toString()}`;
   }
 
+  function accountsHref(nextPage: number) {
+    const search = new URLSearchParams();
+    if (q) search.set("q", q);
+    if (mobileFilter !== "all") search.set("mobile", mobileFilter);
+    search.set("accountsPage", String(nextPage));
+    return `/admin/customers?${search.toString()}`;
+  }
+
   return (
     <div className="skad-app">
       
@@ -229,6 +261,28 @@ export default async function CustomersPage({
               <strong>{allPaidOrders}</strong>
             </article>
           </div>
+
+          <section className="skcustomers-panel">
+            <div className="skcustomers-panel-heading"><div><span className="skad-eyebrow">REGISTERED ACCOUNTS</span><h2>Account identities</h2></div><span>{registeredTotal} matching</span></div>
+            <form className="skcustomers-filters" method="get">
+              <label><Search size={17} /><input name="q" defaultValue={q} placeholder="Search name, email or mobile" /></label>
+              <select name="mobile" defaultValue={mobileFilter} aria-label="Mobile verification filter"><option value="all">All mobile statuses</option><option value="verified">Verified mobile</option><option value="unverified">Unverified mobile</option></select>
+              <button type="submit">Filter accounts</button>
+            </form>
+            <div className="skcustomers-table-wrap"><table className="skcustomers-table"><thead><tr><th>CUSTOMER</th><th>MOBILE</th><th>VERIFICATION</th><th>LOGIN METHOD</th><th>REGISTERED</th><th>LAST LOGIN</th><th>ORDERS</th></tr></thead><tbody>
+              {registeredAccounts.map(account => <tr key={account.id}>
+                <td><strong>{account.name}</strong><small>{account.email}</small></td>
+                <td>{account.phone || "—"}</td>
+                <td>{account.mobileVerifiedAt ? "Verified" : "Unverified"}</td>
+                <td>{account.lastLoginMethod === "mobile_otp" ? "Mobile OTP" : account.lastLoginMethod === "password" ? "Email and password" : "—"}</td>
+                <td>{account.createdAt.toLocaleDateString("en-IN", { timeZone: "Asia/Kolkata" })}</td>
+                <td>{account.lastLoginAt?.toLocaleString("en-IN", { timeZone: "Asia/Kolkata" }) || "—"}</td>
+                <td>{accountOrderMap.get(account.email?.toLowerCase() ?? "") ?? 0}</td>
+              </tr>)}
+            </tbody></table></div>
+            {registeredAccounts.length === 0 && <p className="skcustomers-empty">No registered accounts match these filters.</p>}
+            <div className="skcustomers-pagination"><span>Accounts page {accountsPage} of {accountPages}</span><div>{accountsPage > 1 && <Link href={accountsHref(accountsPage - 1)}>Previous</Link>}{accountsPage < accountPages && <Link href={accountsHref(accountsPage + 1)}>Next</Link>}</div></div>
+          </section>
 
           <section className="skcustomers-panel">
             <div className="skcustomers-panel-heading">

@@ -5,6 +5,6 @@ import { prisma } from "@/lib/prisma";
 export async function GET(request: NextRequest, context: RouteContext<"/api/customer/account/orders/[id]">) {
   const customer = await getCurrentCustomer(); if (!customer) return NextResponse.json({ error: "Sign in required." }, { status: 401 });
   const { id } = await context.params;
-  const order = await prisma.order.findFirst({ where: { id, customerEmail: customer.email }, include: { items: true } });
+  const order = await prisma.order.findFirst({ where: { id, OR: [{ customerId: customer.id }, ...(customer.emailVerifiedAt && customer.email ? [{ customerEmail: customer.email, customerId: null }] : [])] }, include: { items: true } });
   return order ? NextResponse.json({ order: { ...order, items: await resolveCustomerOrderImages(order.items) } }, { headers: { "Cache-Control": "no-store" } }) : NextResponse.json({ error: "Order not found." }, { status: 404 });
 }

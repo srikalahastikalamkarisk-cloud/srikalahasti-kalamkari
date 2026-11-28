@@ -26,7 +26,7 @@ export async function POST(request: NextRequest) {
 
   try {
     const customer = await getCurrentCustomer();
-    if (!customer?.emailVerifiedAt) return NextResponse.json({ success: false, status: "REVIEW_REQUIRED", retryAllowed: false }, { status: 401, headers });
+    if (!customer || (!customer.emailVerifiedAt && !customer.mobileVerifiedAt)) return NextResponse.json({ success: false, status: "REVIEW_REQUIRED", retryAllowed: false }, { status: 401, headers });
     const body = await guarded.json();
 
     if (
@@ -47,6 +47,7 @@ export async function POST(request: NextRequest) {
       select: {
         id: true,
         customerEmail: true,
+        customerId: true,
         orderNumber: true,
         paymentStatus: true,
         orderStatus: true,
@@ -79,7 +80,7 @@ export async function POST(request: NextRequest) {
       orderStatus: order?.orderStatus ?? null,
       attempts: order?.paymentAttempts.length ?? 0,
       ownershipMatches: order
-        ? order.customerEmail === customer.email
+        ? order.customerId === customer.id || (!order.customerId && Boolean(customer.emailVerifiedAt && customer.email && order.customerEmail === customer.email))
         : null
     });
 
@@ -94,7 +95,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (order.customerEmail !== customer.email) return NextResponse.json({ success: false, status: "REVIEW_REQUIRED", retryAllowed: false }, { status: 404, headers });
+    const ownsOrder = order.customerId === customer.id || (!order.customerId && Boolean(customer.emailVerifiedAt && customer.email && order.customerEmail === customer.email));
+    if (!ownsOrder) return NextResponse.json({ success: false, status: "REVIEW_REQUIRED", retryAllowed: false }, { status: 404, headers });
 
     const allowed = await checkPaymentRecoveryRateLimit(
       body.checkoutKey
@@ -170,7 +172,7 @@ export async function POST(request: NextRequest) {
             if (
               !lockedOrder ||
               !lockedAttempt ||
-              lockedOrder.customerEmail !== customer.email ||
+              !(lockedOrder.customerId === customer.id || (!lockedOrder.customerId && Boolean(customer.emailVerifiedAt && customer.email && lockedOrder.customerEmail === customer.email))) ||
               lockedAttempt.orderId !== lockedOrder.id ||
               lockedOrder.razorpayOrderId !== payment.order_id ||
               lockedAttempt.razorpayOrderId !== payment.order_id ||
@@ -253,6 +255,7 @@ export async function POST(request: NextRequest) {
       where: { id: order.id },
       select: {
         customerEmail: true,
+        customerId: true,
         orderStatus: true,
         paymentStatus: true,
         orderNumber: true,
@@ -264,7 +267,7 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    if (!currentOrder || currentOrder.customerEmail !== customer.email) {
+    if (!currentOrder || !(currentOrder.customerId === customer.id || (!currentOrder.customerId && Boolean(customer.emailVerifiedAt && customer.email && currentOrder.customerEmail === customer.email)))) {
       return NextResponse.json({
         success: false,
         status: "REVIEW_REQUIRED",

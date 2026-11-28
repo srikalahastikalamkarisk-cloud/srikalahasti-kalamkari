@@ -8,7 +8,7 @@ import {
   ShoppingBag, Users, Images, Clapperboard,
   Star, TicketPercent, Settings, Palette, LogOut,
   PanelLeftClose, PanelLeftOpen, Menu, X,
-  ExternalLink, ShieldCheck, BookOpen, Plus
+  ExternalLink, ShieldCheck, BookOpen, Plus, Smartphone
 } from "lucide-react";
 import "./admin-dashboard.css";
 
@@ -47,6 +47,7 @@ const sections = [
     label: "ADMINISTRATION",
     items: [
       { name: "Store Settings", href: "/admin/settings", icon: Settings, ready: true },
+      { name: "OTP Management", href: "/admin/otp-management", icon: Smartphone, ready: true },
       { name: "Appearance & Themes", href: "/admin/appearance", icon: Palette, ready: true },
     ],
   },

@@ -18,6 +18,6 @@ export async function POST(request: NextRequest) {
   await prisma.customer.update({ where: { id: customer.id }, data: { passwordHash: await hash(parsed.data.password, 12), sessionVersion: { increment: 1 } } });
   const response = NextResponse.json({ success: true, message: "Password changed. Sign in again with your new password." });
   response.cookies.set("sk_customer_session", "", { httpOnly: true, secure: process.env.NODE_ENV === "production", sameSite: "lax", path: "/", maxAge: 0 });
-  try { await sendPasswordChangedEmail(customer.email, customer.name); } catch { console.error("customer_password_changed_email_delivery_failed"); }
+  if (customer.email) try { await sendPasswordChangedEmail(customer.email, customer.name); } catch { console.error("customer_password_changed_email_delivery_failed"); }
   return response;
 }

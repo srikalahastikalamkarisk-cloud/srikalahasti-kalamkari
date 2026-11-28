@@ -17,7 +17,7 @@ export async function POST(request: NextRequest) {
     if (!limit.allowed) return NextResponse.json({ error: `Please try again in about ${Math.ceil(limit.retryAfterSeconds / 60)} minute(s).`, requestId }, { status: 429, headers: { "Retry-After": String(limit.retryAfterSeconds), "X-Request-Id": requestId, "Cache-Control": "no-store" } });
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return generic(requestId);
     const customer = await prisma.customer.findUnique({ where: { email }, select: { id: true, name: true, email: true, emailVerifiedAt: true } });
-    if (!customer || customer.emailVerifiedAt) return generic(requestId);
+    if (!customer?.email || customer.emailVerifiedAt) return generic(requestId);
     const { token, tokenHash } = createCustomerToken(); const expiresAt = new Date(Date.now() + CUSTOMER_VERIFICATION_TTL_MS);
     await prisma.$transaction(async tx => { await tx.customerVerificationToken.updateMany({ where: { customerId: customer.id, usedAt: null }, data: { usedAt: new Date() } }); await tx.customerVerificationToken.create({ data: { customerId: customer.id, tokenHash, expiresAt } }); });
     try { await sendVerificationEmail(customer.email, customer.name, token); } catch (error) { await prisma.customerVerificationToken.updateMany({ where: { tokenHash, usedAt: null }, data: { usedAt: new Date() } }); console.error("customer_verification_email_delivery_failed", { requestId, category: "verification_email_delivery", name: error instanceof Error ? error.name : "UnknownError" }); }

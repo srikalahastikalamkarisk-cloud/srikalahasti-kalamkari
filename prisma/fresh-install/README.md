@@ -56,11 +56,14 @@ or changing `.env`:
 export DATABASE_URL="$(node -e 'require("dotenv").config({quiet:true}); const u=new URL(process.env.DATABASE_URL); u.pathname="/srikalahasti_step503_fresh_baseline_test"; process.stdout.write(u.toString())')"
 npx prisma db execute --config prisma7.config.ts --file prisma/fresh-install/baseline.sql
 
-for migration_dir in prisma/migrations/*/; do
+for migration_dir in prisma/migrations/2026*/; do
   migration_name=${migration_dir%/}
   migration_name=${migration_name##*/}
+  [[ "$migration_name" < "20261126120000_global_media_cleanup" ]] || continue
   npx prisma migrate resolve --config prisma7.config.ts --applied "$migration_name" || exit 1
 done
+
+npx prisma migrate deploy --config prisma7.config.ts
 
 npx prisma migrate status --config prisma7.config.ts
 ```

@@ -8,6 +8,7 @@ import {
   ShieldCheck, LogOut, ChevronRight, Plus
 } from "lucide-react";
 import "./customer-auth.css";
+import CustomerMobileLink from "@/components/customer-mobile-link";
 
 type Item = {
   id: string;
@@ -22,6 +23,8 @@ type Data = {
     name: string;
     email: string;
     phone: string | null;
+    normalizedPhone?: string | null;
+    mobileVerifiedAt?: string | null;
   };
   addresses: {
     id: string;
@@ -182,8 +185,7 @@ export default function AccountDashboard() {
         method: "POST"
       });
       if (!r.ok) throw new Error();
-      router.push("/");
-      router.refresh();
+      window.location.replace("/");
     } catch {
       setError("Unable to sign out. Please try again.");
       setBusy(false);
@@ -317,11 +319,12 @@ export default function AccountDashboard() {
                   <label>Phone number
                     <input name="phone" type="tel"
                       defaultValue={data.profile.phone || ""}
-                      maxLength={24}/>
+                      maxLength={24} readOnly={Boolean(data.profile.mobileVerifiedAt)} />
                   </label>
                   <button className="skauth-account-button"
                     disabled={busy}>Save profile</button>
                 </form>
+                <CustomerMobileLink phone={data.profile.phone} verified={Boolean(data.profile.mobileVerifiedAt)} refresh={load} />
               </section>
             </>}
 
